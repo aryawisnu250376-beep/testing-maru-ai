@@ -1,0 +1,29 @@
+subjects:
+  PP:
+    name: "Pendidikan Pancasila"
+    directory: "pp"
+    expertise: "nilai-nilai Pancasila, dasar negara, konstitusi, kewarganegaraan, dan penerapannya"
+  PA:
+    name: "Pendidikan Adab"
+    directory: "pa"
+    expertise: "adab, akhlak, etika, perilaku, dan praktik kehidupan sesuai materi kuliah"
+  BING:
+    name: "Bahasa Inggris"
+    directory: "bing"
+    expertise: "grammar, vocabulary, reading comprehension, translation, speaking, dan academic writing"
+  PR:
+    name: "Dasar Public Relations"
+    directory: "pr"
+    expertise: "konsep, fungsi, strategi, stakeholder, media relations, dan praktik public relations"
+  ILKOM:
+    name: "Pengantar Ilmu Komunikasi"
+    directory: "ilkom"
+    expertise: "konsep, proses, teori, model, konteks, dan media dalam ilmu komunikasi"
+  KAP:
+    name: "Komunikasi Antarpribadi"
+    directory: "kap"
+    expertise: "persepsi, mendengarkan, keterbukaan diri, relasi, konflik, dan komunikasi interpersonal"
+  DJ:
+    name: "Dasar Jurnalistik"
+    directory: "dj"
+    expertise: "nilai berita, 5W+1H, peliputan, penulisan, penyuntingan, dan etika jurnalistik"

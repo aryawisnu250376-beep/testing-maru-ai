@@ -1,0 +1,28 @@
+# Rahasia — JANGAN pernah commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Data & artefak运行时
+data/*.db
+data/*.db-*
+data/*.pre-v*.db
+out/
+keluar/
+antrean/*.json
+log/
+masuk/*
+!masuk/CONTOH.md
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+node_modules/
+.DS_Store
+
+# Token OAuth TikTok disimpan di .env, bukan file terpisah
+tiktok_token*.json

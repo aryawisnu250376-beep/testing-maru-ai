@@ -1,0 +1,2559 @@
+{
+  "generated_at": "2026-11-01T14:02:09+00:00",
+  "counts": {
+    "collected": 79,
+    "relevant": 60,
+    "clusters": 10
+  },
+  "clusters": [
+    {
+      "theme": "agents",
+      "label": "AI agent yang bisa ngerjain tugas sendiri",
+      "angle_hint": "Beda chatbot vs agent, dan kenapa itu penting buat kerjaan kamu",
+      "score": 0.9578,
+      "headline_signal": "aa1143/NamiAgent: 零基础入门 AI Agent 的基础教程。不只是教程，也是一个能在本地跑起来的 Agent：读写文件、执行命令、MCP、长期记忆，自带网页端看清每一步。从 100 行最小循环开始，一课加一个能力，最后拆解 Claude Code、Codex 等主流 Agent",
+      "sources": [
+        "github",
+        "hackernews"
+      ],
+      "urls": [
+        "https://github.com/aa1143/NamiAgent",
+        "https://github.com/wanghao-SunSky/cs329z-chinese",
+        "https://github.com/C4rohan/Lampline",
+        "https://github.com/boardshogunfluctuate/Capri-AI",
+        "https://github.com/liyupi/dafeiyu-cleaner",
+        "https://labs.ycombinator.com/projects/games/index.html"
+      ],
+      "signals": [
+        {
+          "source": "github",
+          "title": "aa1143/NamiAgent: 零基础入门 AI Agent 的基础教程。不只是教程，也是一个能在本地跑起来的 Agent：读写文件、执行命令、MCP、长期记忆，自带网页端看清每一步。从 100 行最小循环开始，一课加一个能力，最后拆解 Claude Code、Codex 等主流 Agent",
+          "url": "https://github.com/aa1143/NamiAgent",
+          "raw_score": 118.0,
+          "published": "2026-10-30T11:03:30Z",
+          "meta": {
+            "stars": 118,
+            "topic": "ai-agent",
+            "language": "Python"
+          },
+          "hash": "bdaa6afa297bd7dd",
+          "score": 0.8078,
+          "why": {
+            "relevance": 1.0,
+            "momentum": 0.5611016653720331,
+            "novelty": 1.0,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "claude",
+              "agent",
+              "mcp"
+            ],
+            "format_hits": []
+          },
+          "theme": "agents",
+          "theme_hits": 3
+        },
+        {
+          "source": "github",
+          "title": "wanghao-SunSky/cs329z-chinese: 斯坦福 Stanford CS329Z Engineering AI Agents 中文教程：面向 Python 开发者的 AI 智能体课程，19 讲与 4 项实践，涵盖 LLM、RAG、工具调用、记忆、多智能体、评测与安全。完整 Markdown、在线与离线 HTML。Chinese cours",
+          "url": "https://github.com/wanghao-SunSky/cs329z-chinese",
+          "raw_score": 333.0,
+          "published": "2026-10-28T18:18:24Z",
+          "meta": {
+            "stars": 333,
+            "topic": "llm",
+            "language": "HTML"
+          },
+          "hash": "ddaf95d03fcf2397",
+          "score": 0.6506,
+          "why": {
+            "relevance": 1.0,
+            "momentum": 0.6822675525272985,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "llm",
+              "agent",
+              "agents",
+              "rag"
+            ],
+            "format_hits": []
+          },
+          "theme": "agents",
+          "theme_hits": 2
+        },
+        {
+          "source": "github",
+          "title": "C4rohan/Lampline: Build AI phone agents on your own computer and test every change with an AI caller. Open source, runs free with no API keys, cents per call with your own keys. Im",
+          "url": "https://github.com/C4rohan/Lampline",
+          "raw_score": 531.0,
+          "published": "2026-10-19T06:50:54Z",
+          "meta": {
+            "stars": 531,
+            "topic": "llm",
+            "language": "Python"
+          },
+          "hash": "81e20228b9edf817",
+          "score": 0.6477,
+          "why": {
+            "relevance": 0.8500000000000001,
+            "momentum": 0.7369207177618202,
+            "novelty": 0.25,
+            "format_fit": 0.69,
+            "relevance_hits": [
+              "ai",
+              "agent",
+              "agents"
+            ],
+            "format_hits": [
+              "free",
+              "open source"
+            ]
+          },
+          "theme": "agents",
+          "theme_hits": 2
+        },
+        {
+          "source": "github",
+          "title": "boardshogunfluctuate/Capri-AI: ⚡ Tell your PC what to do. Capri is a cyberpunk AI agent that works with your files, projects and code through Claude Code, Codex or Antigravity. Win",
+          "url": "https://github.com/boardshogunfluctuate/Capri-AI",
+          "raw_score": 593.0,
+          "published": "2026-10-30T22:03:48Z",
+          "meta": {
+            "stars": 593,
+            "topic": "ai-agent",
+            "language": null
+          },
+          "hash": "c2c3e2f9274dd6b9",
+          "score": 0.615,
+          "why": {
+            "relevance": 0.8500000000000001,
+            "momentum": 0.7498631554070506,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "claude",
+              "agent"
+            ],
+            "format_hits": []
+          },
+          "theme": "agents",
+          "theme_hits": 2
+        },
+        {
+          "source": "github",
+          "title": "liyupi/dafeiyu-cleaner: DeepSeek 蓝色大肥鱼消除计划：识别并清理 B 站（Bilibili）评论区中由 DeepSeek 大模型、AI Agent 驱动的机器人账号（大肥鱼）的 Chrome / Edge / Firefox 浏览器插件。离线规则 + DeepSeek API 精判，AI 评论检测、空间主页鉴定、鲸鱼娘一键清场",
+          "url": "https://github.com/liyupi/dafeiyu-cleaner",
+          "raw_score": 124.0,
+          "published": "2026-10-23T03:39:33Z",
+          "meta": {
+            "stars": 124,
+            "topic": "ai-agent",
+            "language": "JavaScript"
+          },
+          "hash": "b8123f609c5252f2",
+          "score": 0.5692,
+          "why": {
+            "relevance": 0.8500000000000001,
+            "momentum": 0.5668769352463692,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "deepseek",
+              "agent"
+            ],
+            "format_hits": []
+          },
+          "theme": "agents",
+          "theme_hits": 2
+        },
+        {
+          "source": "hackernews",
+          "title": "We ran AI agent swarms in Minecraft and Mindustry",
+          "url": "https://labs.ycombinator.com/projects/games/index.html",
+          "raw_score": 413.0,
+          "published": "2026-10-29T21:40:28Z",
+          "meta": {
+            "points": 413,
+            "comments": 169
+          },
+          "hash": "5158f4961844da1a",
+          "score": 0.5519,
+          "why": {
+            "relevance": 0.7000000000000001,
+            "momentum": 0.7074777285197781,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "agent"
+            ],
+            "format_hits": []
+          },
+          "theme": "agents",
+          "theme_hits": 2
+        },
+        {
+          "source": "github",
+          "title": "kukemc/bili-cli: 为 AI Agent 设计的哔哩哔哩命令行工具：扫码登录、看视频、评论、私信、发动态、投稿，全部 JSON 输出",
+          "url": "https://github.com/kukemc/bili-cli",
+          "raw_score": 335.0,
+          "published": "2026-10-19T22:44:50Z",
+          "meta": {
+            "stars": 335,
+            "topic": "ai-agent",
+            "language": "Python"
+          },
+          "hash": "87d40a7dcc26895f",
+          "score": 0.5457,
+          "why": {
+            "relevance": 0.7000000000000001,
+            "momentum": 0.6829684908151467,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "agent"
+            ],
+            "format_hits": []
+          },
+          "theme": "agents",
+          "theme_hits": 2
+        },
+        {
+          "source": "github",
+          "title": "jacke-pp/ai-wallet-binance: 让任何 AI 用你自己的币安 AI 钱包交易：秒买秒卖、狙击 Agent 专属发射台（Four、Flap、GANG）、AI 专属 Mint、本机交易页面。币安签名，不碰私钥。免费开源 MIT · 作者：Jacke_pp · 联系：X @Jacke_pp（私信）",
+          "url": "https://github.com/jacke-pp/ai-wallet-binance",
+          "raw_score": 310.0,
+          "published": "2026-10-25T09:53:57Z",
+          "meta": {
+            "stars": 310,
+            "topic": "ai-agent",
+            "language": "JavaScript"
+          },
+          "hash": "79b751d9e957e823",
+          "score": 0.5435,
+          "why": {
+            "relevance": 0.7000000000000001,
+            "momentum": 0.6738908016410199,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "agent"
+            ],
+            "format_hits": []
+          },
+          "theme": "agents",
+          "theme_hits": 2
+        },
+        {
+          "source": "github",
+          "title": "Cattmonkey/ChaosIntelligence: 把智能体当函数，把想法写成程序。Agent-native functional language with a CLI, Web IDE, goal-driven bots and live UI. Source-available; no AI training.",
+          "url": "https://github.com/Cattmonkey/ChaosIntelligence",
+          "raw_score": 205.0,
+          "published": "2026-10-23T13:04:31Z",
+          "meta": {
+            "stars": 205,
+            "topic": "llm",
+            "language": "Python"
+          },
+          "hash": "0e90c1c5576111ba",
+          "score": 0.5314,
+          "why": {
+            "relevance": 0.7000000000000001,
+            "momentum": 0.6255289689652797,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "agent"
+            ],
+            "format_hits": []
+          },
+          "theme": "agents",
+          "theme_hits": 2
+        },
+        {
+          "source": "github",
+          "title": "Xpropel/Pi-Remote: Remote control for your pi coding agent. Pi-Remote mirrors live pi terminal sessions to any browser, so you can watch runs, answer prompts, and send commands fro",
+          "url": "https://github.com/Xpropel/Pi-Remote",
+          "raw_score": 171.0,
+          "published": "2026-10-28T10:46:22Z",
+          "meta": {
+            "stars": 171,
+            "topic": "ai-agent",
+            "language": "TypeScript"
+          },
+          "hash": "40b844ee2aae3b00",
+          "score": 0.5261,
+          "why": {
+            "relevance": 0.7000000000000001,
+            "momentum": 0.6043509291183674,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "agent",
+              "coding agent"
+            ],
+            "format_hits": []
+          },
+          "theme": "agents",
+          "theme_hits": 2
+        },
+        {
+          "source": "github",
+          "title": "xiaozhangup/Oh-My-McDonald: 基于麦当劳官方 MCP 的对话式 AI Skill，支持餐品推荐、门店比价、优惠查询、营养计算和探索记录，并通过 Python 生成体素风格分享图片。",
+          "url": "https://github.com/xiaozhangup/Oh-My-McDonald",
+          "raw_score": 120.0,
+          "published": "2026-10-24T08:38:16Z",
+          "meta": {
+            "stars": 120,
+            "topic": "ai-agent",
+            "language": "Python"
+          },
+          "hash": "c8f526af9ae223a4",
+          "score": 0.5158,
+          "why": {
+            "relevance": 0.7000000000000001,
+            "momentum": 0.5630584909112296,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "mcp"
+            ],
+            "format_hits": []
+          },
+          "theme": "agents",
+          "theme_hits": 1
+        },
+        {
+          "source": "github",
+          "title": "BEN020406/maimen-order-manager: 麦当劳 MCP 技能：待评价清单、好评兑礼进度、发票报销门槛凑单、单次抽奖确认。99 项测试，非官方产品。",
+          "url": "https://github.com/BEN020406/maimen-order-manager",
+          "raw_score": 108.0,
+          "published": "2026-10-21T16:06:41Z",
+          "meta": {
+            "stars": 108,
+            "topic": "ai-agent",
+            "language": "Python"
+          },
+          "hash": "aaf14a0319be4005",
+          "score": 0.5127,
+          "why": {
+            "relevance": 0.7000000000000001,
+            "momentum": 0.5507962105085747,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "mcp"
+            ],
+            "format_hits": []
+          },
+          "theme": "agents",
+          "theme_hits": 1
+        },
+        {
+          "source": "github",
+          "title": "N1nEmAn/sapper-v2: Autonomous pentest legion — AI commander + worker swarm + layered fact-intent graph. 3rd Tencent Intelligent Attack-Defense online champion (634 teams · 8h unatt",
+          "url": "https://github.com/N1nEmAn/sapper-v2",
+          "raw_score": 411.0,
+          "published": "2026-10-30T15:12:35Z",
+          "meta": {
+            "stars": 411,
+            "topic": "llm",
+            "language": "Python"
+          },
+          "hash": "4a6344651b245448",
+          "score": 0.4992,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.706909171406313,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai"
+            ],
+            "format_hits": []
+          },
+          "theme": "agents",
+          "theme_hits": 1
+        },
+        {
+          "source": "github",
+          "title": "wahaha-potato/mcd-coupon-xray: 麦麦省的券谁都能领，但领了不等于楼下那家店认。一键领全后逐家门店校验哪张券真的能核销，并算出券后实付，直接回答「去哪家店、用哪张券、省多少钱」。基于麦当劳 MCP。",
+          "url": "https://github.com/wahaha-potato/mcd-coupon-xray",
+          "raw_score": 117.0,
+          "published": "2026-10-23T02:38:59Z",
+          "meta": {
+            "stars": 117,
+            "topic": "ai-agent",
+            "language": "Python"
+          },
+          "hash": "af7357458d52f510",
+          "score": 0.4625,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.5601108846864377,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "mcp"
+            ],
+            "format_hits": []
+          },
+          "theme": "agents",
+          "theme_hits": 1
+        }
+      ],
+      "evidence": [
+        {
+          "source": "github",
+          "title": "aa1143/NamiAgent: 零基础入门 AI Agent 的基础教程。不只是教程，也是一个能在本地跑起来的 Agent：读写文件、执行命令、MCP、长期记忆，自带网页端看清每一步。从 100 行最小循环开始，一课加一个能力，最后拆解 Claude Code、Codex 等主流 Agent",
+          "url": "https://github.com/aa1143/NamiAgent",
+          "raw_score": 118.0,
+          "score": 0.8078,
+          "hits": [
+            "ai",
+            "claude",
+            "agent",
+            "mcp"
+          ]
+        },
+        {
+          "source": "github",
+          "title": "wanghao-SunSky/cs329z-chinese: 斯坦福 Stanford CS329Z Engineering AI Agents 中文教程：面向 Python 开发者的 AI 智能体课程，19 讲与 4 项实践，涵盖 LLM、RAG、工具调用、记忆、多智能体、评测与安全。完整 Markdown、在线与离线 HTML。Chinese cours",
+          "url": "https://github.com/wanghao-SunSky/cs329z-chinese",
+          "raw_score": 333.0,
+          "score": 0.6506,
+          "hits": [
+            "ai",
+            "llm",
+            "agent",
+            "agents",
+            "rag"
+          ]
+        },
+        {
+          "source": "github",
+          "title": "C4rohan/Lampline: Build AI phone agents on your own computer and test every change with an AI caller. Open source, runs free with no API keys, cents per call with your own keys. Im",
+          "url": "https://github.com/C4rohan/Lampline",
+          "raw_score": 531.0,
+          "score": 0.6477,
+          "hits": [
+            "ai",
+            "agent",
+            "agents"
+          ]
+        },
+        {
+          "source": "github",
+          "title": "boardshogunfluctuate/Capri-AI: ⚡ Tell your PC what to do. Capri is a cyberpunk AI agent that works with your files, projects and code through Claude Code, Codex or Antigravity. Win",
+          "url": "https://github.com/boardshogunfluctuate/Capri-AI",
+          "raw_score": 593.0,
+          "score": 0.615,
+          "hits": [
+            "ai",
+            "claude",
+            "agent"
+          ]
+        },
+        {
+          "source": "github",
+          "title": "liyupi/dafeiyu-cleaner: DeepSeek 蓝色大肥鱼消除计划：识别并清理 B 站（Bilibili）评论区中由 DeepSeek 大模型、AI Agent 驱动的机器人账号（大肥鱼）的 Chrome / Edge / Firefox 浏览器插件。离线规则 + DeepSeek API 精判，AI 评论检测、空间主页鉴定、鲸鱼娘一键清场",
+          "url": "https://github.com/liyupi/dafeiyu-cleaner",
+          "raw_score": 124.0,
+          "score": 0.5692,
+          "hits": [
+            "ai",
+            "deepseek",
+            "agent"
+          ]
+        },
+        {
+          "source": "hackernews",
+          "title": "We ran AI agent swarms in Minecraft and Mindustry",
+          "url": "https://labs.ycombinator.com/projects/games/index.html",
+          "raw_score": 413.0,
+          "score": 0.5519,
+          "hits": [
+            "ai",
+            "agent"
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "general",
+      "label": "Model AI baru: Mistral-Large-4-1T-A52B",
+      "angle_hint": "Kenapa ini penting sekarang",
+      "score": 0.9211,
+      "headline_signal": "Model AI baru: Mistral-Large-4-1T-A52B",
+      "sources": [
+        "google_trends_id",
+        "hackernews",
+        "huggingface"
+      ],
+      "urls": [
+        "https://huggingface.co/mistralai/Mistral-Large-4-1T-A52B",
+        "https://trends.google.com/trending/rss?geo=ID",
+        "https://github.com/kerlenton/bootgpt",
+        "https://newsletter.signoz.io/p/ai-isnt-replacing-sres-its-deskilling",
+        "https://github.com/guregodevo/memdoor/tree/main/examples/workflows/team-solve",
+        "https://blog.talosintelligence.com/appraisal-by-ai-model-driven-victim-prioritization-in-the-volta-infostealer/"
+      ],
+      "signals": [
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: Mistral-Large-4-1T-A52B",
+          "url": "https://huggingface.co/mistralai/Mistral-Large-4-1T-A52B",
+          "raw_score": 1421.0,
+          "published": "2026-09-30T18:35:13.000Z",
+          "meta": {
+            "likes": 1421,
+            "downloads": 4576,
+            "tags": [
+              "transformers",
+              "mistral_large4",
+              "image-text-to-text",
+              "vLLM",
+              "SGLang",
+              "llama.cpp",
+              "conversational",
+              "en",
+              "fr",
+              "de",
+              "es",
+              "pt"
+            ],
+            "pipeline": "image-text-to-text"
+          },
+          "hash": "ddb81309a5f02b54",
+          "score": 0.7111,
+          "why": {
+            "relevance": 1.0,
+            "momentum": 0.8523522942118428,
+            "novelty": 0.25,
+            "format_fit": 0.5700000000000001,
+            "relevance_hits": [
+              "ai",
+              "llm",
+              "llama",
+              "mistral",
+              "transformer"
+            ],
+            "format_hits": [
+              "2b"
+            ]
+          },
+          "theme": "general",
+          "theme_hits": 1
+        },
+        {
+          "source": "google_trends_id",
+          "title": "Trending di Indonesia: paris fc vs paris saint-germain fc",
+          "url": "https://trends.google.com/trending/rss?geo=ID",
+          "raw_score": 200.0,
+          "published": "Sun, 1 Nov 2026 05:50:00 -0800",
+          "meta": {
+            "approx_traffic": "200+",
+            "geo": "ID"
+          },
+          "hash": "0afee470615c3015",
+          "score": 0.6837,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.6226441355149517,
+            "novelty": 1.0,
+            "format_fit": 0.5700000000000001,
+            "relevance_hits": [
+              "ai"
+            ],
+            "format_hits": [
+              "vs"
+            ]
+          },
+          "theme": "general",
+          "theme_hits": 0
+        },
+        {
+          "source": "hackernews",
+          "title": "Show HN: A language model that lives in a boot sector",
+          "url": "https://github.com/kerlenton/bootgpt",
+          "raw_score": 87.0,
+          "published": "2026-10-31T12:58:29Z",
+          "meta": {
+            "points": 87,
+            "comments": 5
+          },
+          "hash": "0b91f0e61c489b95",
+          "score": 0.6594,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.5256698527787149,
+            "novelty": 1.0,
+            "format_fit": 0.5700000000000001,
+            "relevance_hits": [
+              "language model"
+            ],
+            "format_hits": [
+              "how"
+            ]
+          },
+          "theme": "general",
+          "theme_hits": 0
+        },
+        {
+          "source": "hackernews",
+          "title": "AI isn't replacing SREs, it's deskilling them",
+          "url": "https://newsletter.signoz.io/p/ai-isnt-replacing-sres-its-deskilling",
+          "raw_score": 655.0,
+          "published": "2026-10-30T15:52:18Z",
+          "meta": {
+            "points": 655,
+            "comments": 476
+          },
+          "hash": "dbc154116583a043",
+          "score": 0.5129,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.761519476488317,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai"
+            ],
+            "format_hits": []
+          },
+          "theme": "general",
+          "theme_hits": 0
+        },
+        {
+          "source": "hackernews",
+          "title": "Memdoor: A team of 5 Qwen3.8-27B models beats Fable 5 on LiveCodeBench Hard",
+          "url": "https://github.com/guregodevo/memdoor/tree/main/examples/workflows/team-solve",
+          "raw_score": 306.0,
+          "published": "2026-10-31T22:46:12Z",
+          "meta": {
+            "points": 306,
+            "comments": 147
+          },
+          "hash": "b5ad3b9daee6403c",
+          "score": 0.5086,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.6723709511032432,
+            "novelty": 0.25,
+            "format_fit": 0.5700000000000001,
+            "relevance_hits": [
+              "qwen"
+            ],
+            "format_hits": [
+              "7b"
+            ]
+          },
+          "theme": "general",
+          "theme_hits": 0
+        },
+        {
+          "source": "hackernews",
+          "title": "Malware uses LLMs to rank victims by how much they're worth",
+          "url": "https://blog.talosintelligence.com/appraisal-by-ai-model-driven-victim-prioritization-in-the-volta-infostealer/",
+          "raw_score": 250.0,
+          "published": "2026-10-31T14:29:03Z",
+          "meta": {
+            "points": 250,
+            "comments": 132
+          },
+          "hash": "3123120ca1e677ca",
+          "score": 0.5027,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.648725828188028,
+            "novelty": 0.25,
+            "format_fit": 0.5700000000000001,
+            "relevance_hits": [
+              "llm"
+            ],
+            "format_hits": [
+              "how"
+            ]
+          },
+          "theme": "general",
+          "theme_hits": 0
+        },
+        {
+          "source": "hackernews",
+          "title": "Anthropic blocks users for anything touching training larger models",
+          "url": "https://twitter.com/jiahaoshao1/status/2116475922190922088",
+          "raw_score": 405.0,
+          "published": "2026-10-31T19:39:19Z",
+          "meta": {
+            "points": 405,
+            "comments": 227
+          },
+          "hash": "871b64957afa7c01",
+          "score": 0.4988,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.7051867911600869,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai"
+            ],
+            "format_hits": []
+          },
+          "theme": "general",
+          "theme_hits": 0
+        },
+        {
+          "source": "hackernews",
+          "title": "Proton's CEO Cancels AI 'Re-Interviews'",
+          "url": "https://www.404media.co/protons-ceo-cancels-ai-re-interviews/",
+          "raw_score": 291.0,
+          "published": "2026-10-30T17:24:45Z",
+          "meta": {
+            "points": 291,
+            "comments": 253
+          },
+          "hash": "0c6068499f92111c",
+          "score": 0.4891,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.6664895805582023,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai"
+            ],
+            "format_hits": []
+          },
+          "theme": "general",
+          "theme_hits": 0
+        },
+        {
+          "source": "hackernews",
+          "title": "Building an AI-native engineering org",
+          "url": "https://twitter.com/sgondala2/status/2115832070274723875",
+          "raw_score": 187.0,
+          "published": "2026-10-29T21:58:34Z",
+          "meta": {
+            "points": 187,
+            "comments": 197
+          },
+          "hash": "040a4fce4fe1e564",
+          "score": 0.4762,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.6147939701082997,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai"
+            ],
+            "format_hits": []
+          },
+          "theme": "general",
+          "theme_hits": 0
+        },
+        {
+          "source": "hackernews",
+          "title": "GPT-5.6 Sol can beat Factorio on peaceful mode",
+          "url": "https://ryanmadden.net/gpt-56-beats-factorio/",
+          "raw_score": 173.0,
+          "published": "2026-10-31T18:50:34Z",
+          "meta": {
+            "points": 173,
+            "comments": 186
+          },
+          "hash": "6412e9bfaddf3608",
+          "score": 0.4739,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.6057082484493418,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "gpt"
+            ],
+            "format_hits": []
+          },
+          "theme": "general",
+          "theme_hits": 0
+        },
+        {
+          "source": "hackernews",
+          "title": "Ask HN: Are you tired too in this AI era?",
+          "url": "https://news.ycombinator.com/item?id=50301479",
+          "raw_score": 148.0,
+          "published": "2026-10-30T09:17:43Z",
+          "meta": {
+            "points": 148,
+            "comments": 141
+          },
+          "hash": "5b51321e841929c6",
+          "score": 0.4694,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.5874973956511458,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai"
+            ],
+            "format_hits": []
+          },
+          "theme": "general",
+          "theme_hits": 0
+        },
+        {
+          "source": "hackernews",
+          "title": "Proton goes all in on using AI",
+          "url": "https://convo.casa/@b/117525936178835007",
+          "raw_score": 120.0,
+          "published": "2026-10-29T21:49:28Z",
+          "meta": {
+            "points": 120,
+            "comments": 117
+          },
+          "hash": "2a94db37269bb198",
+          "score": 0.4633,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.5630584909112296,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai"
+            ],
+            "format_hits": []
+          },
+          "theme": "general",
+          "theme_hits": 0
+        }
+      ],
+      "evidence": [
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: Mistral-Large-4-1T-A52B",
+          "url": "https://huggingface.co/mistralai/Mistral-Large-4-1T-A52B",
+          "raw_score": 1421.0,
+          "score": 0.7111,
+          "hits": [
+            "ai",
+            "llm",
+            "llama",
+            "mistral",
+            "transformer"
+          ]
+        },
+        {
+          "source": "google_trends_id",
+          "title": "Trending di Indonesia: paris fc vs paris saint-germain fc",
+          "url": "https://trends.google.com/trending/rss?geo=ID",
+          "raw_score": 200.0,
+          "score": 0.6837,
+          "hits": [
+            "ai"
+          ]
+        },
+        {
+          "source": "hackernews",
+          "title": "Show HN: A language model that lives in a boot sector",
+          "url": "https://github.com/kerlenton/bootgpt",
+          "raw_score": 87.0,
+          "score": 0.6594,
+          "hits": [
+            "language model"
+          ]
+        },
+        {
+          "source": "hackernews",
+          "title": "AI isn't replacing SREs, it's deskilling them",
+          "url": "https://newsletter.signoz.io/p/ai-isnt-replacing-sres-its-deskilling",
+          "raw_score": 655.0,
+          "score": 0.5129,
+          "hits": [
+            "ai"
+          ]
+        },
+        {
+          "source": "hackernews",
+          "title": "Memdoor: A team of 5 Qwen3.8-27B models beats Fable 5 on LiveCodeBench Hard",
+          "url": "https://github.com/guregodevo/memdoor/tree/main/examples/workflows/team-solve",
+          "raw_score": 306.0,
+          "score": 0.5086,
+          "hits": [
+            "qwen"
+          ]
+        },
+        {
+          "source": "hackernews",
+          "title": "Malware uses LLMs to rank victims by how much they're worth",
+          "url": "https://blog.talosintelligence.com/appraisal-by-ai-model-driven-victim-prioritization-in-the-volta-infostealer/",
+          "raw_score": 250.0,
+          "score": 0.5027,
+          "hits": [
+            "llm"
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "on_device",
+      "label": "AI yang bisa jalan di HP sendiri, tanpa internet",
+      "angle_hint": "Kenapa AI sekarang muat di kantong, dan apa batasnya",
+      "score": 0.8164,
+      "headline_signal": "wangzan101/Mika: An on-device AI agent for Android that operates apps and the web to get things done for you.",
+      "sources": [
+        "github",
+        "huggingface"
+      ],
+      "urls": [
+        "https://github.com/wici-ai/inferssd",
+        "https://huggingface.co/abenzerps/Qwen-Image-2.1-Uncensored-Quantized",
+        "https://github.com/wangzan101/Mika",
+        "https://github.com/divagr18/qwenputer",
+        "https://github.com/rddmwmddr/android-ad-cleaner",
+        "https://github.com/ccch1mneyyy/dsh-Go"
+      ],
+      "signals": [
+        {
+          "source": "github",
+          "title": "wici-ai/inferssd: Run models larger than your RAM or VRAM by streaming MoE experts from SSD. Built on llama.cpp.",
+          "url": "https://github.com/wici-ai/inferssd",
+          "raw_score": 191.0,
+          "published": "2026-10-22T10:40:45Z",
+          "meta": {
+            "stars": 191,
+            "topic": "llm",
+            "language": "C++"
+          },
+          "hash": "f93423007b594fcc",
+          "score": 0.7693,
+          "why": {
+            "relevance": 0.8500000000000001,
+            "momentum": 0.6172657838163341,
+            "novelty": 1.0,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "llama",
+              "moe"
+            ],
+            "format_hits": []
+          },
+          "theme": "on_device",
+          "theme_hits": 1
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: Qwen-Image-2.1-Uncensored-Quantized",
+          "url": "https://huggingface.co/abenzerps/Qwen-Image-2.1-Uncensored-Quantized",
+          "raw_score": 5447.0,
+          "published": "2026-09-20T15:51:13.000Z",
+          "meta": {
+            "likes": 5447,
+            "downloads": 2548468,
+            "tags": [
+              "gguf",
+              "qwen",
+              "image-generation",
+              "comfyui",
+              "comfyui-gguf",
+              "mlx",
+              "fp8",
+              "nvfp4",
+              "text-to-image",
+              "base_model:Qwen/Qwen-Image-2.1",
+              "base_model:quantized:Qwen/Qwen-Image-2.1",
+              "license:other"
+            ],
+            "pipeline": "text-to-image"
+          },
+          "hash": "fbb32700a270e88e",
+          "score": 0.6775,
+          "why": {
+            "relevance": 0.8500000000000001,
+            "momentum": 1.0,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "qwen",
+              "quantized"
+            ],
+            "format_hits": []
+          },
+          "theme": "on_device",
+          "theme_hits": 1
+        },
+        {
+          "source": "github",
+          "title": "wangzan101/Mika: An on-device AI agent for Android that operates apps and the web to get things done for you.",
+          "url": "https://github.com/wangzan101/Mika",
+          "raw_score": 3429.0,
+          "published": "2026-10-29T14:34:07Z",
+          "meta": {
+            "stars": 3429,
+            "topic": "ai-agent",
+            "language": "Kotlin"
+          },
+          "hash": "a94f98ff604448d3",
+          "score": 0.6664,
+          "why": {
+            "relevance": 0.8500000000000001,
+            "momentum": 0.9557285164991272,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "agent",
+              "on-device"
+            ],
+            "format_hits": []
+          },
+          "theme": "on_device",
+          "theme_hits": 2
+        },
+        {
+          "source": "github",
+          "title": "divagr18/qwenputer: A computer, compiled into the weights of a language model. An exact CPU inside Qwen3.5-4B, with Gated DeltaNet state as RAM.",
+          "url": "https://github.com/divagr18/qwenputer",
+          "raw_score": 420.0,
+          "published": "2026-10-19T11:48:10Z",
+          "meta": {
+            "stars": 420,
+            "topic": "llm",
+            "language": "Python"
+          },
+          "hash": "c220560b5a7beea5",
+          "score": 0.6229,
+          "why": {
+            "relevance": 0.8500000000000001,
+            "momentum": 0.7094462721245667,
+            "novelty": 0.25,
+            "format_fit": 0.5700000000000001,
+            "relevance_hits": [
+              "language model",
+              "qwen",
+              "weights"
+            ],
+            "format_hits": [
+              "4b"
+            ]
+          },
+          "theme": "on_device",
+          "theme_hits": 1
+        },
+        {
+          "source": "github",
+          "title": "rddmwmddr/android-ad-cleaner: 关掉国产安卓手机系统里的广告、热搜、资讯推荐和营销推送。不 root，可还原，支持 AI 智能体一键执行。",
+          "url": "https://github.com/rddmwmddr/android-ad-cleaner",
+          "raw_score": 5572.0,
+          "published": "2026-10-24T05:35:47Z",
+          "meta": {
+            "stars": 5572,
+            "topic": "ai-agent",
+            "language": "Python"
+          },
+          "hash": "d1dca091f59a82d2",
+          "score": 0.5725,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 1.0,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai"
+            ],
+            "format_hits": []
+          },
+          "theme": "on_device",
+          "theme_hits": 1
+        },
+        {
+          "source": "github",
+          "title": "ccch1mneyyy/dsh-Go: dsh-go — DeepSeek Harness 装进口袋：手机本机运行，也能遥控你的电脑。",
+          "url": "https://github.com/ccch1mneyyy/dsh-Go",
+          "raw_score": 4286.0,
+          "published": "2026-10-25T08:09:52Z",
+          "meta": {
+            "stars": 4286,
+            "topic": "ai-agent",
+            "language": "Dart"
+          },
+          "hash": "14d738332ce923ae",
+          "score": 0.568,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.9819133974773101,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "deepseek"
+            ],
+            "format_hits": []
+          },
+          "theme": "on_device",
+          "theme_hits": 1
+        },
+        {
+          "source": "github",
+          "title": "jackwener/DSH-Android: 免 ROOT 免 Termux，一个 APK 在安卓手机上跑 DeepSeek Harness。引擎内嵌 App 进程 · 读屏操作 App · 改系统设置 · 定时/条件自动化 · 可选 Shizuku",
+          "url": "https://github.com/jackwener/DSH-Android",
+          "raw_score": 681.0,
+          "published": "2026-10-27T19:26:12Z",
+          "meta": {
+            "stars": 681,
+            "topic": "ai-agent",
+            "language": "Kotlin"
+          },
+          "hash": "d00de515a74d23f7",
+          "score": 0.514,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.7660829465685525,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "deepseek"
+            ],
+            "format_hits": []
+          },
+          "theme": "on_device",
+          "theme_hits": 2
+        }
+      ],
+      "evidence": [
+        {
+          "source": "github",
+          "title": "wici-ai/inferssd: Run models larger than your RAM or VRAM by streaming MoE experts from SSD. Built on llama.cpp.",
+          "url": "https://github.com/wici-ai/inferssd",
+          "raw_score": 191.0,
+          "score": 0.7693,
+          "hits": [
+            "ai",
+            "llama",
+            "moe"
+          ]
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: Qwen-Image-2.1-Uncensored-Quantized",
+          "url": "https://huggingface.co/abenzerps/Qwen-Image-2.1-Uncensored-Quantized",
+          "raw_score": 5447.0,
+          "score": 0.6775,
+          "hits": [
+            "ai",
+            "qwen",
+            "quantized"
+          ]
+        },
+        {
+          "source": "github",
+          "title": "wangzan101/Mika: An on-device AI agent for Android that operates apps and the web to get things done for you.",
+          "url": "https://github.com/wangzan101/Mika",
+          "raw_score": 3429.0,
+          "score": 0.6664,
+          "hits": [
+            "ai",
+            "agent",
+            "on-device"
+          ]
+        },
+        {
+          "source": "github",
+          "title": "divagr18/qwenputer: A computer, compiled into the weights of a language model. An exact CPU inside Qwen3.5-4B, with Gated DeltaNet state as RAM.",
+          "url": "https://github.com/divagr18/qwenputer",
+          "raw_score": 420.0,
+          "score": 0.6229,
+          "hits": [
+            "language model",
+            "qwen",
+            "weights"
+          ]
+        },
+        {
+          "source": "github",
+          "title": "rddmwmddr/android-ad-cleaner: 关掉国产安卓手机系统里的广告、热搜、资讯推荐和营销推送。不 root，可还原，支持 AI 智能体一键执行。",
+          "url": "https://github.com/rddmwmddr/android-ad-cleaner",
+          "raw_score": 5572.0,
+          "score": 0.5725,
+          "hits": [
+            "ai"
+          ]
+        },
+        {
+          "source": "github",
+          "title": "ccch1mneyyy/dsh-Go: dsh-go — DeepSeek Harness 装进口袋：手机本机运行，也能遥控你的电脑。",
+          "url": "https://github.com/ccch1mneyyy/dsh-Go",
+          "raw_score": 4286.0,
+          "score": 0.568,
+          "hits": [
+            "deepseek"
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "small_models",
+      "label": "Model AI kecil yang makin pintar",
+      "angle_hint": "Kecil bukan berarti bodoh: kenapa model mungil sekarang dipakai serius",
+      "score": 0.8009,
+      "headline_signal": "h9-tec/ai-roadmap-2026: AI Roadmap 2026: a beginner's path through Foundations, LLM Engineering, Agents, Evaluation, and Production, with verified free resources and a mini-project",
+      "sources": [
+        "github",
+        "huggingface"
+      ],
+      "urls": [
+        "https://huggingface.co/XHToken/Spark-X2.6-4B",
+        "https://github.com/h9-tec/ai-roadmap-2026",
+        "https://huggingface.co/ccore/Qwen3.5-4B-3D-Coder",
+        "https://huggingface.co/LiquidAI/LFM3-1.7B"
+      ],
+      "signals": [
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: Spark-X2.6-4B",
+          "url": "https://huggingface.co/XHToken/Spark-X2.6-4B",
+          "raw_score": 944.0,
+          "published": "2026-10-19T03:19:51.000Z",
+          "meta": {
+            "likes": 944,
+            "downloads": 16707,
+            "tags": [
+              "transformers",
+              "safetensors",
+              "spark2_5",
+              "text-generation",
+              "llm",
+              "sparkx2_5",
+              "conversational",
+              "custom_code",
+              "en",
+              "zh",
+              "base_model:XHToken/Spark-X2.6-4B-Base",
+              "base_model:finetune:XHToken/Spark-X2.6-4B-Base"
+            ],
+            "pipeline": "text-generation"
+          },
+          "hash": "c0718f9c941bb7b0",
+          "score": 0.6991,
+          "why": {
+            "relevance": 1.0,
+            "momentum": 0.804375797806738,
+            "novelty": 0.25,
+            "format_fit": 0.5700000000000001,
+            "relevance_hits": [
+              "ai",
+              "llm",
+              "transformer",
+              "finetune",
+              "token"
+            ],
+            "format_hits": [
+              "4b"
+            ]
+          },
+          "theme": "small_models",
+          "theme_hits": 1
+        },
+        {
+          "source": "github",
+          "title": "h9-tec/ai-roadmap-2026: AI Roadmap 2026: a beginner's path through Foundations, LLM Engineering, Agents, Evaluation, and Production, with verified free resources and a mini-project",
+          "url": "https://github.com/h9-tec/ai-roadmap-2026",
+          "raw_score": 182.0,
+          "published": "2026-10-21T12:23:43Z",
+          "meta": {
+            "stars": 182,
+            "topic": "llm",
+            "language": null
+          },
+          "hash": "90994afeff4a0b7e",
+          "score": 0.6509,
+          "why": {
+            "relevance": 1.0,
+            "momentum": 0.6116291743255968,
+            "novelty": 0.25,
+            "format_fit": 0.5700000000000001,
+            "relevance_hits": [
+              "ai",
+              "llm",
+              "agent",
+              "agents"
+            ],
+            "format_hits": [
+              "free"
+            ]
+          },
+          "theme": "small_models",
+          "theme_hits": 2
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: Qwen3.5-4B-3D-Coder",
+          "url": "https://huggingface.co/ccore/Qwen3.5-4B-3D-Coder",
+          "raw_score": 443.0,
+          "published": "2026-10-25T05:43:34.000Z",
+          "meta": {
+            "likes": 443,
+            "downloads": 44825,
+            "tags": [
+              "safetensors",
+              "gguf",
+              "qwen3_5",
+              "code",
+              "threejs",
+              "3d",
+              "preview",
+              "dataset:ccore/ThreeJS-3D-Scenes",
+              "base_model:Qwen/Qwen3.5-4B",
+              "base_model:finetune:Qwen/Qwen3.5-4B",
+              "license:apache-2.0",
+              "endpoints_compatible"
+            ],
+            "pipeline": null
+          },
+          "hash": "5c97e30e71f3ed2f",
+          "score": 0.6244,
+          "why": {
+            "relevance": 0.8500000000000001,
+            "momentum": 0.715691343554207,
+            "novelty": 0.25,
+            "format_fit": 0.5700000000000001,
+            "relevance_hits": [
+              "ai",
+              "qwen",
+              "finetune"
+            ],
+            "format_hits": [
+              "4b"
+            ]
+          },
+          "theme": "small_models",
+          "theme_hits": 1
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: LFM3-1.7B",
+          "url": "https://huggingface.co/LiquidAI/LFM3-1.7B",
+          "raw_score": 659.0,
+          "published": "2026-10-23T21:35:42.000Z",
+          "meta": {
+            "likes": 659,
+            "downloads": 37568,
+            "tags": [
+              "transformers",
+              "safetensors",
+              "lfm3",
+              "text-generation",
+              "liquid",
+              "edge",
+              "conversational",
+              "custom_code",
+              "en",
+              "ar",
+              "zh",
+              "fr"
+            ],
+            "pipeline": "text-generation"
+          },
+          "hash": "388c2ee2a1096307",
+          "score": 0.6016,
+          "why": {
+            "relevance": 0.7000000000000001,
+            "momentum": 0.762233197923272,
+            "novelty": 0.25,
+            "format_fit": 0.69,
+            "relevance_hits": [
+              "ai",
+              "transformer"
+            ],
+            "format_hits": [
+              "1.7b",
+              "7b"
+            ]
+          },
+          "theme": "small_models",
+          "theme_hits": 1
+        }
+      ],
+      "evidence": [
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: Spark-X2.6-4B",
+          "url": "https://huggingface.co/XHToken/Spark-X2.6-4B",
+          "raw_score": 944.0,
+          "score": 0.6991,
+          "hits": [
+            "ai",
+            "llm",
+            "transformer",
+            "finetune",
+            "token"
+          ]
+        },
+        {
+          "source": "github",
+          "title": "h9-tec/ai-roadmap-2026: AI Roadmap 2026: a beginner's path through Foundations, LLM Engineering, Agents, Evaluation, and Production, with verified free resources and a mini-project",
+          "url": "https://github.com/h9-tec/ai-roadmap-2026",
+          "raw_score": 182.0,
+          "score": 0.6509,
+          "hits": [
+            "ai",
+            "llm",
+            "agent",
+            "agents"
+          ]
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: Qwen3.5-4B-3D-Coder",
+          "url": "https://huggingface.co/ccore/Qwen3.5-4B-3D-Coder",
+          "raw_score": 443.0,
+          "score": 0.6244,
+          "hits": [
+            "ai",
+            "qwen",
+            "finetune"
+          ]
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: LFM3-1.7B",
+          "url": "https://huggingface.co/LiquidAI/LFM3-1.7B",
+          "raw_score": 659.0,
+          "score": 0.6016,
+          "hits": [
+            "ai",
+            "transformer"
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "coding",
+      "label": "AI yang nulis kode dan ngerjain repo",
+      "angle_hint": "Batas nyata AI coding: apa yang aman diserahin, apa yang jangan",
+      "score": 0.7999,
+      "headline_signal": "jmanico/grim-prompter: Threat modeling for AI coding agents: point Claude Code, Codex or any agent at your repo and get an evidence-traced threat model. 36 architectures, 29 method",
+      "sources": [
+        "github",
+        "hackernews"
+      ],
+      "urls": [
+        "https://help.openai.com/en/articles/20001625-understanding-chatgpt-and-codex-usage-limits",
+        "https://github.com/jmanico/grim-prompter",
+        "https://github.com/helloianneo/ian-xhs-carousel",
+        "https://github.com/OpenDCAI/gugu",
+        "https://github.com/tavern-labs-ai/persona-ai-sdk"
+      ],
+      "signals": [
+        {
+          "source": "hackernews",
+          "title": "ChatGPT and Codex usage limits merging",
+          "url": "https://help.openai.com/en/articles/20001625-understanding-chatgpt-and-codex-usage-limits",
+          "raw_score": 190.0,
+          "published": "2026-10-31T21:49:07Z",
+          "meta": {
+            "points": 190,
+            "comments": 128
+          },
+          "hash": "f99c17eb2833659f",
+          "score": 0.6642,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.6166526920080712,
+            "novelty": 1.0,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "gpt"
+            ],
+            "format_hits": []
+          },
+          "theme": "coding",
+          "theme_hits": 1
+        },
+        {
+          "source": "github",
+          "title": "jmanico/grim-prompter: Threat modeling for AI coding agents: point Claude Code, Codex or any agent at your repo and get an evidence-traced threat model. 36 architectures, 29 method",
+          "url": "https://github.com/jmanico/grim-prompter",
+          "raw_score": 326.0,
+          "published": "2026-10-28T12:09:26Z",
+          "meta": {
+            "stars": 326,
+            "topic": "llm",
+            "language": null
+          },
+          "hash": "1e3bde18d38cb351",
+          "score": 0.6499,
+          "why": {
+            "relevance": 1.0,
+            "momentum": 0.6797807796787089,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "claude",
+              "agent",
+              "agents",
+              "coding agent"
+            ],
+            "format_hits": []
+          },
+          "theme": "coding",
+          "theme_hits": 3
+        },
+        {
+          "source": "github",
+          "title": "helloianneo/ian-xhs-carousel: 把文章、案例或笔记排成 3:4 小红书图文 | 1080×1440 | 20 个母版 | 浅色 / 深色 | Claude Code Skill",
+          "url": "https://github.com/helloianneo/ian-xhs-carousel",
+          "raw_score": 285.0,
+          "published": "2026-10-21T07:58:58Z",
+          "meta": {
+            "stars": 285,
+            "topic": "ai-agent",
+            "language": "HTML"
+          },
+          "hash": "d241be938a9b10ff",
+          "score": 0.4885,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.6640519812798106,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "claude"
+            ],
+            "format_hits": []
+          },
+          "theme": "coding",
+          "theme_hits": 1
+        },
+        {
+          "source": "github",
+          "title": "OpenDCAI/gugu: Gugu (咕咕): personal assistant, chat and device client — source release",
+          "url": "https://github.com/OpenDCAI/gugu",
+          "raw_score": 105.0,
+          "published": "2026-10-21T10:41:55Z",
+          "meta": {
+            "stars": 105,
+            "topic": "ai-agent",
+            "language": "TypeScript"
+          },
+          "hash": "52ebf6a20a672408",
+          "score": 0.4774,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.5475195285995221,
+            "novelty": 0.25,
+            "format_fit": 0.5700000000000001,
+            "relevance_hits": [
+              "ai"
+            ],
+            "format_hits": [
+              "release"
+            ]
+          },
+          "theme": "coding",
+          "theme_hits": 1
+        },
+        {
+          "source": "github",
+          "title": "tavern-labs-ai/persona-ai-sdk: Persona AI SDK: default personas, durable character memory, and Bedrock/OpenAI adapters in one package.",
+          "url": "https://github.com/tavern-labs-ai/persona-ai-sdk",
+          "raw_score": 192.0,
+          "published": "2026-10-31T14:29:10Z",
+          "meta": {
+            "stars": 192,
+            "topic": "llm",
+            "language": "TypeScript"
+          },
+          "hash": "cc4dbc23118389d3",
+          "score": 0.477,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.6178756907177245,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai"
+            ],
+            "format_hits": []
+          },
+          "theme": "coding",
+          "theme_hits": 1
+        }
+      ],
+      "evidence": [
+        {
+          "source": "hackernews",
+          "title": "ChatGPT and Codex usage limits merging",
+          "url": "https://help.openai.com/en/articles/20001625-understanding-chatgpt-and-codex-usage-limits",
+          "raw_score": 190.0,
+          "score": 0.6642,
+          "hits": [
+            "gpt"
+          ]
+        },
+        {
+          "source": "github",
+          "title": "jmanico/grim-prompter: Threat modeling for AI coding agents: point Claude Code, Codex or any agent at your repo and get an evidence-traced threat model. 36 architectures, 29 method",
+          "url": "https://github.com/jmanico/grim-prompter",
+          "raw_score": 326.0,
+          "score": 0.6499,
+          "hits": [
+            "ai",
+            "claude",
+            "agent",
+            "agents",
+            "coding agent"
+          ]
+        },
+        {
+          "source": "github",
+          "title": "helloianneo/ian-xhs-carousel: 把文章、案例或笔记排成 3:4 小红书图文 | 1080×1440 | 20 个母版 | 浅色 / 深色 | Claude Code Skill",
+          "url": "https://github.com/helloianneo/ian-xhs-carousel",
+          "raw_score": 285.0,
+          "score": 0.4885,
+          "hits": [
+            "claude"
+          ]
+        },
+        {
+          "source": "github",
+          "title": "OpenDCAI/gugu: Gugu (咕咕): personal assistant, chat and device client — source release",
+          "url": "https://github.com/OpenDCAI/gugu",
+          "raw_score": 105.0,
+          "score": 0.4774,
+          "hits": [
+            "ai"
+          ]
+        },
+        {
+          "source": "github",
+          "title": "tavern-labs-ai/persona-ai-sdk: Persona AI SDK: default personas, durable character memory, and Bedrock/OpenAI adapters in one package.",
+          "url": "https://github.com/tavern-labs-ai/persona-ai-sdk",
+          "raw_score": 192.0,
+          "score": 0.477,
+          "hits": [
+            "ai"
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "open_source",
+      "label": "Model open source yang ngejar ketat model tertutup",
+      "angle_hint": "Kenapa bobot model terbuka mengubah siapa yang bisa bikin AI",
+      "score": 0.7896,
+      "headline_signal": "Model AI baru: Nanbeige4.3-33B",
+      "sources": [
+        "huggingface"
+      ],
+      "urls": [
+        "https://huggingface.co/Nanbeige/Nanbeige4.3-33B",
+        "https://huggingface.co/Qwen/Qwen3.8-27B",
+        "https://huggingface.co/speridlabs/idol",
+        "https://huggingface.co/RecursiveSI/flint"
+      ],
+      "signals": [
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: Nanbeige4.3-33B",
+          "url": "https://huggingface.co/Nanbeige/Nanbeige4.3-33B",
+          "raw_score": 959.0,
+          "published": "2026-10-24T02:49:18.000Z",
+          "meta": {
+            "likes": 959,
+            "downloads": 15795,
+            "tags": [
+              "transformers",
+              "safetensors",
+              "llama",
+              "text-generation",
+              "llm",
+              "nanbeige",
+              "conversational",
+              "en",
+              "zh",
+              "base_model:Nanbeige/Nanbeige4.3-33B-Base",
+              "base_model:finetune:Nanbeige/Nanbeige4.3-33B-Base",
+              "license:apache-2.0"
+            ],
+            "pipeline": "text-generation"
+          },
+          "hash": "368613cea1659fc6",
+          "score": 0.6996,
+          "why": {
+            "relevance": 1.0,
+            "momentum": 0.8062247622317905,
+            "novelty": 0.25,
+            "format_fit": 0.5700000000000001,
+            "relevance_hits": [
+              "ai",
+              "llm",
+              "llama",
+              "transformer",
+              "finetune"
+            ],
+            "format_hits": [
+              "3b"
+            ]
+          },
+          "theme": "open_source",
+          "theme_hits": 1
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: Qwen3.8-27B",
+          "url": "https://huggingface.co/Qwen/Qwen3.8-27B",
+          "raw_score": 18892.0,
+          "published": "2026-08-05T08:22:59.000Z",
+          "meta": {
+            "likes": 18892,
+            "downloads": 7892866,
+            "tags": [
+              "transformers",
+              "safetensors",
+              "qwen3_5",
+              "image-text-to-text",
+              "conversational",
+              "license:apache-2.0",
+              "eval-results",
+              "endpoints_compatible",
+              "deploy:azure",
+              "deploy:sagemaker",
+              "region:us"
+            ],
+            "pipeline": "image-text-to-text"
+          },
+          "hash": "aac8817240f0b751",
+          "score": 0.6955,
+          "why": {
+            "relevance": 0.8500000000000001,
+            "momentum": 1.0,
+            "novelty": 0.25,
+            "format_fit": 0.5700000000000001,
+            "relevance_hits": [
+              "ai",
+              "qwen",
+              "transformer"
+            ],
+            "format_hits": [
+              "7b"
+            ]
+          },
+          "theme": "open_source",
+          "theme_hits": 1
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: idol",
+          "url": "https://huggingface.co/speridlabs/idol",
+          "raw_score": 262.0,
+          "published": "2026-10-28T15:55:17.000Z",
+          "meta": {
+            "likes": 262,
+            "downloads": 4194,
+            "tags": [
+              "idol",
+              "gaussian-splatting",
+              "3d",
+              "image-to-3d",
+              "license:apache-2.0",
+              "region:us"
+            ],
+            "pipeline": "image-to-3d"
+          },
+          "hash": "8a3c251c9d6d28ba",
+          "score": 0.6736,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.6542088547556747,
+            "novelty": 1.0,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai"
+            ],
+            "format_hits": []
+          },
+          "theme": "open_source",
+          "theme_hits": 1
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: flint",
+          "url": "https://huggingface.co/RecursiveSI/flint",
+          "raw_score": 1285.0,
+          "published": "2026-10-21T14:20:58.000Z",
+          "meta": {
+            "likes": 1285,
+            "downloads": 26703,
+            "tags": [
+              "transformers",
+              "safetensors",
+              "flint",
+              "text-generation",
+              "conversational",
+              "license:apache-2.0",
+              "endpoints_compatible",
+              "region:us"
+            ],
+            "pipeline": "text-generation"
+          },
+          "hash": "ee24badc6199e1ba",
+          "score": 0.5851,
+          "why": {
+            "relevance": 0.7000000000000001,
+            "momentum": 0.8405496565335736,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "transformer"
+            ],
+            "format_hits": []
+          },
+          "theme": "open_source",
+          "theme_hits": 1
+        }
+      ],
+      "evidence": [
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: Nanbeige4.3-33B",
+          "url": "https://huggingface.co/Nanbeige/Nanbeige4.3-33B",
+          "raw_score": 959.0,
+          "score": 0.6996,
+          "hits": [
+            "ai",
+            "llm",
+            "llama",
+            "transformer",
+            "finetune"
+          ]
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: Qwen3.8-27B",
+          "url": "https://huggingface.co/Qwen/Qwen3.8-27B",
+          "raw_score": 18892.0,
+          "score": 0.6955,
+          "hits": [
+            "ai",
+            "qwen",
+            "transformer"
+          ]
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: idol",
+          "url": "https://huggingface.co/speridlabs/idol",
+          "raw_score": 262.0,
+          "score": 0.6736,
+          "hits": [
+            "ai"
+          ]
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: flint",
+          "url": "https://huggingface.co/RecursiveSI/flint",
+          "raw_score": 1285.0,
+          "score": 0.5851,
+          "hits": [
+            "ai",
+            "transformer"
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "multimodal",
+      "label": "AI yang bisa lihat, dengar, dan bikin gambar",
+      "angle_hint": "Cara AI 'melihat' gambar, dijelaskan tanpa matematika",
+      "score": 0.775,
+      "headline_signal": "Model AI baru: LTX-2.5",
+      "sources": [
+        "hackernews",
+        "huggingface"
+      ],
+      "urls": [
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017",
+        "https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy",
+        "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B",
+        "https://huggingface.co/Lightricks/LTX-2.5",
+        "https://huggingface.co/baidu/Unlimited-OCR-2",
+        "https://martinfowler.com/bliki/LLM-Voice.html"
+      ],
+      "signals": [
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: DeepSeek-V4.1-Flash-1017",
+          "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017",
+          "raw_score": 4169.0,
+          "published": "2026-10-17T02:40:38.000Z",
+          "meta": {
+            "likes": 4169,
+            "downloads": 170353,
+            "tags": [
+              "transformers",
+              "safetensors",
+              "deepseek_v41",
+              "text-generation",
+              "image-text-to-text",
+              "license:mit",
+              "eval-results",
+              "endpoints_compatible",
+              "8-bit",
+              "fp8",
+              "deploy:azure",
+              "region:us"
+            ],
+            "pipeline": "image-text-to-text"
+          },
+          "hash": "3328af06a8a37bf0",
+          "score": 0.6722,
+          "why": {
+            "relevance": 0.8500000000000001,
+            "momentum": 0.9786646156906499,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "deepseek",
+              "transformer"
+            ],
+            "format_hits": []
+          },
+          "theme": "multimodal",
+          "theme_hits": 1
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: flux-3-image-klein-comfy",
+          "url": "https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy",
+          "raw_score": 2228.0,
+          "published": "2026-10-14T12:00:13.000Z",
+          "meta": {
+            "likes": 2228,
+            "downloads": 970633,
+            "tags": [
+              "diffusion-single-file",
+              "comfyui",
+              "image-generation",
+              "image-editing",
+              "flux",
+              "flux-3",
+              "black-forest-labs",
+              "image-to-image",
+              "en",
+              "base_model:black-forest-labs/flux-3-image-klein",
+              "base_model:finetune:black-forest-labs/flux-3-image-klein",
+              "license:other"
+            ],
+            "pipeline": "image-to-image"
+          },
+          "hash": "879c70aa6c539c00",
+          "score": 0.6538,
+          "why": {
+            "relevance": 0.8500000000000001,
+            "momentum": 0.9051253333303132,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "diffusion",
+              "finetune"
+            ],
+            "format_hits": []
+          },
+          "theme": "multimodal",
+          "theme_hits": 1
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: NVIDIA-Nemotron-3.5-Transcribe-30B-A4B",
+          "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B",
+          "raw_score": 573.0,
+          "published": "2026-10-07T22:50:21.000Z",
+          "meta": {
+            "likes": 573,
+            "downloads": 29364,
+            "tags": [
+              "nemo",
+              "safetensors",
+              "nemo_speechlm",
+              "text2text-generation",
+              "nvidia",
+              "pytorch",
+              "nemotron-3.5",
+              "speech",
+              "asr",
+              "speech-translation",
+              "speaker-diarization",
+              "audio"
+            ],
+            "pipeline": "automatic-speech-recognition"
+          },
+          "hash": "1401bcc881793ab5",
+          "score": 0.632,
+          "why": {
+            "relevance": 0.8500000000000001,
+            "momentum": 0.7458419810460961,
+            "novelty": 0.25,
+            "format_fit": 0.5700000000000001,
+            "relevance_hits": [
+              "ai",
+              "nemotron",
+              "speech"
+            ],
+            "format_hits": [
+              "4b"
+            ]
+          },
+          "theme": "multimodal",
+          "theme_hits": 1
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: LTX-2.5",
+          "url": "https://huggingface.co/Lightricks/LTX-2.5",
+          "raw_score": 10147.0,
+          "published": "2026-07-23T07:55:24.000Z",
+          "meta": {
+            "likes": 10147,
+            "downloads": 2431846,
+            "tags": [
+              "diffusion-single-file",
+              "image-to-video",
+              "text-to-video",
+              "video-to-video",
+              "image-text-to-video",
+              "audio-to-video",
+              "text-to-audio",
+              "video-to-audio",
+              "audio-to-audio",
+              "text-to-audio-video",
+              "image-to-audio-video",
+              "image-text-to-audio-video"
+            ],
+            "pipeline": "image-to-video"
+          },
+          "hash": "1062cba05404ffc4",
+          "score": 0.625,
+          "why": {
+            "relevance": 0.7000000000000001,
+            "momentum": 1.0,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "diffusion"
+            ],
+            "format_hits": []
+          },
+          "theme": "multimodal",
+          "theme_hits": 4
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: Unlimited-OCR-2",
+          "url": "https://huggingface.co/baidu/Unlimited-OCR-2",
+          "raw_score": 496.0,
+          "published": "2026-10-26T03:57:46.000Z",
+          "meta": {
+            "likes": 496,
+            "downloads": 109519,
+            "tags": [
+              "transformers",
+              "safetensors",
+              "unlimited-ocr",
+              "feature-extraction",
+              "baidu",
+              "vision-language",
+              "ocr",
+              "custom_code",
+              "image-text-to-text",
+              "multilingual",
+              "arxiv:2606.23050",
+              "license:mit"
+            ],
+            "pipeline": "image-text-to-text"
+          },
+          "hash": "cdd6adc2be0bdf81",
+          "score": 0.5572,
+          "why": {
+            "relevance": 0.7000000000000001,
+            "momentum": 0.7289307774273319,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "transformer"
+            ],
+            "format_hits": []
+          },
+          "theme": "multimodal",
+          "theme_hits": 1
+        },
+        {
+          "source": "hackernews",
+          "title": "LLM Voice",
+          "url": "https://martinfowler.com/bliki/LLM-Voice.html",
+          "raw_score": 605.0,
+          "published": "2026-10-29T14:57:55Z",
+          "meta": {
+            "points": 605,
+            "comments": 335
+          },
+          "hash": "07a6add8e48126f8",
+          "score": 0.5106,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.7522113699727212,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "llm"
+            ],
+            "format_hits": []
+          },
+          "theme": "multimodal",
+          "theme_hits": 1
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: Pika-H3-Flex",
+          "url": "https://huggingface.co/Pika-Labs/Pika-H3-Flex",
+          "raw_score": 289.0,
+          "published": "2026-10-29T17:08:44.000Z",
+          "meta": {
+            "likes": 289,
+            "downloads": 404,
+            "tags": [
+              "diffusers",
+              "safetensors",
+              "video-generation",
+              "audio-video-generation",
+              "lora",
+              "image-to-video",
+              "base_model:MiniMaxAI/MiniMax-H3",
+              "base_model:adapter:MiniMaxAI/MiniMax-H3",
+              "license:other",
+              "region:us"
+            ],
+            "pipeline": "image-to-video"
+          },
+          "hash": "3f90e2aac77fbb4e",
+          "score": 0.4889,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.6656826576946641,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai"
+            ],
+            "format_hits": []
+          },
+          "theme": "multimodal",
+          "theme_hits": 3
+        }
+      ],
+      "evidence": [
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: DeepSeek-V4.1-Flash-1017",
+          "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017",
+          "raw_score": 4169.0,
+          "score": 0.6722,
+          "hits": [
+            "ai",
+            "deepseek",
+            "transformer"
+          ]
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: flux-3-image-klein-comfy",
+          "url": "https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy",
+          "raw_score": 2228.0,
+          "score": 0.6538,
+          "hits": [
+            "ai",
+            "diffusion",
+            "finetune"
+          ]
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: NVIDIA-Nemotron-3.5-Transcribe-30B-A4B",
+          "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B",
+          "raw_score": 573.0,
+          "score": 0.632,
+          "hits": [
+            "ai",
+            "nemotron",
+            "speech"
+          ]
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: LTX-2.5",
+          "url": "https://huggingface.co/Lightricks/LTX-2.5",
+          "raw_score": 10147.0,
+          "score": 0.625,
+          "hits": [
+            "ai",
+            "diffusion"
+          ]
+        },
+        {
+          "source": "huggingface",
+          "title": "Model AI baru: Unlimited-OCR-2",
+          "url": "https://huggingface.co/baidu/Unlimited-OCR-2",
+          "raw_score": 496.0,
+          "score": 0.5572,
+          "hits": [
+            "ai",
+            "transformer"
+          ]
+        },
+        {
+          "source": "hackernews",
+          "title": "LLM Voice",
+          "url": "https://martinfowler.com/bliki/LLM-Voice.html",
+          "raw_score": 605.0,
+          "score": 0.5106,
+          "hits": [
+            "llm"
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "cost",
+      "label": "Harga AI yang jatuh dan siapa yang untung",
+      "angle_hint": "Kenapa biaya AI turun cepat, dan gimana itu dipakai bisnis",
+      "score": 0.7492,
+      "headline_signal": "lwh0630/TokenBar: Open-source, cross-platform AI quota monitor (Codex, Claude, Cursor and 47 more). Windows, macOS, Linux, Android and iOS. Built with Flutter.",
+      "sources": [
+        "github",
+        "hackernews"
+      ],
+      "urls": [
+        "https://nolanlawson.com/2026/10/28/the-ai-cost-of-javascript-frameworks/",
+        "https://github.com/lwh0630/TokenBar",
+        "https://fortune.com/2026/10/30/cisco-president-jeetu-patel-gen-z-27-year-old-unlimited-ai-tokens-rewrite-legacy-code-entry-level-jobs/",
+        "https://www.bbc.co.uk/news/articles/cvwy72e0n72yo",
+        "https://www.wsj.com/tech/ai/openai-raises-less-than-half-of-30-billion-target-in-latest-round-91aecdc5"
+      ],
+      "signals": [
+        {
+          "source": "hackernews",
+          "title": "The AI cost of JavaScript frameworks",
+          "url": "https://nolanlawson.com/2026/10/28/the-ai-cost-of-javascript-frameworks/",
+          "raw_score": 154.0,
+          "published": "2026-11-01T06:06:19Z",
+          "meta": {
+            "points": 154,
+            "comments": 104
+          },
+          "hash": "2844dd06fa236e92",
+          "score": 0.658,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.5921324770873607,
+            "novelty": 1.0,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai"
+            ],
+            "format_hits": []
+          },
+          "theme": "cost",
+          "theme_hits": 1
+        },
+        {
+          "source": "github",
+          "title": "lwh0630/TokenBar: Open-source, cross-platform AI quota monitor (Codex, Claude, Cursor and 47 more). Windows, macOS, Linux, Android and iOS. Built with Flutter.",
+          "url": "https://github.com/lwh0630/TokenBar",
+          "raw_score": 187.0,
+          "published": "2026-10-24T07:30:31Z",
+          "meta": {
+            "stars": 187,
+            "topic": "llm",
+            "language": "Dart"
+          },
+          "hash": "293ea5b61c67bfaa",
+          "score": 0.5992,
+          "why": {
+            "relevance": 0.8500000000000001,
+            "momentum": 0.6147939701082997,
+            "novelty": 0.25,
+            "format_fit": 0.5700000000000001,
+            "relevance_hits": [
+              "ai",
+              "claude",
+              "token"
+            ],
+            "format_hits": [
+              "open-source"
+            ]
+          },
+          "theme": "cost",
+          "theme_hits": 2
+        },
+        {
+          "source": "hackernews",
+          "title": "Cisco gives engineer unlimited AI tokens to rewrite legacy code",
+          "url": "https://fortune.com/2026/10/30/cisco-president-jeetu-patel-gen-z-27-year-old-unlimited-ai-tokens-rewrite-legacy-code-entry-level-jobs/",
+          "raw_score": 310.0,
+          "published": "2026-10-30T14:08:20Z",
+          "meta": {
+            "points": 310,
+            "comments": 382
+          },
+          "hash": "84181bcd87e44091",
+          "score": 0.596,
+          "why": {
+            "relevance": 0.8500000000000001,
+            "momentum": 0.6738908016410199,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai",
+              "token",
+              "tokens"
+            ],
+            "format_hits": []
+          },
+          "theme": "cost",
+          "theme_hits": 1
+        },
+        {
+          "source": "hackernews",
+          "title": "US tech stocks see sharp falls over AI cost fears",
+          "url": "https://www.bbc.co.uk/news/articles/cvwy72e0n72yo",
+          "raw_score": 267.0,
+          "published": "2026-10-30T16:13:02Z",
+          "meta": {
+            "points": 267,
+            "comments": 298
+          },
+          "hash": "0ad8bbdffaefc4b9",
+          "score": 0.4866,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.6564199712268842,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai"
+            ],
+            "format_hits": []
+          },
+          "theme": "cost",
+          "theme_hits": 1
+        },
+        {
+          "source": "hackernews",
+          "title": "OpenAI raises less than half of $30B target",
+          "url": "https://www.wsj.com/tech/ai/openai-raises-less-than-half-of-30-billion-target-in-latest-round-91aecdc5",
+          "raw_score": 184.0,
+          "published": "2026-10-31T03:22:44Z",
+          "meta": {
+            "points": 184,
+            "comments": 195
+          },
+          "hash": "77d3860248ad0caf",
+          "score": 0.4757,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.6129053479174628,
+            "novelty": 0.25,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai"
+            ],
+            "format_hits": []
+          },
+          "theme": "cost",
+          "theme_hits": 1
+        }
+      ],
+      "evidence": [
+        {
+          "source": "hackernews",
+          "title": "The AI cost of JavaScript frameworks",
+          "url": "https://nolanlawson.com/2026/10/28/the-ai-cost-of-javascript-frameworks/",
+          "raw_score": 154.0,
+          "score": 0.658,
+          "hits": [
+            "ai"
+          ]
+        },
+        {
+          "source": "github",
+          "title": "lwh0630/TokenBar: Open-source, cross-platform AI quota monitor (Codex, Claude, Cursor and 47 more). Windows, macOS, Linux, Android and iOS. Built with Flutter.",
+          "url": "https://github.com/lwh0630/TokenBar",
+          "raw_score": 187.0,
+          "score": 0.5992,
+          "hits": [
+            "ai",
+            "claude",
+            "token"
+          ]
+        },
+        {
+          "source": "hackernews",
+          "title": "Cisco gives engineer unlimited AI tokens to rewrite legacy code",
+          "url": "https://fortune.com/2026/10/30/cisco-president-jeetu-patel-gen-z-27-year-old-unlimited-ai-tokens-rewrite-legacy-code-entry-level-jobs/",
+          "raw_score": 310.0,
+          "score": 0.596,
+          "hits": [
+            "ai",
+            "token",
+            "tokens"
+          ]
+        },
+        {
+          "source": "hackernews",
+          "title": "US tech stocks see sharp falls over AI cost fears",
+          "url": "https://www.bbc.co.uk/news/articles/cvwy72e0n72yo",
+          "raw_score": 267.0,
+          "score": 0.4866,
+          "hits": [
+            "ai"
+          ]
+        },
+        {
+          "source": "hackernews",
+          "title": "OpenAI raises less than half of $30B target",
+          "url": "https://www.wsj.com/tech/ai/openai-raises-less-than-half-of-30-billion-target-in-latest-round-91aecdc5",
+          "raw_score": 184.0,
+          "score": 0.4757,
+          "hits": [
+            "ai"
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "safety",
+      "label": "Keamanan, privasi, dan aturan main AI",
+      "angle_hint": "Risiko nyata AI yang jarang dibahas media, dan cara menutupnya",
+      "score": 0.6505,
+      "headline_signal": "Leaking Secrets from Air-Gap Computers by Spelling Radio Signals from RAM (2024)",
+      "sources": [
+        "hackernews"
+      ],
+      "urls": [
+        "https://arxiv.org/abs/2409.02292"
+      ],
+      "signals": [
+        {
+          "source": "hackernews",
+          "title": "Leaking Secrets from Air-Gap Computers by Spelling Radio Signals from RAM (2024)",
+          "url": "https://arxiv.org/abs/2409.02292",
+          "raw_score": 119.0,
+          "published": "2026-11-01T01:46:29Z",
+          "meta": {
+            "points": 119,
+            "comments": 62
+          },
+          "hash": "e137b398992ed0e2",
+          "score": 0.6505,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.5620841549086905,
+            "novelty": 1.0,
+            "format_fit": 0.45,
+            "relevance_hits": [
+              "ai"
+            ],
+            "format_hits": []
+          },
+          "theme": "safety",
+          "theme_hits": 1
+        }
+      ],
+      "evidence": [
+        {
+          "source": "hackernews",
+          "title": "Leaking Secrets from Air-Gap Computers by Spelling Radio Signals from RAM (2024)",
+          "url": "https://arxiv.org/abs/2409.02292",
+          "raw_score": 119.0,
+          "score": 0.6505,
+          "hits": [
+            "ai"
+          ]
+        }
+      ]
+    },
+    {
+      "theme": "reasoning",
+      "label": "Model yang 'mikir dulu' sebelum jawab",
+      "angle_hint": "Apa yang sebenarnya terjadi saat AI 'berpikir', dan kapan itu sia-sia",
+      "score": 0.5124,
+      "headline_signal": "Do the math: How we took over ChatGPT accounts",
+      "sources": [
+        "hackernews"
+      ],
+      "urls": [
+        "https://www.parameter.ai/labs/we-found-a-gap-at-openai"
+      ],
+      "signals": [
+        {
+          "source": "hackernews",
+          "title": "Do the math: How we took over ChatGPT accounts",
+          "url": "https://www.parameter.ai/labs/we-found-a-gap-at-openai",
+          "raw_score": 349.0,
+          "published": "2026-10-31T10:30:11Z",
+          "meta": {
+            "points": 349,
+            "comments": 169
+          },
+          "hash": "c92e85bb8d1d8c8a",
+          "score": 0.5124,
+          "why": {
+            "relevance": 0.55,
+            "momentum": 0.6877612711528253,
+            "novelty": 0.25,
+            "format_fit": 0.5700000000000001,
+            "relevance_hits": [
+              "gpt"
+            ],
+            "format_hits": [
+              "how"
+            ]
+          },
+          "theme": "reasoning",
+          "theme_hits": 1
+        }
+      ],
+      "evidence": [
+        {
+          "source": "hackernews",
+          "title": "Do the math: How we took over ChatGPT accounts",
+          "url": "https://www.parameter.ai/labs/we-found-a-gap-at-openai",
+          "raw_score": 349.0,
+          "score": 0.5124,
+          "hits": [
+            "gpt"
+          ]
+        }
+      ]
+    }
+  ]
+}

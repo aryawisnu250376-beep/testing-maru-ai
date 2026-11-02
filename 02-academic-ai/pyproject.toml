@@ -1,0 +1,21 @@
+# Standar gaya kode + lint Academic AI (Python 3.11+).
+# Rapikan: .venv/bin/ruff check --fix . ; .venv/bin/ruff format .
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "RUF", "S"]
+ignore = [
+    "E501", # Panjang baris diatur formatter (line-length 100), bukan linter.
+    "B008", # Positif-palsu: File(...) pada default arg adalah pola standar FastAPI.
+    "S101", # assert adalah idiom pytest di tests/.
+    # CATATAN: BLE (blind-except) dan TRY sengaja TIDAK dipilih. except-luas di project ini
+    # disengaja dan selalu mencatat log agar bot/web terdegradasi graceful, bukan crash.
+    # TRY004 (minta TypeError) juga tidak dipakai karena ValueError dipetakan ke HTTP 422
+    # dan pesan user; menggantinya akan merusak kontrak error tersebut.
+]
+
+[tool.ruff.lint.per-file-ignores]
+# tests memakai kredensial dummy + subprocess node oleh desain fixture.
+"tests/**" = ["S104", "S105", "S106", "S603"]

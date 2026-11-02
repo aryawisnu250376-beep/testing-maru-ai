@@ -1,0 +1,11 @@
+{
+  "_komentar": "Contoh instance MausBot/OpenMausBot. Salin ke ~/.openmausbot/config.json. MausBot hanya menampilkan & menerima keputusan; tidak mengarang konten.",
+  "instances": {
+    "penyusun": {
+      "driver": "openai-compat",
+      "displayName": "Penyusun (Hermes)",
+      "environment": { "ROUTER_API_KEY": "ISI_DI_ENV_JANGAN_DI_SINI" },
+      "config": { "url": "http://localhost:20128/v1", "apiKeyEnv": "ROUTER_API_KEY", "model": "ISI_DARI_DASHBOARD" }
+    }
+  }
+}

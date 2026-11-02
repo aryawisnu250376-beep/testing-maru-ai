@@ -1,0 +1,123 @@
+{
+  "name": "Academic AI - Auto Ingest Folder",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "C:\\academic_ai\\inbox",
+        "options": {}
+      },
+      "id": "file-ingest-001",
+      "name": "Pantau Folder Inbox",
+      "type": "n8n-nodes-base.localFileTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const item = $input.first();\nconst bin = (item.binary && item.binary.data) || {};\nconst fullPath = item.json.filepath || item.json.path || bin.fileName || '';\nconst parts = String(fullPath).replace(/\\\\/g, '/').split('/');\nconst parent = (parts.length > 1 ? parts[parts.length - 2] : '').toUpperCase();\nconst known = ['PP', 'PA', 'BING', 'PR', 'ILKOM', 'KAP', 'DJ'];\nreturn [{ json: { subject_code: known.includes(parent) ? parent : 'PP' }, binary: item.binary, pairedItem: { item: 0 } }];"
+      },
+      "id": "code-ingest-001",
+      "name": "Tentukan Matkul",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8765/api/materials",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer GANTI_DENGAN_LOCAL_API_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "specifyBody": "multipart-form-data",
+        "multipartBody": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            },
+            {
+              "parameterType": "formData",
+              "name": "subject_code",
+              "value": "={{ $json.subject_code }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "http-ingest-001",
+      "name": "Upload Materi",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "GANTI_DENGAN_CHAT_ID",
+        "text": "={{ '✅ Materi masuk: ' + $json.original_name + '\\nHalaman: ' + $json.page_count + ' | Chunk: ' + $json.chunk_count }}",
+        "additionalFields": {
+          "disable_web_page_preview": true
+        }
+      },
+      "id": "tg-ingest-001",
+      "name": "Kirim Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Pantau Folder Inbox": {
+      "main": [
+        [
+          {
+            "node": "Tentukan Matkul",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tentukan Matkul": {
+      "main": [
+        [
+          {
+            "node": "Upload Materi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Materi": {
+      "main": [
+        [
+          {
+            "node": "Kirim Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Jakarta"
+  },
+  "pinData": {}
+}

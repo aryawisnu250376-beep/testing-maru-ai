@@ -1,0 +1,39 @@
+{
+  "subjects": [
+    {
+      "code": "BING",
+      "name": "Bahasa Inggris",
+      "directory": "bing"
+    },
+    {
+      "code": "DJ",
+      "name": "Dasar Jurnalistik",
+      "directory": "dj"
+    },
+    {
+      "code": "ILKOM",
+      "name": "Pengantar Ilmu Komunikasi",
+      "directory": "ilkom"
+    },
+    {
+      "code": "KAP",
+      "name": "Komunikasi Antarpribadi",
+      "directory": "kap"
+    },
+    {
+      "code": "PA",
+      "name": "Pendidikan Adab",
+      "directory": "pa"
+    },
+    {
+      "code": "PP",
+      "name": "Pendidikan Pancasila",
+      "directory": "pp"
+    },
+    {
+      "code": "PR",
+      "name": "Dasar Public Relations",
+      "directory": "pr"
+    }
+  ]
+}

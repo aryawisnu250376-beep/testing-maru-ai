@@ -1,0 +1,84 @@
+name: Produksi Harian
+
+# Menyiapkan 1 episode baru setiap pagi, lalu MENUNGGU ACC manusia.
+# Render tidak dijalankan di sini — itu terjadi setelah kamu approve.
+#
+# Secret opsional (Settings -> Secrets):
+#   LLM_BASE_URL, LLM_API_KEY, LLM_MODEL      -> kualitas script naik
+#   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID      -> ACC langsung dari HP
+#   YOUTUBE_API_KEY                           -> sinyal trend tambahan
+#   GITHUB_TOKEN                              -> otomatis tersedia
+
+on:
+  schedule:
+    - cron: "0 0 * * *"   # 07:00 WIB
+  workflow_dispatch:
+    inputs:
+      theme:
+        description: "id tema (kosongkan untuk tema teratas)"
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: pip install -r requirements.txt
+
+      - name: Pindai trend
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python -m src.cli scan
+
+      - name: Tulis script
+        id: script
+        env:
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+        run: |
+          python -m src.cli script ${{ inputs.theme && format('--theme {0}', inputs.theme) || '' }} --json \
+            | tail -1 > /tmp/out.json
+          python -c "
+          import json
+          d=json.load(open('/tmp/out.json'))
+          print('EPISODE_ID='+d['episode_id'])
+          print('VALID='+str(d['validation']['ok']))
+          " >> "$GITHUB_OUTPUT"
+          cat /tmp/out.json | python -c "import json,sys; d=json.load(sys.stdin); print(d['script']['title'])"
+
+      - name: Kirim untuk ACC (Telegram kalau secret tersedia)
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m src.cli approve ${{ steps.script.outputs.EPISODE_ID }}
+
+      - name: Simpan artefak (script + laporan trend)
+        uses: actions/upload-artifact@v4
+        with:
+          name: episode-${{ steps.script.outputs.EPISODE_ID }}
+          path: |
+            out/${{ steps.script.outputs.EPISODE_ID }}/
+            data/last_trend_report.json
+          retention-days: 14
+
+      - name: Ringkasan
+        run: |
+          echo "### Episode siap direview" >> "$GITHUB_STEP_SUMMARY"
+          echo "- id: \`${{ steps.script.outputs.EPISODE_ID }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- validasi: ${{ steps.script.outputs.VALID }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "ACC lewat Telegram, atau ambil artefak lalu jalankan:" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "python -m src.cli approve ${{ steps.script.outputs.EPISODE_ID }}" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"

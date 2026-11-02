@@ -1,0 +1,70 @@
+# Config Hermes Agent (NousResearch/hermes-agent)
+# Salin ke ~/.hermes/config.yaml, lalu sesuaikan path.
+#
+# Integrasi memakai MCP, bukan shell bebas:
+#   - agent tahu skema parameter tiap tool
+#   - izin bisa diatur per-tool
+#   - hasil terstruktur (JSON), bukan teks yang harus diparse ulang
+
+agent:
+  name: "produser-konten"
+  system_prompt_file: "./skills/konten-ai/SKILL.md"
+
+mcp_servers:
+  konten-ai:
+    command: "python"
+    args: ["-m", "src.mcp_server"]
+    cwd: "/home/user/ai-edukasi-agent"
+    env:
+      LLM_BASE_URL: "${LLM_BASE_URL}"          # opsional
+      LLM_API_KEY: "${LLM_API_KEY}"            # opsional
+      LLM_MODEL: "${LLM_MODEL}"                # opsional
+      TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN}"
+      TELEGRAM_CHAT_ID: "${TELEGRAM_CHAT_ID}"
+
+# Model: 9Router (banyak provider, ada tier gratis) + fallback Ollama lokal
+providers:
+  - id: "9router"
+    type: "openai-compatible"
+    base_url: "http://localhost:20128/v1"
+    api_key_env: "NINE_ROUTER_KEY"
+    model: "glm/glm-4.6"
+    model_map:
+      strong: "kr/claude-sonnet-4.5"    # nulis script
+      cheap:  "glm/glm-4.6"             # klasifikasi trend
+      qc:     "glm/glm-4.6"             # fact-check
+
+  - id: "ollama-local"
+    type: "openai-compatible"
+    base_url: "http://localhost:11434/v1"
+    api_key: "ollama"
+    model: "qwen2.5:3b"
+
+tools:
+  shell:
+    enabled: false      # semua akses lewat MCP, bukan shell bebas
+
+approvals:
+  mode: "smart"         # manual | smart | off
+  require_confirmation:
+    - "publish_video"   # aksi yang menyentuh dunia luar
+  auto_approve:
+    - "scan_trends"
+    - "qc_video"
+    - "learning_report"
+    - "list_episodes"
+
+schedule:
+  - cron: "0 7 * * *"
+    prompt: "Ritme pagi: scan_trends, pilih tema terbaik, write_script, request_approval."
+  - cron: "0 16 * * *"
+    prompt: "Scan sore: kalau ada tema baru skor >0.85, usulkan ke user (jangan langsung tulis script)."
+  - cron: "0 9 * * *"
+    prompt: "Cek metrik episode yang tayang H+1 dan H+3, record_metrics, lalu learning_report. Laporkan satu insight saja."
+
+gateway:
+  telegram:
+    enabled: true
+    bot_token_env: "TELEGRAM_BOT_TOKEN"
+    allowed_chat_ids_env: "TELEGRAM_CHAT_ID"
+  workspace: "/home/user/ai-edukasi-agent"

@@ -1,0 +1,88 @@
+{
+  "title": "Kenapa AI sekarang bisa jalan di HP tanpa internet",
+  "format": "satu_konsep",
+  "theme": "on_device",
+  "generator": "llm_simulated_for_demo",
+  "hook": "AI paling berguna tahun ini nggak ada di server.",
+  "beats": [
+    {
+      "kind": "hook",
+      "narration": "AI yang paling berguna tahun ini, mungkin bukan yang di server besar. Tapi yang muat di HP kamu.",
+      "headline": "Bukan di server",
+      "body": "AI paling berguna tahun ini justru muat di HP kamu.",
+      "source_refs": []
+    },
+    {
+      "kind": "point",
+      "narration": "Minggu ini di GitHub, proyek yang bikin AI jalan di Android naik ribuan bintang. Di Hugging Face, model 1,7 miliar parameter lagi trending.",
+      "headline": "Buktinya ada",
+      "body": "Proyek AI on-device naik ribuan bintang di GitHub. Model 1,7B masuk trending Hugging Face.",
+      "source_refs": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "kind": "point",
+      "narration": "Kok bisa? Ukurannya dipadatkan lewat kuantisasi: 16 bit jadi 4 bit, turun empat kali. Plus model kecil sekarang dilatih lebih pintar.",
+      "headline": "Kok bisa kecil?",
+      "body": "Kuantisasi 4-bit bikin ukuran turun ~4x. Model kecil juga makin pintar, bukan cuma makin besar.",
+      "source_refs": [
+        2
+      ]
+    },
+    {
+      "kind": "point",
+      "narration": "Bayangin kayak bawa kamera saku, bukan studio foto. Nggak sehebat studio, tapi bisa dipakai di mana aja, kapan aja.",
+      "headline": "Analogi simpel",
+      "body": "Kamera saku, bukan studio foto. Nggak sehebat, tapi selalu ada di kantong.",
+      "source_refs": []
+    },
+    {
+      "kind": "point",
+      "narration": "Artinya buat kamu: datanya nggak keluar dari HP, nggak bayar langganan API, dan tetap jalan waktu sinyal hilang.",
+      "headline": "Kenapa penting",
+      "body": "Privasi lebih aman, biaya nol, dan tetap jalan tanpa internet.",
+      "source_refs": []
+    },
+    {
+      "kind": "limit",
+      "narration": "Tapi jujur, batasnya nyata. Model sekecil ini masih gampang salah kalau disuruh nalar panjang. Buat ringkas dokumen: cukup. Buat keputusan penting: jangan.",
+      "headline": "Batasnya nyata",
+      "body": "Lemah di penalaran panjang. Cukup buat chat & ringkas, jangan buat keputusan penting.",
+      "source_refs": [
+        2
+      ]
+    },
+    {
+      "kind": "cta",
+      "narration": "Kalau kamu mau satu konsep AI dijelasin tiap hari dalam satu menit, follow dulu.",
+      "headline": "Satu konsep. Satu menit.",
+      "body": "Follow buat satu konsep AI tiap hari.",
+      "source_refs": []
+    }
+  ],
+  "caption": "AI 1,7 miliar parameter sekarang bisa jalan di HP, tanpa internet. Tapi ada batasnya yang jarang dibahas. Kamu bakal pakai AI offline buat apa?",
+  "hashtags": [
+    "#AI",
+    "#belajarAI",
+    "#teknologi",
+    "#AIindonesia",
+    "#techtok"
+  ],
+  "sources": [
+    {
+      "title": "wangzan101/Mika — on-device AI agent for Android",
+      "url": "https://github.com/wangzan101/Mika"
+    },
+    {
+      "title": "ccch1mneyyy/dsh-Go — DeepSeek harness that runs on your phone",
+      "url": "https://github.com/ccch1mneyyy/dsh-Go"
+    },
+    {
+      "title": "LiquidAI/LFM3-1.7B — trending model on Hugging Face",
+      "url": "https://huggingface.co/LiquidAI/LFM3-1.7B"
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+# ============================================================
+#  Konfigurasi pipeline — semua nilai di sini default $0
+# ============================================================
+
+brand:
+  name: "AI DALAM 60 DETIK"
+  handle: "@aipelan60"
+  language: "id"
+  niche: "edukasi AI praktis untuk orang Indonesia"
+
+video:
+  width: 1080
+  height: 1920
+  fps: 24
+  crf: 24
+  max_duration_sec: 62
+  style: "story2d"             # story2d | motion (legacy)
+  voice: "id-ID-ArdiNeural"    # alternatif: id-ID-GadisNeural
+  rate: "+8%"                 # sedikit lebih cepat = retensi lebih baik
+  tail_padding_sec: 0.35       # jeda napas di akhir tiap scene
+  safe_top: 240                # area aman TikTok (px)
+  safe_bottom: 1620
+  # pillow = cepat & ringan | manim = animasi diagram | auto = campuran
+  animator: "pillow"
+  music: true                  # musik latar disintesis sendiri (bebas royalti)
+  music_style: null            # tech | calm | curious (null = otomatis dari tema)
+  music_db: -12.0              # dB di bawah narasi (~18 dB; -23 = nyaris tak terdengar)
+  sfx: true                    # whoosh/pop di transisi
+  caption_words: 6
+  caption_style: "box"         # box | word (legacy)
+  allow_silent_fallback: false # fail loudly, then retry; never quietly publish silence
+  recording_alignment: "estimated" # estimated | whisper (optional faster-whisper)
+  beat_voice:
+    masalah: {rate_delta: 0, pause_sec: 0.40}
+    titik_balik: {rate_delta: -4, pause_sec: 0.65}
+    batasan: {rate_delta: -6, pause_sec: 0.65}
+    pelajaran: {rate_delta: 0, pause_sec: 0.45}
+
+trend_radar:
+  geo: "ID"
+  max_signals_per_source: 15
+  sources:
+    hackernews: true           # gratis, tanpa key
+    huggingface: true          # gratis, tanpa key
+    github: true               # gratis (rate limit 10 req/menit tanpa token)
+    google_trends_id: true     # gratis, RSS
+    youtube: true              # gratis; butuh YOUTUBE_API_KEY, lewati kalau kosong
+    reference_watchlist: true  # pola dari video yang kamu amati sendiri
+  # bobot skor akhir (harus total 1.0)
+  weights:
+    relevance: 0.35            # nyambung ke niche AI atau tidak
+    momentum: 0.25             # seberapa panas sinyalnya
+    novelty: 0.25              # belum pernah dibahas
+    format_fit: 0.15           # cocok jadi pelajaran 60 detik atau tidak
+  min_score: 0.45              # di bawah ini dibuang
+  dedupe_jaccard: 0.55         # mirip di atas ini = digabung jadi 1 cluster
+
+scriptwriter:
+  max_beats: 7
+  narrative: true
+  max_words_per_beat: 24
+  require_sources: true        # tiap klaim wajib ada URL. kosong = DITOLAK
+  must_include_limitation: true  # wajib sebut batasan/kekurangan
+
+# --- Otonomi: seberapa jauh agent boleh jalan sendiri -------------------
+autonomy:
+  enabled: true
+  max_pending_approval: 2        # berhenti bikin episode baru kalau sebanyak ini belum di-ACC
+  min_hours_between_episodes: 3  # jeda minimum antar episode baru
+  auto_produce_after_approval: true  # ACC kamu = perintah produksi
+  auto_publish: false            # publish publik selalu manual (audit TikTok)
+  learn_when_idle: true          # saat menunggu ACC, agent belajar dari metrik
+  tick_sec: 15                   # jeda antar langkah kerja
+
+publish:
+  mode: "manual"               # manual | draft | direct
+  default_hashtags:
+    - "#AI"
+    - "#belajarAI"
+    - "#teknologi"
+    - "#AIindonesia"
+  disclosure:
+    ai_generated: true         # wajib: TikTok minta label konten AI

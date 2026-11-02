@@ -1,0 +1,39 @@
+# Semua ID model dibaca dari .env; gunakan ID persis dari katalog 9Router.
+embeddings:
+  model: ${MODEL_EMBEDDING}
+manager:
+  model: ${MODEL_MANAGER}
+fallbacks:
+  agent_a: ${MODEL_FALLBACK_AGENT_A}
+  agent_b: ${MODEL_FALLBACK_AGENT_B}
+  agent_c: ${MODEL_FALLBACK_AGENT_C}
+  manager: ${MODEL_FALLBACK_MANAGER}
+subjects:
+  PP:
+    agent_a: ${MODEL_PP_A}
+    agent_b: ${MODEL_PP_B}
+    agent_c: ${MODEL_PP_C}
+  PA:
+    agent_a: ${MODEL_PA_A}
+    agent_b: ${MODEL_PA_B}
+    agent_c: ${MODEL_PA_C}
+  BING:
+    agent_a: ${MODEL_BING_A}
+    agent_b: ${MODEL_BING_B}
+    agent_c: ${MODEL_BING_C}
+  PR:
+    agent_a: ${MODEL_PR_A}
+    agent_b: ${MODEL_PR_B}
+    agent_c: ${MODEL_PR_C}
+  ILKOM:
+    agent_a: ${MODEL_ILKOM_A}
+    agent_b: ${MODEL_ILKOM_B}
+    agent_c: ${MODEL_ILKOM_C}
+  KAP:
+    agent_a: ${MODEL_KAP_A}
+    agent_b: ${MODEL_KAP_B}
+    agent_c: ${MODEL_KAP_C}
+  DJ:
+    agent_a: ${MODEL_DJ_A}
+    agent_b: ${MODEL_DJ_B}
+    agent_c: ${MODEL_DJ_C}

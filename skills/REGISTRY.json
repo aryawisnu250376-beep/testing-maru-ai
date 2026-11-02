@@ -1,0 +1,95 @@
+{
+  "schema_version": "1.0",
+  "repository": "aryawisnu250376-beep/testing-maru-ai",
+  "total_skills": 12,
+  "skills": [
+    {
+      "id": "academic/answer",
+      "division": "academic",
+      "name": "answer",
+      "path": "skills/academic/answer/SKILL.md",
+      "description": "Skill: Menjawab Pertanyaan Kuliah (answer)"
+    },
+    {
+      "id": "academic/citation-discipline",
+      "division": "academic",
+      "name": "citation-discipline",
+      "path": "skills/academic/citation-discipline/SKILL.md",
+      "description": "Skill: Disiplin Sitasi & Anti-Halusinasi (semua mode)"
+    },
+    {
+      "id": "academic/explain-simple",
+      "division": "academic",
+      "name": "explain-simple",
+      "path": "skills/academic/explain-simple/SKILL.md",
+      "description": "Template prompt akademik (explain_simple.md)"
+    },
+    {
+      "id": "academic/quiz",
+      "division": "academic",
+      "name": "quiz",
+      "path": "skills/academic/quiz/SKILL.md",
+      "description": "Skill: Kuis Pedagogis (quiz)"
+    },
+    {
+      "id": "academic/quiz-maker",
+      "division": "academic",
+      "name": "quiz-maker",
+      "path": "skills/academic/quiz-maker/SKILL.md",
+      "description": "Template prompt akademik (quiz_maker.md)"
+    },
+    {
+      "id": "academic/summarize-id",
+      "division": "academic",
+      "name": "summarize-id",
+      "path": "skills/academic/summarize-id/SKILL.md",
+      "description": "Template prompt akademik (summarize_id.md)"
+    },
+    {
+      "id": "academic/summary",
+      "division": "academic",
+      "name": "summary",
+      "path": "skills/academic/summary/SKILL.md",
+      "description": "Skill: Rangkuman Berstruktur (summary)"
+    },
+    {
+      "id": "social-media/cek-mutu",
+      "division": "social-media",
+      "name": "cek-mutu",
+      "path": "skills/social-media/cek-mutu/SKILL.md",
+      "description": "Tandai kalimat tanpa dasar sumber, kembalikan untuk revisi."
+    },
+    {
+      "id": "social-media/konten-ai",
+      "division": "social-media",
+      "name": "konten-ai",
+      "path": "skills/social-media/konten-ai/SKILL.md",
+      "description": "Skill: manajer produksi konten AI"
+    },
+    {
+      "id": "social-media/naskah-video",
+      "division": "social-media",
+      "name": "naskah-video",
+      "path": "skills/social-media/naskah-video/SKILL.md",
+      "description": "Ubah ringkasan jadi naskah video 30-60 detik."
+    },
+    {
+      "id": "social-media/ringkas-modul",
+      "division": "social-media",
+      "name": "ringkas-modul",
+      "path": "skills/social-media/ringkas-modul/SKILL.md",
+      "description": "Ringkas PDF/catatan kuliah jadi poin bernomor halaman."
+    },
+    {
+      "id": "social-media/usul-jadwal",
+      "division": "social-media",
+      "name": "usul-jadwal",
+      "path": "skills/social-media/usul-jadwal/SKILL.md",
+      "description": "Usulkan jam tayang beserta alasannya."
+    }
+  ],
+  "learned_artifacts": [
+    "skills/learned/academic_answer_skills.json",
+    "skills/learned/social_media_winning_patterns.md"
+  ]
+}

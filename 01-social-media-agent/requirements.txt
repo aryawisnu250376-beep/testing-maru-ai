@@ -1,0 +1,29 @@
+# === STACK $0 (semua gratis, tanpa API key) ===
+Pillow>=10.0            # render kartu/visual (fallback utama animasi)
+numpy>=1.26             # sintesis musik & sfx (src/audio.py), analisis QC
+edge-tts>=6.1           # dubbing neural gratis (Microsoft Edge endpoint)
+imageio-ffmpeg>=0.5     # ffmpeg portable, tanpa install sistem
+PyYAML>=6.0             # config
+pypdf>=4.0              # ringkas-modul: baca PDF per halaman
+youtube-transcript-api>=0.6  # transkrip YouTube tanpa API key
+
+# --- Animasi vektor (Manim). Berat: butuh cairo/pango di sistem. ---
+# Kalau gagal install, pipeline tetap jalan: visuals.py otomatis fallback
+# ke renderer pillow (lihat RENDERERS["manim"] -> draw_diagram).
+manim>=0.18
+
+# --- Opsional ---
+# moviepy>=2.0          # hanya dipakai eksperimen; render inti pakai ffmpeg langsung
+# faster-whisper>=1.0   # caption word-level presisi (butuh model ~75MB, lokal)
+# kokoro>=0.9           # TTS lokal 100% offline (first run download ~330MB)
+# mcp>=1.0              # server MCP (src/mcp_server.py, 10 tool)
+
+# === DEV ===
+pytest>=8.0            # test suite (python -m pytest tests -q)
+
+# --- Riset & suara opsional (kerangka 4 bot) ---
+# markitdown>=0.1       # docx/pptx/xlsx/html -> Markdown
+# crawl4ai>=0.4         # halaman web -> Markdown (butuh Playwright)
+# faster-whisper>=1.0   # transkripsi lokal (sudah dipakai voice.py)
+# kokoro>=0.9           # TTS lokal ringan (Apache 2.0)
+# moviepy>=2.0          # rakit video alternatif

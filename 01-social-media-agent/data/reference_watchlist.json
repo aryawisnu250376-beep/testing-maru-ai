@@ -1,0 +1,18 @@
+{
+  "_keterangan": "Daftar video/akun yang mau kamu amati. Isi manual dari HP (TikTok tidak punya API trend publik). Pipeline akan mengubah pola masing-masing menjadi kandidat ide, TANPA memakai naskah/audio/visual aslinya.",
+  "_cara_isi": [
+    "Buka video di TikTok yang menurutmu menahan perhatian.",
+    "Salin URL-nya ke 'url'.",
+    "Tempel ringkasan/transkrip singkat ke 'transcript' (boleh 2-3 kalimat).",
+    "Simpan, lalu: python -m src.cli harvest",
+    "Hasil observasi masuk radar sebagai kandidat tema."
+  ],
+  "items": [
+    {
+      "url": "https://www.tiktok.com/@contoh/video/123",
+      "transcript": "Kamu mungkin salah paham soal AI di HP. Banyak yang bilang AI cuma jalan di server besar. Padahal model kecil bisa jalan di ponsel. Caranya model dipadatkan jadi 4 bit. Tapi nalar panjangnya masih lemah.",
+      "catatan": "contoh pola: salah-paham lalu koreksi",
+      "sudah_dihitung": false
+    }
+  ]
+}

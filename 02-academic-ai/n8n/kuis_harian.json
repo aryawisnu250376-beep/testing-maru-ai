@@ -1,0 +1,115 @@
+{
+  "name": "Academic AI - Kuis Harian",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "cronExpression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "sched-quiz-001",
+      "name": "Jadwal Pagi",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8765/api/quiz",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer GANTI_DENGAN_LOCAL_API_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"subject_code\": \"PP\",\n  \"topic\": \"\"\n}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "http-quiz-001",
+      "name": "Minta Kuis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const res = $input.first().json;\nconst lines = ['🧠 Kuis Harian'];\nif (res.status === 'UNVERIFIED' || !res.answer) {\n  lines.push('Belum bisa dibuat: ' + (res.reason || 'materi/bukti belum cukup'));\n  return [{ json: { text: lines.join('\\n') } }];\n}\nlet payload;\ntry {\n  const raw = String(res.answer);\n  payload = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1));\n} catch (err) {\n  return [{ json: { text: lines.concat(['Format kuis tidak valid.']).join('\\n') } }];\n}\nconst questions = payload.questions || payload || [];\nquestions.forEach((q, i) => {\n  lines.push(`\\n${i + 1}. ${q.question}`);\n  for (const k of ['A', 'B', 'C', 'D']) lines.push(`   ${k}. ${(q.options || {})[k] || ''}`);\n  lines.push(`   ✅ ${q.correct_answer || ''} — ${q.explanation || ''}`);\n});\nlines.push(`\\nStatus: ${res.status}`);\nreturn [{ json: { text: lines.join('\\n').slice(0, 3800) } }];"
+      },
+      "id": "code-quiz-001",
+      "name": "Format Kuis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "GANTI_DENGAN_CHAT_ID",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "disable_web_page_preview": true
+        }
+      },
+      "id": "tg-quiz-001",
+      "name": "Kirim Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Jadwal Pagi": {
+      "main": [
+        [
+          {
+            "node": "Minta Kuis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Minta Kuis": {
+      "main": [
+        [
+          {
+            "node": "Format Kuis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Kuis": {
+      "main": [
+        [
+          {
+            "node": "Kirim Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Jakarta"
+  },
+  "pinData": {}
+}

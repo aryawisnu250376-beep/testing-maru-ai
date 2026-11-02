@@ -1,0 +1,18 @@
+# Hermes Agent -> 9Router lokal. Salin ke ~/.hermes/config.yaml (WSL2).
+# Nama model diambil dari dashboard 9Router, JANGAN ditebak.
+model:
+  provider: custom
+  default: ISI_DARI_DASHBOARD_9ROUTER   # contoh: kr/claude-... atau combo gratis
+  base_url: http://localhost:20128/v1   # WSL2 mirrored; jika NAT pakai IP host Windows
+  key_env: ROUTER_API_KEY
+  context_length: 64000
+
+# Batasi langkah otonom per tugas (usulan awal 25).
+agent:
+  max_steps: 25
+
+# Hermes TIDAK menyimpan kredensial TikTok dan TIDAK memanggil Ootto.
+# Skill hanya menulis draf ke antrean bersama.
+skills:
+  external_dirs:
+    - ./skills

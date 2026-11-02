@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ffmpeg (libass untuk caption)
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+
+      - name: Test suite
+        run: python -m pytest tests -q
+
+      - name: Smoke test pipeline (tanpa LLM, tanpa jaringan opsional)
+        run: |
+          python -m src.cli script --json | tail -1 > /tmp/script.json
+          python -c "
+          import json
+          d = json.load(open('/tmp/script.json'))
+          assert d['validation']['ok'], d['validation']['errors']
+          s = d['script']
+          assert len(s['beats']) >= 4
+          assert s['sources'], 'sumber wajib ada'
+          kinds = [b['kind'] for b in s['beats']]
+          assert 'limit' in kinds, 'wajib menyebut batasan'
+          print('script valid:', s['title'][:50])
+          "
+
+      - name: Scan trend (boleh gagal kalau jaringan diblokir)
+        continue-on-error: true
+        run: python -m src.cli scan

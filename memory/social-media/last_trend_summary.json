@@ -1,0 +1,118 @@
+{
+  "generated_at": "2026-11-01T14:02:09+00:00",
+  "counts": {
+    "collected": 79,
+    "relevant": 60,
+    "clusters": 10
+  },
+  "top_clusters": [
+    {
+      "theme": "agents",
+      "label": "AI agent yang bisa ngerjain tugas sendiri",
+      "angle_hint": "Beda chatbot vs agent, dan kenapa itu penting buat kerjaan kamu",
+      "score": 0.9578,
+      "headline_signal": "aa1143/NamiAgent: 零基础入门 AI Agent 的基础教程。不只是教程，也是一个能在本地跑起来的 Agent：读写文件、执行命令、MCP、长期记忆，自带网页端看清每一步。从 100 行最小循环开始，一课加一个能力，最后拆解 Claude Code、Codex 等主流 Agent",
+      "sources": [
+        "github",
+        "hackernews"
+      ]
+    },
+    {
+      "theme": "general",
+      "label": "Model AI baru: Mistral-Large-4-1T-A52B",
+      "angle_hint": "Kenapa ini penting sekarang",
+      "score": 0.9211,
+      "headline_signal": "Model AI baru: Mistral-Large-4-1T-A52B",
+      "sources": [
+        "google_trends_id",
+        "hackernews",
+        "huggingface"
+      ]
+    },
+    {
+      "theme": "on_device",
+      "label": "AI yang bisa jalan di HP sendiri, tanpa internet",
+      "angle_hint": "Kenapa AI sekarang muat di kantong, dan apa batasnya",
+      "score": 0.8164,
+      "headline_signal": "wangzan101/Mika: An on-device AI agent for Android that operates apps and the web to get things done for you.",
+      "sources": [
+        "github",
+        "huggingface"
+      ]
+    },
+    {
+      "theme": "small_models",
+      "label": "Model AI kecil yang makin pintar",
+      "angle_hint": "Kecil bukan berarti bodoh: kenapa model mungil sekarang dipakai serius",
+      "score": 0.8009,
+      "headline_signal": "h9-tec/ai-roadmap-2026: AI Roadmap 2026: a beginner's path through Foundations, LLM Engineering, Agents, Evaluation, and Production, with verified free resources and a mini-project",
+      "sources": [
+        "github",
+        "huggingface"
+      ]
+    },
+    {
+      "theme": "coding",
+      "label": "AI yang nulis kode dan ngerjain repo",
+      "angle_hint": "Batas nyata AI coding: apa yang aman diserahin, apa yang jangan",
+      "score": 0.7999,
+      "headline_signal": "jmanico/grim-prompter: Threat modeling for AI coding agents: point Claude Code, Codex or any agent at your repo and get an evidence-traced threat model. 36 architectures, 29 method",
+      "sources": [
+        "github",
+        "hackernews"
+      ]
+    },
+    {
+      "theme": "open_source",
+      "label": "Model open source yang ngejar ketat model tertutup",
+      "angle_hint": "Kenapa bobot model terbuka mengubah siapa yang bisa bikin AI",
+      "score": 0.7896,
+      "headline_signal": "Model AI baru: Nanbeige4.3-33B",
+      "sources": [
+        "huggingface"
+      ]
+    },
+    {
+      "theme": "multimodal",
+      "label": "AI yang bisa lihat, dengar, dan bikin gambar",
+      "angle_hint": "Cara AI 'melihat' gambar, dijelaskan tanpa matematika",
+      "score": 0.775,
+      "headline_signal": "Model AI baru: LTX-2.5",
+      "sources": [
+        "hackernews",
+        "huggingface"
+      ]
+    },
+    {
+      "theme": "cost",
+      "label": "Harga AI yang jatuh dan siapa yang untung",
+      "angle_hint": "Kenapa biaya AI turun cepat, dan gimana itu dipakai bisnis",
+      "score": 0.7492,
+      "headline_signal": "lwh0630/TokenBar: Open-source, cross-platform AI quota monitor (Codex, Claude, Cursor and 47 more). Windows, macOS, Linux, Android and iOS. Built with Flutter.",
+      "sources": [
+        "github",
+        "hackernews"
+      ]
+    },
+    {
+      "theme": "safety",
+      "label": "Keamanan, privasi, dan aturan main AI",
+      "angle_hint": "Risiko nyata AI yang jarang dibahas media, dan cara menutupnya",
+      "score": 0.6505,
+      "headline_signal": "Leaking Secrets from Air-Gap Computers by Spelling Radio Signals from RAM (2024)",
+      "sources": [
+        "hackernews"
+      ]
+    },
+    {
+      "theme": "reasoning",
+      "label": "Model yang 'mikir dulu' sebelum jawab",
+      "angle_hint": "Apa yang sebenarnya terjadi saat AI 'berpikir', dan kapan itu sia-sia",
+      "score": 0.5124,
+      "headline_signal": "Do the math: How we took over ChatGPT accounts",
+      "sources": [
+        "hackernews"
+      ]
+    }
+  ]
+}

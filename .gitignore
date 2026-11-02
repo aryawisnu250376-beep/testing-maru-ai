@@ -1,0 +1,53 @@
+# ============================================================
+#  MARU AI — Proteksi Kredensial, Database Biner, & Aset Berat
+# ============================================================
+
+# Kredensial & environment lokal (JANGAN PERNAH DI-COMMIT)
+.env
+.env.*
+!.env.example
+!.env.github.example
+!.env.gratis-9router.example
+!.env.hybrid-manager-hermes.example
+!.env.ollama-hermes.example
+*credentials*.json
+*token*.json
+*secret*
+*.pem
+*.key
+
+# Cache Python & pengujian
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+
+# Node / Web
+node_modules/
+
+# Database SQLite runtime & lock files (data relevan diekspor aman ke memory/ & skills/learned/)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# File PDF materi berat & hasil render video lokal
+03-academic-data/
+04-materi-kuliah/*.pdf
+04-materi-kuliah/**/*.pdf
+05-demo-teknis/*.mp4
+01-social-media-agent/out/
+02-academic-ai/data/
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+*.log

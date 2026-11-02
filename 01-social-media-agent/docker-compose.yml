@@ -1,0 +1,48 @@
+# Jalankan seluruh pipeline dengan satu perintah: docker compose up -d
+#
+# Semua fitur inti jalan tanpa API key. Isi .env hanya kalau mau naik kualitas
+# (LLM, Telegram, YouTube API).
+
+services:
+  agent:
+    build: .
+    container_name: ai-edukasi-agent
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      # state + artefak video tetap ada walau container dibuang
+      - ./data:/app/data
+      - ./out:/app/out
+      - ./config:/app/config:ro
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8080
+    # render CPU-bound; batasi supaya dashboard tetap responsif
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 3g
+    shm_size: "512m"
+
+  # Worker terpisah (opsional) — pakai kalau render menumpuk.
+  # Jalankan dengan: docker compose --profile worker up -d
+  worker:
+    build: .
+    container_name: ai-edukasi-agent-worker
+    restart: unless-stopped
+    profiles: ["worker"]
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./data:/app/data
+      - ./out:/app/out
+      - ./config:/app/config:ro
+    command: ["python", "-m", "src.cli", "worker", "--poll", "3"]
+    depends_on:
+      - agent

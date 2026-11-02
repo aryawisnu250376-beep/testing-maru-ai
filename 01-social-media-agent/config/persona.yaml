@@ -1,0 +1,44 @@
+# ============================================================
+#  Suara brand + rubrik kualitas. Dipakai di prompt LLM & QC.
+# ============================================================
+
+voice:
+  tone: "santai, kayak teman yang ngerti teknis tapi nggak sok"
+  pronoun: "kamu / gw"
+  do:
+    - "Mulai dari pertanyaan yang bikin orang berhenti scroll"
+    - "Satu beat = satu ide. Jangan tumpuk."
+    - "Wajib ada analogi dunia nyata"
+    - "Wajib sebut batasannya — jangan jual mimpi"
+    - "Angka harus dari sumber, bukan ingatan model"
+  dont:
+    - "Jangan pakai 'revolusioner', 'game changer', 'mengubah segalanya'"
+    - "Jangan sebut nama versi model kalau tidak ada di sources"
+    - "Jangan clickbait yang isinya nggak ada"
+    - "Jangan lebih dari 2 istilah teknis per video"
+
+rubric:
+  hook:
+    weight: 0.30
+    question: "Kalau lihat 1,5 detik pertama, mau nggak lanjut nonton?"
+  clarity:
+    weight: 0.25
+    question: "Orang non-teknis paham setelah 1x nonton?"
+  accuracy:
+    weight: 0.25
+    question: "Semua klaim ada di sources[]?"
+  payoff:
+    weight: 0.20
+    question: "Penonton dapat sesuatu yang bisa dipakai/diceritakan?"
+
+format_library:
+  # format yang terbukti tahan lama untuk edukasi
+  - id: "satu_konsep"
+    name: "1 Konsep 60 Detik"
+    structure: [hook_pertanyaan, definisi_sederhana, analogi, contoh_nyata, batasan, cta]
+  - id: "bedah_istilah"
+    name: "Bedah Istilah"
+    structure: [hook_salah_paham, apa_artinya, kenapa_dipakai, kapan_gagal, cta]
+  - id: "berita_diterjemahkan"
+    name: "Berita AI, Diterjemahkan"
+    structure: [hook_peristiwa, apa_yang_terjadi, kenapa_penting, dampak_ke_kamu, batasan, cta]

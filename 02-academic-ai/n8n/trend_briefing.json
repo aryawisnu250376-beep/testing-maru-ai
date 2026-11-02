@@ -1,0 +1,62 @@
+{
+  "name": "TrendRadar Briefing (AI Stack)",
+  "notes": "Contoh workflow n8n: tiap Senin 07:00 WIB, riset 3 topik tren via endpoint /api/web lalu kirim ringkasan ke Telegram. Import file ini di n8n (Workflows > Import from File), lalu isi ACADEMIC_API_TOKEN dan TELEGRAM_CHAT_ID. Inspirasi pola dari TrendRadar (skor tren edukimia.github.io/trendradar, terminologi: frekuensi/kesegaran/nilai guna).",
+  "schedule": "0 7 * * 1 Asia/Jakarta",
+  "steps": [
+    {
+      "id": "cron",
+      "node": "n8n-nodes-base.scheduleTrigger",
+      "params": { "rule": { "interval": [{ "field": "weeks", "weeksInterval": 1, "triggerAtDay": 1, "triggerAtHour": 7 }] } }
+    },
+    {
+      "id": "topics",
+      "node": "n8n-nodes-base.set",
+      "params": {
+        "values": {
+          "topics": [
+            "tren AI pendidikan Indonesia",
+            "kurikulum merdeka update terbaru",
+            "beasiswa S1 Indonesia 2026"
+          ]
+        }
+      }
+    },
+    {
+      "id": "research",
+      "node": "n8n-nodes-base.httpRequest",
+      "loop_over": "topics",
+      "params": {
+        "method": "POST",
+        "url": "http://localhost:8000/api/web",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": { "Authorization": "Bearer {{$env.ACADEMIC_API_TOKEN}}" },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"query\": \"{{$json.topics}}\"}"
+      }
+    },
+    {
+      "id": "format",
+      "node": "n8n-nodes-base.function",
+      "params": {
+        "functionCode": "const items = $input.all().map(i => `• ${i.json.answer}`);\nreturn [{ json: { briefing: `📚 Briefing Tren Mingguan\\n\\n${items.join('\\n')}` } }];"
+      }
+    },
+    {
+      "id": "send",
+      "node": "n8n-nodes-base.telegram",
+      "params": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{$env.TELEGRAM_CHAT_ID}}",
+        "text": "={{$json.briefing}}"
+      }
+    }
+  ],
+  "scoring_hint": {
+    "frekuensi": "berapa kali topik muncul di hasil /api/web",
+    "kesegaran": "utamakan sumber < 30 hari (cek tanggal di teks sumber)",
+    "nilai_guna": "relevansi ke mata kuliah aktif di config SUBJECTS"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "repository": "aryawisnu250376-beep/testing-maru-ai",
+  "scopes": [
+    "social-media",
+    "academic",
+    "hq"
+  ],
+  "tracked_files": [
+    "memory/README.md",
+    "memory/academic/materials_index.csv",
+    "memory/academic/subjects_catalog.json",
+    "memory/academic/user_facts.json",
+    "memory/hq/shared_context.json",
+    "memory/social-media/last_trend_summary.json",
+    "memory/social-media/orchestrator_state.json",
+    "memory/social-media/reference_watchlist.json",
+    "memory/social-media/watch_state.json"
+  ]
+}
