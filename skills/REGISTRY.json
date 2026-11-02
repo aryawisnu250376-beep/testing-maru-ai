@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "repository": "aryawisnu250376-beep/testing-maru-ai",
-  "total_skills": 24,
+  "total_skills": 68,
   "skills": [
     {
       "id": "academic/academy-guide",
@@ -16,6 +16,13 @@
       "name": "answer",
       "path": "skills/academic/answer/SKILL.md",
       "description": "Skill: Menjawab Pertanyaan Kuliah (answer)"
+    },
+    {
+      "id": "academic/arxiv-research",
+      "division": "academic",
+      "name": "arxiv-research",
+      "path": "skills/academic/arxiv-research/SKILL.md",
+      "description": "Search arXiv papers by keyword, author, category, or ID."
     },
     {
       "id": "academic/bedah-jurnal",
@@ -53,6 +60,20 @@
       "description": "Template prompt akademik (explain_simple.md)"
     },
     {
+      "id": "academic/grounded-citations",
+      "division": "academic",
+      "name": "grounded-citations",
+      "path": "skills/academic/grounded-citations/SKILL.md",
+      "description": "Ground answers and documents in cited, verifiable sources."
+    },
+    {
+      "id": "academic/open-notebook",
+      "division": "academic",
+      "name": "open-notebook",
+      "path": "skills/academic/open-notebook/SKILL.md",
+      "description": "Integrasi Open Notebook (lfnovo/open-notebook & open-notebook-mcp) sebagai ruang riset multi-sumber mandiri bergaya NotebookLM untuk merangkum PDF kuliah, catatan studi, pencarian vektor, dan pembuatan podcast diskusi mu"
+    },
+    {
       "id": "academic/pdf",
       "division": "academic",
       "name": "pdf",
@@ -81,6 +102,13 @@
       "description": "Template prompt akademik (quiz_maker.md)"
     },
     {
+      "id": "academic/research-paper-writing",
+      "division": "academic",
+      "name": "research-paper-writing",
+      "path": "skills/academic/research-paper-writing/SKILL.md",
+      "description": "Write ML papers for NeurIPS/ICML/ICLR: design→submit."
+    },
+    {
       "id": "academic/summarize-id",
       "division": "academic",
       "name": "summarize-id",
@@ -102,6 +130,97 @@
       "description": "Use this skill any time a spreadsheet file is the primary input or output. This means any task where the user wants to: open, read, edit, or fix an existing .xlsx, .xlsm, .xltx, .csv, or .tsv file (e.g., adding columns, "
     },
     {
+      "id": "shared/ai-agent-observability",
+      "division": "shared",
+      "name": "ai-agent-observability",
+      "path": "skills/shared/ai-agent-observability/SKILL.md",
+      "description": "Guide for building observable, evaluable AI Agent systems. Covers trace design (Run/Trace/Thread), non-determinism management, structured error handling, evaluation strategies (unit/trace/thread), production-to-offline f"
+    },
+    {
+      "id": "shared/antigravity-skills",
+      "division": "shared",
+      "name": "antigravity-skills",
+      "path": "skills/shared/antigravity-skills/SKILL.md",
+      "description": "Panduan katalog & integrasi pustaka Antigravity Skills (sickn33/antigravity-awesome-skills & DavisChang/antigravity-skills) untuk memilih, mengaudit keamanan, dan memasang ribuan playbook SKILL.md ke ekosistem MARU AI."
+    },
+    {
+      "id": "shared/antislop",
+      "division": "shared",
+      "name": "antislop",
+      "path": "skills/shared/antislop/SKILL.md",
+      "description": "Anti Slop: Rules for AI Coding Agents. The core filter. Load always to stop generic AI slop."
+    },
+    {
+      "id": "shared/antislop-ui",
+      "division": "shared",
+      "name": "antislop-ui",
+      "path": "skills/shared/antislop-ui/SKILL.md",
+      "description": "UI and visual skill for antislop. Use when building or editing any interface: color, layout, components, motion, and page performance. Load with the core."
+    },
+    {
+      "id": "shared/arch-design-review",
+      "division": "shared",
+      "name": "arch-design-review",
+      "path": "skills/shared/arch-design-review/SKILL.md",
+      "description": "Facilitate structured system architecture design discussions covering requirements, traffic, data consistency, reliability, security, operability, and cost. Use when the user wants to review a system design, discuss arch"
+    },
+    {
+      "id": "shared/codegraph",
+      "division": "shared",
+      "name": "codegraph",
+      "path": "skills/shared/codegraph/SKILL.md",
+      "description": "Pemetaan graf kode sumber (AST, call graph, dependency antar-modul, skema database, endpoint API, dan analisis dampak perubahan / blast-radius) untuk audit arsitektur, integrasi MARU HQ, dan AI Technician."
+    },
+    {
+      "id": "shared/diagram-design",
+      "division": "shared",
+      "name": "diagram-design",
+      "path": "skills/shared/diagram-design/SKILL.md",
+      "description": "Create branded architecture, architecture delta, IT current-state, flowchart, sequence, state machine, ER/data model, timeline, swimlane, quadrant, radar/spider, polar chart (polar/radial lollipop), loop/flywheel, nested"
+    },
+    {
+      "id": "shared/dynamic-workflow",
+      "division": "shared",
+      "name": "dynamic-workflow",
+      "path": "skills/shared/dynamic-workflow/SKILL.md",
+      "description": "Plan-in-code fan-outs, adversarial verification, waves."
+    },
+    {
+      "id": "shared/find-skills",
+      "division": "shared",
+      "name": "find-skills",
+      "path": "skills/shared/find-skills/SKILL.md",
+      "description": "Helps users discover and install agent skills when they ask questions like \"how do I do X\", \"find a skill for X\", \"is there a skill that can...\", or express interest in extending capabilities. This skill should be used w"
+    },
+    {
+      "id": "shared/frontend-design",
+      "division": "shared",
+      "name": "frontend-design",
+      "path": "skills/shared/frontend-design/SKILL.md",
+      "description": "Guidance for distinctive, intentional visual design when building new UI or reshaping an existing one. Helps with aesthetic direction, typography, and making choices that don't read as templated defaults."
+    },
+    {
+      "id": "shared/gitnexus-explorer",
+      "division": "shared",
+      "name": "gitnexus-explorer",
+      "path": "skills/shared/gitnexus-explorer/SKILL.md",
+      "description": "Serve an interactive codebase knowledge graph web UI."
+    },
+    {
+      "id": "shared/impeccable",
+      "division": "shared",
+      "name": "impeccable",
+      "path": "skills/shared/impeccable/SKILL.md",
+      "description": "Use when the user wants to design, redesign, shape, critique, audit, polish, simplify, harden, animate, or otherwise improve a frontend interface: websites, landing pages, dashboards, product UI, components, forms, setti"
+    },
+    {
+      "id": "shared/maru-hq-governance",
+      "division": "shared",
+      "name": "maru-hq-governance",
+      "path": "skills/shared/maru-hq-governance/SKILL.md",
+      "description": "Aturan tata kelola inti MARU HQ (Hybrid Autonomous AI Corporation): level otonomi L1/L2/L3, gerbang persetujuan manusia, kontrak task lintas divisi, batas budget/retry, serta larangan keras kebocoran kredensial."
+    },
+    {
       "id": "shared/mcp-builder",
       "division": "shared",
       "name": "mcp-builder",
@@ -109,11 +228,144 @@
       "description": "Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to interact with external services through well-designed tools. Use when building MCP servers to integrate external APIs or services, "
     },
     {
+      "id": "shared/multica-ai",
+      "division": "shared",
+      "name": "multica-ai",
+      "path": "skills/shared/multica-ai/SKILL.md",
+      "description": "Use when a local coding agent (Codex, Claude Code, Cursor, or similar) needs to operate Multica through the authenticated `multica` CLI: reading or updating issues, comments, metadata, labels, custom properties, subscrib"
+    },
+    {
+      "id": "shared/n8n-mcp-tools-expert",
+      "division": "shared",
+      "name": "n8n-mcp-tools-expert",
+      "path": "skills/shared/n8n-mcp-tools-expert/SKILL.md",
+      "description": "Expert guide for using n8n-mcp MCP tools effectively. Use when searching for nodes, validating configurations, accessing templates, managing workflows, or using any n8n-mcp tool. Provides tool selection guidance, paramet"
+    },
+    {
+      "id": "shared/n8n-workflow-patterns",
+      "division": "shared",
+      "name": "n8n-workflow-patterns",
+      "path": "skills/shared/n8n-workflow-patterns/SKILL.md",
+      "description": "Proven architectural patterns for building n8n workflows."
+    },
+    {
+      "id": "shared/no-ai-slop",
+      "division": "shared",
+      "name": "no-ai-slop",
+      "path": "skills/shared/no-ai-slop/SKILL.md",
+      "description": "Edit drafts into sharper, more human writing while preserving the writer's personal voice, or detect AI-slop patterns without rewriting. Use when the user wants a draft clearer, more direct, more opinionated, or less AI-"
+    },
+    {
+      "id": "shared/omni-route",
+      "division": "shared",
+      "name": "omni-route",
+      "path": "skills/shared/omni-route/SKILL.md",
+      "description": "Konfigurasi dan tata kelola OmniRoute (diegosouzapw/OmniRoute, evolusi 9Router di port 20128) sebagai Model Router cerdas multi-provider dengan fallback berjenjang, kontrol kuota/biaya, auto-refresh OAuth, dan kompatibil"
+    },
+    {
+      "id": "shared/penpot-mcp",
+      "division": "shared",
+      "name": "penpot-mcp",
+      "path": "skills/shared/penpot-mcp/SKILL.md",
+      "description": "Use this skill whenever the user wants to use AI agents to work with Penpot design files via"
+    },
+    {
+      "id": "shared/react-best-practices",
+      "division": "shared",
+      "name": "react-best-practices",
+      "path": "skills/shared/react-best-practices/SKILL.md",
+      "description": "React and Next.js performance optimization guidelines from Vercel Engineering. This skill should be used when writing, reviewing, or refactoring React/Next.js code to ensure optimal performance patterns. Triggers on task"
+    },
+    {
+      "id": "shared/searxng-search",
+      "division": "shared",
+      "name": "searxng-search",
+      "path": "skills/shared/searxng-search/SKILL.md",
+      "description": "Free keyless meta-search aggregating 70+ engines."
+    },
+    {
       "id": "shared/skill-creator",
       "division": "shared",
       "name": "skill-creator",
       "path": "skills/shared/skill-creator/SKILL.md",
       "description": "Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, edit, or optimize an existing skill, run evals to test a skill, benchmark skill pe"
+    },
+    {
+      "id": "shared/skill-security-auditor",
+      "division": "shared",
+      "name": "skill-security-auditor",
+      "path": "skills/shared/skill-security-auditor/SKILL.md",
+      "description": "Use when you need to review any AI agent skill for prompt injection, secret exfiltration, dangerous commands, over-privileged configuration, or supply-chain risks before installation or execution. Supports SKILL.md, AGEN"
+    },
+    {
+      "id": "shared/stitch-design-md",
+      "division": "shared",
+      "name": "stitch-design-md",
+      "path": "skills/shared/stitch-design-md/SKILL.md",
+      "description": "Analyze Stitch projects and synthesize a semantic design system into DESIGN.md files"
+    },
+    {
+      "id": "shared/stitch-generate-design",
+      "division": "shared",
+      "name": "stitch-generate-design",
+      "path": "skills/shared/stitch-generate-design/SKILL.md",
+      "description": "Generate new screens from text prompts or images, edit existing screens"
+    },
+    {
+      "id": "shared/stitch-loop",
+      "division": "shared",
+      "name": "stitch-loop",
+      "path": "skills/shared/stitch-loop/SKILL.md",
+      "description": "Teaches agents to iteratively build websites using Stitch with an autonomous baton-passing loop pattern"
+    },
+    {
+      "id": "shared/stitch-taste-design",
+      "division": "shared",
+      "name": "stitch-taste-design",
+      "path": "skills/shared/stitch-taste-design/SKILL.md",
+      "description": "Semantic Design System Skill for Google Stitch. Generates agent-friendly DESIGN.md files that enforce premium, anti-generic UI standards — strict typography, calibrated color, asymmetric layouts, perpetual micro-motion, "
+    },
+    {
+      "id": "shared/ui-ux-pro-max",
+      "division": "shared",
+      "name": "ui-ux-pro-max",
+      "path": "skills/shared/ui-ux-pro-max/SKILL.md",
+      "description": "UI/UX design intelligence for web, mobile, and desktop. This skill should be used when designing, building, reviewing, or fixing interfaces, including pages, components, design systems, accessibility, interaction, respon"
+    },
+    {
+      "id": "shared/web-design-guidelines",
+      "division": "shared",
+      "name": "web-design-guidelines",
+      "path": "skills/shared/web-design-guidelines/SKILL.md",
+      "description": "Review UI code for Web Interface Guidelines compliance. Use when asked to \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", or \"check my site against best practices\"."
+    },
+    {
+      "id": "shared/webapp-testing",
+      "division": "shared",
+      "name": "webapp-testing",
+      "path": "skills/shared/webapp-testing/SKILL.md",
+      "description": "Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browser logs."
+    },
+    {
+      "id": "social-media/ai-presenter-video",
+      "division": "social-media",
+      "name": "ai-presenter-video",
+      "path": "skills/social-media/ai-presenter-video/SKILL.md",
+      "description": "Make a verified AI presenter video from script + image."
+    },
+    {
+      "id": "social-media/antislop-copywriting",
+      "division": "social-media",
+      "name": "antislop-copywriting",
+      "path": "skills/social-media/antislop-copywriting/SKILL.md",
+      "description": "Copy and text skill for antislop. Use when writing or editing prose: headlines, tone, CTAs, and anti-AI-writing patterns. Load with the core."
+    },
+    {
+      "id": "social-media/blender-mcp",
+      "division": "social-media",
+      "name": "blender-mcp",
+      "path": "skills/social-media/blender-mcp/SKILL.md",
+      "description": "Kendalikan Blender 3D secara langsung lewat protokol MCP (ahujasid/blender-mcp) menggunakan skrip bpy untuk membuat objek 3D, material, pencahayaan, animasi kamera, dan render aset visual MARU AI."
     },
     {
       "id": "social-media/brand-guidelines",
@@ -137,6 +389,34 @@
       "description": "Tandai kalimat tanpa dasar sumber, kembalikan untuk revisi."
     },
     {
+      "id": "social-media/comfyui",
+      "division": "social-media",
+      "name": "comfyui",
+      "path": "skills/social-media/comfyui/SKILL.md",
+      "description": "Generate images, video, and audio via diffusion workflows."
+    },
+    {
+      "id": "social-media/hyperframes",
+      "division": "social-media",
+      "name": "hyperframes",
+      "path": "skills/social-media/hyperframes/SKILL.md",
+      "description": "Read first to make, edit, animate or render any video with HyperFrames (HTML rendered to video), including launch films, explainers, music videos, charts, maps, vertical clips, title cards, captions and overlays. Holds t"
+    },
+    {
+      "id": "social-media/img2threejs",
+      "division": "social-media",
+      "name": "img2threejs",
+      "path": "skills/social-media/img2threejs/SKILL.md",
+      "description": "Turn an object or character reference image into a quality-gated, animation-ready procedural Three.js model built in code. Use for image-to-3D reconstruction, detail-accurate object rebuilds, stylized/likeness-maximized "
+    },
+    {
+      "id": "social-media/kanban-video-orchestrator",
+      "division": "social-media",
+      "name": "kanban-video-orchestrator",
+      "path": "skills/social-media/kanban-video-orchestrator/SKILL.md",
+      "description": "Plan and run multi-agent video production pipelines."
+    },
+    {
       "id": "social-media/konten-ai",
       "division": "social-media",
       "name": "konten-ai",
@@ -144,11 +424,32 @@
       "description": "Skill: manajer produksi konten AI"
     },
     {
+      "id": "social-media/manim-video",
+      "division": "social-media",
+      "name": "manim-video",
+      "path": "skills/social-media/manim-video/SKILL.md",
+      "description": "Manim CE animations: 3Blue1Brown math/algo videos."
+    },
+    {
+      "id": "social-media/money-printer-turbo",
+      "division": "social-media",
+      "name": "money-printer-turbo",
+      "path": "skills/social-media/money-printer-turbo/SKILL.md",
+      "description": "Use this skill whenever the user wants to create a finished video from a topic, title, idea, prompt, or script with MoneyPrinterTurbo. This includes short-form, voice-over, educational, marketing, social-media, and stock"
+    },
+    {
       "id": "social-media/naskah-video",
       "division": "social-media",
       "name": "naskah-video",
       "path": "skills/social-media/naskah-video/SKILL.md",
       "description": "Ubah ringkasan jadi naskah video 30-60 detik."
+    },
+    {
+      "id": "social-media/remotion",
+      "division": "social-media",
+      "name": "remotion",
+      "path": "skills/social-media/remotion/SKILL.md",
+      "description": "Router for all Remotion skills"
     },
     {
       "id": "social-media/ringkas-modul",
@@ -170,6 +471,13 @@
       "name": "usul-jadwal",
       "path": "skills/social-media/usul-jadwal/SKILL.md",
       "description": "Usulkan jam tayang beserta alasannya."
+    },
+    {
+      "id": "social-media/video-shotcraft",
+      "division": "social-media",
+      "name": "video-shotcraft",
+      "path": "skills/social-media/video-shotcraft/SKILL.md",
+      "description": "Create cinematic product videos from frontend projects or webpages with Remotion, real page captures, shot cards, the Ink Press template, beat sync and sound design. Use for full product promos, reproducing Ink Press, si"
     }
   ],
   "learned_artifacts": [

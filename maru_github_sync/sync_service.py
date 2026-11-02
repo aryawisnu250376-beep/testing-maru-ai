@@ -72,10 +72,12 @@ class MaruGitHubSyncService:
         sm_root = self.root / "01-social-media-agent"
         ac_root = self.root / "02-academic-ai"
 
-        # A. Social Media skills -> skills/social-media/
+        # A. Social Media skills -> skills/social-media/ (kecuali yang berasal dari skills/shared/)
         if (sm_root / "skills").is_dir():
             for sdir in sorted((sm_root / "skills").iterdir()):
                 if sdir.is_dir() and (sdir / "SKILL.md").is_file():
+                    if (self.root / "skills" / "shared" / sdir.name / "SKILL.md").is_file():
+                        continue
                     target = self.root / "skills" / "social-media" / sdir.name / "SKILL.md"
                     target.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(sdir / "SKILL.md", target)
