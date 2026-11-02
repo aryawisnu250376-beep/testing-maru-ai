@@ -1,8 +1,9 @@
-"""CLI Sinkronisasi GitHub untuk Skill & Memori MARU AI.
+"""CLI Sinkronisasi & Impor Skill GitHub untuk MARU AI.
 
 Contoh pemakaian (Windows CMD / PowerShell / Linux):
   python -m maru_github_sync status
-  python -m maru_github_sync export-local
+  python -m maru_github_sync list-skills
+  python -m maru_github_sync add-skill https://github.com/anthropics/skills/tree/main/skills/pdf --division academic
   python -m maru_github_sync push
   python -m maru_github_sync pull
   python -m maru_github_sync sync
@@ -20,15 +21,41 @@ from .sync_service import MaruGitHubSyncService
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="maru_github_sync",
-        description="Sinkronisasi penyimpanan Skill & Memori MARU AI ke GitHub.",
+        description="Sinkronisasi & manajemen Skill/Memori MARU AI dengan GitHub.",
     )
-    parser.add_argument(
-        "command",
-        choices=["status", "export-local", "import-local", "push", "pull", "sync"],
-        help="Aksi sinkronisasi yang dijalankan.",
-    )
-    args = parser.parse_args(argv)
+    sub = parser.add_subparsers(dest="command", required=True)
 
+    for simple_cmd in ("status", "export-local", "import-local", "push", "pull", "sync", "list-skills"):
+        sub.add_parser(simple_cmd)
+
+    add_p = sub.add_parser(
+        "add-skill",
+        help="Impor SKILL.md dari URL/repo GitHub mana pun ke MARU AI + auto-push.",
+    )
+    add_p.add_argument(
+        "source",
+        help="URL folder/file GitHub atau owner/repo/path (contoh: https://github.com/anthropics/skills/tree/main/skills/pdf)",
+    )
+    add_p.add_argument(
+        "--division",
+        "-d",
+        choices=["academic", "social-media", "shared"],
+        default="shared",
+        help="Target divisi pengguna skill (default: shared = dipakai semua divisi).",
+    )
+    add_p.add_argument(
+        "--name",
+        "-n",
+        default=None,
+        help="Nama folder skill kustom (opsional; otomatis dideteksi dari frontmatter/URL).",
+    )
+    add_p.add_argument(
+        "--no-push",
+        action="store_true",
+        help="Pasang secara lokal saja tanpa langsung push ke repo GitHub MARU.",
+    )
+
+    args = parser.parse_args(argv)
     cfg = GitHubSyncConfig.from_env()
     svc = MaruGitHubSyncService(cfg)
 
@@ -50,24 +77,36 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(info, indent=2, ensure_ascii=False))
             return 0
 
-        if args.command == "export-local":
-            res = svc.export_local_to_central()
+        if args.command == "list-skills":
+            svc._refresh_registry_and_index()
+            reg_path = cfg.repo_root / "skills" / "REGISTRY.json"
+            print(reg_path.read_text(encoding="utf-8"))
+            return 0
+
+        if args.command == "add-skill":
+            res = svc.add_skill_from_github(
+                args.source,
+                division=args.division,
+                custom_name=args.name,
+                push_remote=not args.no_push,
+            )
             print(json.dumps(res, indent=2, ensure_ascii=False))
+            return 0
+
+        if args.command == "export-local":
+            print(json.dumps(svc.export_local_to_central(), indent=2, ensure_ascii=False))
             return 0
 
         if args.command == "import-local":
-            res = svc.import_central_to_local()
-            print(json.dumps(res, indent=2, ensure_ascii=False))
+            print(json.dumps(svc.import_central_to_local(), indent=2, ensure_ascii=False))
             return 0
 
         if args.command == "push":
-            res = svc.push_skills_and_memory()
-            print(json.dumps(res, indent=2, ensure_ascii=False))
+            print(json.dumps(svc.push_skills_and_memory(), indent=2, ensure_ascii=False))
             return 0
 
         if args.command == "pull":
-            res = svc.pull_skills_and_memory()
-            print(json.dumps(res, indent=2, ensure_ascii=False))
+            print(json.dumps(svc.pull_skills_and_memory(), indent=2, ensure_ascii=False))
             return 0
 
         if args.command == "sync":

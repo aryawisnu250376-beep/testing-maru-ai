@@ -188,6 +188,57 @@ class TestMaruGitHubSync(unittest.TestCase):
             self.assertEqual(pull_res["imported_academic_facts"], 1)
             self.assertEqual(pull_res["imported_academic_skills"], 1)
 
+    def test_add_skill_from_external_github_url(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "01-social-media-agent/skills").mkdir(parents=True)
+            (root / "02-academic-ai/prompts/skills").mkdir(parents=True)
+
+            sample_skill = (
+                "---\nname: pdf-analyzer\ndescription: Analisis dokumen PDF presisi\n---\n"
+                "# PDF Analyzer\n1. Periksa setiap halaman.\n"
+            )
+
+            def fake_external_urlopen(req, timeout: int = 20):
+                url = req.full_url
+                if url.endswith("/contents/skills/pdf?ref=main"):
+                    return FakeRemoteGitHub._json_resp(
+                        [{"name": "SKILL.md", "path": "skills/pdf/SKILL.md", "type": "file"}]
+                    )
+                if "/contents/skills/pdf/SKILL.md?ref=main" in url:
+                    raw = sample_skill.encode("utf-8")
+                    resp = io.BytesIO(raw)
+                    resp.__enter__ = lambda s=resp: s  # type: ignore[attr-defined]
+                    resp.__exit__ = lambda *args: False  # type: ignore[attr-defined]
+                    return resp
+                raise AssertionError(f"Unexpected external URL: {url}")
+
+            fake_maru_remote = FakeRemoteGitHub()
+            cfg = GitHubSyncConfig(
+                repo_root=root,
+                enabled=True,
+                repo="aryawisnu250376-beep/testing-maru-ai",
+                branch="main",
+                token="github_pat_dummy_token_for_unit_test",
+            )
+            svc = MaruGitHubSyncService(
+                cfg, GitHubContentsClient(cfg, urlopen_fn=fake_maru_remote.urlopen)
+            )
+            res = svc.add_skill_from_github(
+                "https://github.com/anthropics/skills/tree/main/skills/pdf",
+                division="shared",
+                urlopen_fn=fake_external_urlopen,
+            )
+            self.assertTrue(res["ok"])
+            self.assertEqual(res["skill_id"], "shared/pdf-analyzer")
+            self.assertTrue((root / "skills/shared/pdf-analyzer/SKILL.md").is_file())
+            # Karena division="shared", otomatis terdistribusi ke kedua divisi:
+            self.assertTrue((root / "01-social-media-agent/skills/pdf-analyzer/SKILL.md").is_file())
+            self.assertTrue((root / "02-academic-ai/prompts/skills/custom/pdf-analyzer.md").is_file())
+            # Dan otomatis ter-push ke repo MARU:
+            self.assertIn("skills/shared/pdf-analyzer/SKILL.md", fake_maru_remote.files)
+            self.assertIn("skills/REGISTRY.json", fake_maru_remote.files)
+
 
 if __name__ == "__main__":
     unittest.main()

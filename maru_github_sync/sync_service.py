@@ -180,7 +180,50 @@ class MaruGitHubSyncService:
         """Terapkan skill & memori dari folder `skills/` dan `memory/` kembali ke modul divisi."""
         imported_facts = 0
         imported_skills = 0
+        mirrored_skill_files: list[str] = []
+        sm_root = self.root / "01-social-media-agent"
         ac_root = self.root / "02-academic-ai"
+
+        # Distribusi skill baru dari skills/social-media & skills/shared -> 01-social-media-agent/skills/
+        if sm_root.is_dir():
+            for scope in ("social-media", "shared"):
+                scope_dir = self.root / "skills" / scope
+                if not scope_dir.is_dir():
+                    continue
+                for sk_md in sorted(scope_dir.glob("*/SKILL.md")):
+                    slug = sk_md.parent.name
+                    if slug == "konten-ai":
+                        continue
+                    dest = sm_root / "skills" / slug / "SKILL.md"
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(sk_md, dest)
+                    mirrored_skill_files.append(str(dest.relative_to(self.root)).replace("\\", "/"))
+
+        # Distribusi skill kustom dari skills/academic & skills/shared -> 02-academic-ai/prompts/skills/custom/
+        builtin_academic_slugs = {
+            "answer",
+            "citation-discipline",
+            "quiz",
+            "summary",
+            "explain-simple",
+            "quiz-maker",
+            "summarize-id",
+        }
+        if ac_root.is_dir():
+            custom_dir = ac_root / "prompts" / "skills" / "custom"
+            for scope in ("academic", "shared"):
+                scope_dir = self.root / "skills" / scope
+                if not scope_dir.is_dir():
+                    continue
+                for sk_md in sorted(scope_dir.glob("*/SKILL.md")):
+                    slug = sk_md.parent.name
+                    if scope == "academic" and slug in builtin_academic_slugs:
+                        continue
+                    custom_dir.mkdir(parents=True, exist_ok=True)
+                    dest = custom_dir / f"{slug}.md"
+                    shutil.copy2(sk_md, dest)
+                    mirrored_skill_files.append(str(dest.relative_to(self.root)).replace("\\", "/"))
+
         db_candidate = academic_db_path or (ac_root / "data" / "academic_ai.db")
 
         if db_candidate.is_file():
@@ -232,6 +275,36 @@ class MaruGitHubSyncService:
         return {
             "imported_academic_facts": imported_facts,
             "imported_academic_skills": imported_skills,
+            "mirrored_skill_files": mirrored_skill_files,
+        }
+
+    def add_skill_from_github(
+        self,
+        source: str,
+        *,
+        division: str = "shared",
+        custom_name: str | None = None,
+        push_remote: bool = True,
+        urlopen_fn: Any = None,
+    ) -> dict[str, Any]:
+        """Impor SKILL.md dari URL/repo GitHub mana pun, daftarkan ke REGISTRY, & sinkronkan."""
+        from .skill_importer import GitHubSkillImporter
+
+        importer = GitHubSkillImporter(self.config, urlopen_fn=urlopen_fn)
+        installed = importer.install_skill(source, division=division, custom_name=custom_name)
+        self._refresh_registry_and_index()
+        mirror_info = self.import_central_to_local()
+
+        pushed_files: list[str] = []
+        if push_remote and self.config.is_ready:
+            for rel in (installed["local_path"], "skills/REGISTRY.json"):
+                if self.best_effort_push_single(rel, commit_label="add-skill"):
+                    pushed_files.append(rel)
+
+        return {
+            **installed,
+            "mirrored_to": mirror_info["mirrored_skill_files"],
+            "pushed_to_github": pushed_files,
         }
 
     def _refresh_registry_and_index(self) -> None:

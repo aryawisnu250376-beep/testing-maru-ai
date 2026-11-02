@@ -33,6 +33,20 @@ Repository terpusat untuk **MARU AI (Hybrid Autonomous AI Corporation)** yang me
    sync_github.bat sync
    ```
 
+## Cara Menambah Skill dari GitHub (Open-Source maupun Buat Sendiri)
+
+- **Impor langsung skill dari repo GitHub mana pun (1 klik/perintah)**:
+  ```cmd
+  add_skill.bat https://github.com/anthropics/skills/tree/main/skills/pdf academic
+  ```
+  *(Mendukung URL folder `tree/...`, file `blob/.../SKILL.md`, `raw.githubusercontent.com`, atau `owner/repo/path`. Pilihan divisi: `academic`, `social-media`, atau `shared`.)*
+- **Tambah langsung lewat web GitHub `testing-maru-ai`**:
+  Buat file `skills/<divisi>/<nama-skill>/SKILL.md` lewat tombol **Add file** di GitHub, lalu jalankan `sync_github.bat pull` di laptop — otomatis tersalin ke aplikasi divisi dan langsung aktif!
+- **Lihat seluruh daftar skill yang terdaftar**:
+  ```cmd
+  python -m maru_github_sync list-skills
+  ```
+
 ## Alur Auto-Sync Otomatis Saat Aplikasi Berjalan
 
 - **Academic AI (`02-academic-ai`)**:

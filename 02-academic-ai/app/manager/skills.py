@@ -110,14 +110,55 @@ async def _best_effort_sync_academic_skills(database) -> None:
         return
 
 
+def _custom_skill_texts(task_mode: str, subject_code: str) -> list[str]:
+    """Muat skill tambahan hasil impor dari GitHub (`prompts/skills/custom/*.md`)."""
+    custom_dir = SKILLS_DIR / "custom"
+    if not custom_dir.is_dir():
+        return []
+    loaded: list[str] = []
+    mode_low = task_mode.lower()
+    subj_low = subject_code.lower()
+    for md_path in sorted(custom_dir.glob("*.md")):
+        try:
+            raw = md_path.read_text(encoding="utf-8").strip()
+        except Exception:
+            continue
+        if not raw:
+            continue
+        # Cek filter opsional di frontmatter (`task_mode:` atau `subject:`)
+        allowed_modes: set[str] = set()
+        allowed_subjects: set[str] = set()
+        lines = raw.splitlines()
+        if lines and lines[0].strip() == "---":
+            for ln in lines[1:25]:
+                s = ln.strip()
+                if s == "---":
+                    break
+                if s.lower().startswith("task_mode:"):
+                    allowed_modes = {
+                        x.strip().lower() for x in s.split(":", 1)[1].split(",") if x.strip()
+                    }
+                elif s.lower().startswith("subject:"):
+                    allowed_subjects = {
+                        x.strip().lower() for x in s.split(":", 1)[1].split(",") if x.strip()
+                    }
+        if allowed_modes and mode_low not in allowed_modes:
+            continue
+        if allowed_subjects and subj_low not in allowed_subjects:
+            continue
+        loaded.append(f"[skill tambahan {md_path.stem}]\n{raw[:2000]}")
+    return loaded
+
+
 async def skill_hint_for(database, settings, task_mode: str, subject_code: str) -> str:
-    """Builtin skill pack + hint from past wins, or ''. Never raises."""
+    """Builtin skill pack + custom GitHub skills + hint from past wins, or ''. Never raises."""
     if not getattr(settings, "skills_learn_enabled", True):
         return ""
     hints: list[str] = []
     builtin = _builtin_skill_text(task_mode)
     if builtin:
         hints.append(f"[skill bawaan {task_mode}]\n{builtin}")
+    hints.extend(_custom_skill_texts(task_mode, subject_code))
     try:
         row = await database.get_skill(skill_name(task_mode, subject_code))
     except Exception:
