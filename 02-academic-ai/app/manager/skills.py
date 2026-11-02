@@ -111,7 +111,11 @@ async def _best_effort_sync_academic_skills(database) -> None:
 
 
 def _custom_skill_texts(task_mode: str, subject_code: str) -> list[str]:
-    """Muat skill tambahan hasil impor dari GitHub (`prompts/skills/custom/*.md`)."""
+    """Muat skill tambahan hasil impor dari GitHub (`prompts/skills/custom/*.md`).
+
+    Agar konteks LLM lokal (Ollama/9Router) tetap hemat dan presisi, skill referensi besar
+    hanya disuntikkan otomatis ke prompt chat bila memiliki `auto_inject: true` di frontmatter.
+    """
     custom_dir = SKILLS_DIR / "custom"
     if not custom_dir.is_dir():
         return []
@@ -125,7 +129,7 @@ def _custom_skill_texts(task_mode: str, subject_code: str) -> list[str]:
             continue
         if not raw:
             continue
-        # Cek filter opsional di frontmatter (`task_mode:` atau `subject:`)
+        auto_inject = False
         allowed_modes: set[str] = set()
         allowed_subjects: set[str] = set()
         lines = raw.splitlines()
@@ -134,19 +138,24 @@ def _custom_skill_texts(task_mode: str, subject_code: str) -> list[str]:
                 s = ln.strip()
                 if s == "---":
                     break
-                if s.lower().startswith("task_mode:"):
+                low = s.lower()
+                if low.startswith("auto_inject:"):
+                    auto_inject = low.split(":", 1)[1].strip() in ("true", "1", "yes")
+                elif low.startswith("task_mode:"):
                     allowed_modes = {
                         x.strip().lower() for x in s.split(":", 1)[1].split(",") if x.strip()
                     }
-                elif s.lower().startswith("subject:"):
+                elif low.startswith("subject:"):
                     allowed_subjects = {
                         x.strip().lower() for x in s.split(":", 1)[1].split(",") if x.strip()
                     }
+        if not auto_inject:
+            continue
         if allowed_modes and mode_low not in allowed_modes:
             continue
         if allowed_subjects and subj_low not in allowed_subjects:
             continue
-        loaded.append(f"[skill tambahan {md_path.stem}]\n{raw[:2000]}")
+        loaded.append(f"[skill tambahan {md_path.stem}]\n{raw[:1800]}")
     return loaded
 
 

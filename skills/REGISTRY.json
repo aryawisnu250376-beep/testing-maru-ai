@@ -1,14 +1,28 @@
 {
   "schema_version": "1.0",
   "repository": "aryawisnu250376-beep/testing-maru-ai",
-  "total_skills": 12,
+  "total_skills": 24,
   "skills": [
+    {
+      "id": "academic/academy-guide",
+      "division": "academic",
+      "name": "academy-guide",
+      "path": "skills/academic/academy-guide/SKILL.md",
+      "description": "Stop and check this skill before finishing any reply to a question about how"
+    },
     {
       "id": "academic/answer",
       "division": "academic",
       "name": "answer",
       "path": "skills/academic/answer/SKILL.md",
       "description": "Skill: Menjawab Pertanyaan Kuliah (answer)"
+    },
+    {
+      "id": "academic/bedah-jurnal",
+      "division": "academic",
+      "name": "bedah-jurnal",
+      "path": "skills/academic/bedah-jurnal/SKILL.md",
+      "description": "Analisis kritis struktur jurnal ilmiah, metode penelitian, sampel, temuan, dan disiplin sitasi akademik."
     },
     {
       "id": "academic/citation-discipline",
@@ -18,11 +32,39 @@
       "description": "Skill: Disiplin Sitasi & Anti-Halusinasi (semua mode)"
     },
     {
+      "id": "academic/doc-coauthoring",
+      "division": "academic",
+      "name": "doc-coauthoring",
+      "path": "skills/academic/doc-coauthoring/SKILL.md",
+      "description": "Guide users through a structured workflow for co-authoring documentation. Use when user wants to write documentation, proposals, technical specs, decision docs, or similar structured content. This workflow helps users ef"
+    },
+    {
+      "id": "academic/docx",
+      "division": "academic",
+      "name": "docx",
+      "path": "skills/academic/docx/SKILL.md",
+      "description": "Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files) or Word templates (.dotx files). Triggers include: any mention of 'Word doc', 'word document', '.docx', '.dotx', or"
+    },
+    {
       "id": "academic/explain-simple",
       "division": "academic",
       "name": "explain-simple",
       "path": "skills/academic/explain-simple/SKILL.md",
       "description": "Template prompt akademik (explain_simple.md)"
+    },
+    {
+      "id": "academic/pdf",
+      "division": "academic",
+      "name": "pdf",
+      "path": "skills/academic/pdf/SKILL.md",
+      "description": "Use this skill whenever the user wants to do anything with PDF files. This includes reading or extracting text/tables from PDFs, combining or merging multiple PDFs into one, splitting PDFs apart, rotating pages, adding w"
+    },
+    {
+      "id": "academic/pptx",
+      "division": "academic",
+      "name": "pptx",
+      "path": "skills/academic/pptx/SKILL.md",
+      "description": "Use this skill any time a .pptx or .potx file is involved in any way — as input, output, or both. This includes: creating slide decks, pitch decks, or presentations; reading, parsing, or extracting text from any .pptx or"
     },
     {
       "id": "academic/quiz",
@@ -53,6 +95,41 @@
       "description": "Skill: Rangkuman Berstruktur (summary)"
     },
     {
+      "id": "academic/xlsx",
+      "division": "academic",
+      "name": "xlsx",
+      "path": "skills/academic/xlsx/SKILL.md",
+      "description": "Use this skill any time a spreadsheet file is the primary input or output. This means any task where the user wants to: open, read, edit, or fix an existing .xlsx, .xlsm, .xltx, .csv, or .tsv file (e.g., adding columns, "
+    },
+    {
+      "id": "shared/mcp-builder",
+      "division": "shared",
+      "name": "mcp-builder",
+      "path": "skills/shared/mcp-builder/SKILL.md",
+      "description": "Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to interact with external services through well-designed tools. Use when building MCP servers to integrate external APIs or services, "
+    },
+    {
+      "id": "shared/skill-creator",
+      "division": "shared",
+      "name": "skill-creator",
+      "path": "skills/shared/skill-creator/SKILL.md",
+      "description": "Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, edit, or optimize an existing skill, run evals to test a skill, benchmark skill pe"
+    },
+    {
+      "id": "social-media/brand-guidelines",
+      "division": "social-media",
+      "name": "brand-guidelines",
+      "path": "skills/social-media/brand-guidelines/SKILL.md",
+      "description": "Applies Anthropic's official brand colors and typography to any sort of artifact that may benefit from having Anthropic's look-and-feel. Use it when brand colors or style guidelines, visual formatting, or company design "
+    },
+    {
+      "id": "social-media/canvas-design",
+      "division": "social-media",
+      "name": "canvas-design",
+      "path": "skills/social-media/canvas-design/SKILL.md",
+      "description": "Create beautiful visual art in .png and .pdf documents using design philosophy. You should use this skill when the user asks to create a poster, piece of art, design, or other static piece. Create original visual designs"
+    },
+    {
       "id": "social-media/cek-mutu",
       "division": "social-media",
       "name": "cek-mutu",
@@ -79,6 +156,13 @@
       "name": "ringkas-modul",
       "path": "skills/social-media/ringkas-modul/SKILL.md",
       "description": "Ringkas PDF/catatan kuliah jadi poin bernomor halaman."
+    },
+    {
+      "id": "social-media/theme-factory",
+      "division": "social-media",
+      "name": "theme-factory",
+      "path": "skills/social-media/theme-factory/SKILL.md",
+      "description": "Toolkit for styling artifacts with a theme. These artifacts can be slides, docs, reportings, HTML landing pages, etc. There are 10 pre-set themes with colors/fonts that you can apply to any artifact that has been creatin"
     },
     {
       "id": "social-media/usul-jadwal",

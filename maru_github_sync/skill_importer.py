@@ -172,6 +172,30 @@ class GitHubSkillImporter:
             )
             return slugify_skill_name(inferred), text, parsed.raw_url
 
+        # Fast-path untuk repo publik: coba raw.githubusercontent.com terlebih dahulu
+        # agar hemat kuota rate-limit GitHub API ketika token belum diisi.
+        if not self.config.token and parsed.kind in ("tree", "blob"):
+            guess_ref = parsed.ref or "main"
+            candidates = (
+                [parsed.path.lstrip("/")]
+                if (parsed.kind == "blob" or parsed.path.lower().endswith(".md"))
+                else [
+                    f"{parsed.path.strip('/')}/SKILL.md".lstrip("/"),
+                    f"{parsed.path.strip('/')}/skill.md".lstrip("/"),
+                ]
+            )
+            for cand in candidates:
+                raw_try = f"https://raw.githubusercontent.com/{parsed.owner}/{parsed.repo}/{guess_ref}/{cand}"
+                try:
+                    text = self._get_text(raw_try, use_auth=False)
+                    if text.strip():
+                        folder_leaf = Path(cand).parent.name or Path(cand).stem or parsed.repo
+                        inferred = _extract_frontmatter_name(text) or folder_leaf
+                        canonical = f"https://github.com/{parsed.owner}/{parsed.repo}/blob/{guess_ref}/{cand}"
+                        return slugify_skill_name(inferred), text, canonical
+                except GitHubSyncError:
+                    continue
+
         api_base = self.config.api_base
         ref = parsed.ref
         if not ref:

@@ -318,13 +318,17 @@ class MaruGitHubSyncService:
             division = parts[0] if len(parts) > 1 else "shared"
             skill_id = parts[1] if len(parts) > 1 else sk_md.stem
             first_desc = ""
-            for ln in sk_md.read_text(encoding="utf-8", errors="replace").splitlines():
+            lines_list = sk_md.read_text(encoding="utf-8", errors="replace").splitlines()
+            for idx, ln in enumerate(lines_list):
                 s = ln.strip()
                 if s.lower().startswith("description:"):
-                    first_desc = s.split(":", 1)[1].strip()
+                    val = s.split(":", 1)[1].strip().strip('"').strip("'")
+                    if val in (">", "|", ">-", "|-", "") and idx + 1 < len(lines_list):
+                        val = lines_list[idx + 1].strip()
+                    first_desc = val[:220]
                     break
                 if s.startswith("# ") and not first_desc:
-                    first_desc = s.lstrip("# ").strip()
+                    first_desc = s.lstrip("# ").strip()[:220]
             entries.append(
                 {
                     "id": f"{division}/{skill_id}",
