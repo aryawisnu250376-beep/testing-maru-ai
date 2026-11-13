@@ -54,7 +54,11 @@ jobs:
         run: |
           python -m unittest tests/test_phase615_security.py -v
 
-      - name: Run Academic AI Test Suite (129 Tests)
+      - name: Install Academic AI Dependencies
         run: |
-          cd 02-academic-ai
+          pip install google-api-python-client python-multipart aiosqlite openai pypdf
+
+      - name: Run Academic AI Test Suite (129 Tests)
+        working-directory: 02-academic-ai
+        run: |
           python -m pytest -q

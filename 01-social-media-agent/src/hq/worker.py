@@ -133,7 +133,8 @@ class HQWorker:
                 proc.join(timeout=1.0)
                 if proc.is_alive():
                     try:
-                        os.kill(proc.pid, signal.SIGKILL)
+                        sig_kill = getattr(signal, "SIGKILL", signal.SIGTERM)
+                        os.kill(proc.pid, sig_kill)
                         proc.join(timeout=1.0)
                     except Exception:
                         pass
