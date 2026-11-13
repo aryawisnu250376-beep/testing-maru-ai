@@ -65,17 +65,13 @@ class TestPhase613Remediation(unittest.TestCase):
         cls.temp_dir = tempfile.mkdtemp()
         dashboard.RUNTIME = security.from_environment("127.0.0.1")
         
-        # Bind ephemeral port
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.bind(('127.0.0.1', 0))
-        cls.port = sock.getsockname()[1]
-        sock.close()
-
         from http.server import HTTPServer
-        cls.server = HTTPServer(("127.0.0.1", cls.port), dashboard.Handler)
+        # Bind directly to port 0 to prevent SO_REUSEADDR port hijacking or race condition on Windows
+        cls.server = HTTPServer(("127.0.0.1", 0), dashboard.Handler)
+        cls.port = cls.server.server_port
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
-        time.sleep(0.3)
+        time.sleep(0.5)
 
     @classmethod
     def tearDownClass(cls):
