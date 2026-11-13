@@ -55,7 +55,7 @@ jobs:
         run: |
           python -c "import sys, pytest; sys.path.insert(0, '02-academic-ai'); sys.exit(pytest.main(['02-academic-ai/tests', '-q']))"
 
-- name: Run Academic AI Test Suite (129 Tests - Windows)
+      - name: Run Academic AI Test Suite (129 Tests - Windows)
         if: runner.os == 'Windows'
         working-directory: 02-academic-ai
         run: |
