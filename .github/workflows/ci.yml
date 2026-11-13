@@ -31,6 +31,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Set up Node.js for Academic JS Tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Install System Dependencies (Ubuntu)
         if: runner.os == 'Linux'
         run: |
@@ -50,16 +55,22 @@ jobs:
         run: |
           python -m unittest tests/test_phase615_security.py -v
 
-      - name: Run Academic AI Test Suite (129 Tests - Linux)
+      - name: Run Academic AI Node.js Agent Office Tests
+        working-directory: 02-academic-ai
+        run: |
+          node tests/test_agent_office.js
+          node tests/test_web_ui.js
+
+      - name: Run Academic AI Python Test Suite (129 Tests - Linux)
         if: runner.os == 'Linux'
         run: |
           python -c "import sys, pytest; sys.path.insert(0, '02-academic-ai'); sys.exit(pytest.main(['02-academic-ai/tests', '-q']))"
 
-      - name: Run Academic AI Test Suite (129 Tests - Windows)
+      - name: Run Academic AI Python Test Suite (129 Tests - Windows)
         if: runner.os == 'Windows'
         working-directory: 02-academic-ai
         run: |
-          python -c "import sys, os, pytest; sys.path.insert(0, os.getcwd()); sys.exit(pytest.main(['tests', '-q']))"
+          python -c "import sys, os, pytest; sys.path.insert(0, os.getcwd()); sys.exit(pytest.main(['tests', '-q', '-p', 'no:warnings']))"
 
       - name: Run Phase 6.1.3 & 6.1.4 Auth, Isolation & Rendering Security Suite (Linux)
         if: runner.os == 'Linux'
