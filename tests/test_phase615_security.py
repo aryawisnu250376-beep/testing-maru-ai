@@ -1,27 +1,23 @@
 import unittest
 import time
 import os
+import tempfile
+import shutil
 from pathlib import Path
 
 from src.hq.memory import HQMemoryManager, InternalAuthAuthority, CallerContext
 
 class TestPhase615ComprehensiveSecurity(unittest.TestCase):
     def setUp(self):
-        self.test_db = Path("data/test_phase615_mem.db")
-        if self.test_db.exists():
-            self.test_db.unlink()
+        self.temp_dir = tempfile.mkdtemp()
+        self.test_db = Path(self.temp_dir) / "test_phase615_mem.db"
         self.memory = HQMemoryManager(db_path=self.test_db)
 
     def tearDown(self):
-        if self.test_db.exists():
-            try:
-                self.test_db.unlink()
-            except Exception:
-                pass
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_01_impersonation_using_magic_ids_fails_closed(self):
         """Proof: Passing EMP-L01, HQ, or PEMILIK without server-issued token fails closed to unauthenticated."""
-        # An attacker claiming to be EMP-L01 / Director without token
         ctx = CallerContext.resolve_authenticated("fake_token_123")
         self.assertFalse(ctx.authenticated)
         self.assertFalse(ctx.is_hq)
@@ -38,7 +34,6 @@ class TestPhase615ComprehensiveSecurity(unittest.TestCase):
         self.assertTrue(ctx.authenticated)
         self.assertTrue(ctx.is_hq)
 
-        # Revocation
         InternalAuthAuthority.revoke(principal.session_token)
         revoked_ctx = CallerContext.resolve_authenticated(principal.session_token)
         self.assertFalse(revoked_ctx.authenticated)
@@ -68,11 +63,9 @@ class TestPhase615ComprehensiveSecurity(unittest.TestCase):
         )
 
         p_hermes = InternalAuthAuthority.issue_principal("EMP-L02", "secret")
-        # Hermes tries to update Ardi's record
         with self.assertRaises(PermissionError):
             self.memory.update(rec.memory_id, "Hacked content", editor="EMP-L02", auth_token=p_hermes.session_token)
 
-        # Hermes tries to delete Ardi's record
         with self.assertRaises(PermissionError):
             self.memory.delete(rec.memory_id, actor="EMP-L02", auth_token=p_hermes.session_token)
 
