@@ -18,7 +18,7 @@ from typing import Optional, List, Dict, Any, Tuple
 
 from src.hq.models import (
     CanonicalJob, JobStatus, JobPriority, JobBudget,
-    IdempotencyConflictError, DependencyNotSatisfiedError, DependencyLoopError
+    IdempotencyConflictError, DependencyNotSatisfiedError, DependencyLoopError, DependencyNotFoundError
 )
 from src.hq.database import get_connection, init_db, DEFAULT_DB_PATH
 
@@ -71,11 +71,24 @@ class HQJobQueue:
                 conn.execute("COMMIT")
                 return existing_job
 
-            # Prevent self-dependency or simple dependency loop
+            # P0: Validate dependency existence & loops
             dep_list = dependencies or []
             if parent_task_id and parent_task_id in dep_list:
                 conn.execute("ROLLBACK")
                 raise DependencyLoopError("Self-dependency detected between parent_task_id and dependencies")
+
+            if dep_list:
+                # Check for self loop
+                # Also check existence of dependencies in DB
+                placeholders = ",".join("?" for _ in dep_list)
+                dep_chk = conn.execute(
+                    f"SELECT task_id, status FROM hq_jobs WHERE task_id IN ({placeholders})", dep_list
+                ).fetchall()
+                found_map = dict(dep_chk)
+                for d in dep_list:
+                    if d not in found_map:
+                        conn.execute("ROLLBACK")
+                        raise DependencyNotFoundError(f"Dependency task '{d}' does not exist in queue!")
 
             now = time.time()
             task_id = f"JOB-{time.strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"

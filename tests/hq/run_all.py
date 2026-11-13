@@ -1,36 +1,38 @@
 """
-MARU HQ Phase 6.1.1 Canonical Test Runner — Single Command Execution
+MARU HQ Comprehensive Canonical Test Runner
+Phase 6.1.1 (26 Checks) + Phase 6.1.2 Internal Autonomy (7 Checks) = 33 Total Checks
 Usage:
   python -m tests.hq.run_all
-  or
-  pytest tests/hq -v
 """
 
 import unittest
 import sys
 from pathlib import Path
 
-# Add repo root to sys.path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from tests.hq.test_job_engine import TestHQCorePhase611
+from tests.hq.test_phase612_autonomy import TestHQInternalAutonomyPhase612
 
 def run_all():
     print("======================================================================")
-    print("MARU HQ — PHASE 6.1.1 CANONICAL TEST SUITE (26 ACCEPTANCE CHECKS)")
+    print("MARU HQ — FULL CANONICAL TEST SUITE (PHASE 6.1.1 + PHASE 6.1.2)")
     print("======================================================================\n")
 
     loader = unittest.TestLoader()
-    suite = loader.loadTestsFromTestCase(TestHQCorePhase611)
+    suite = unittest.TestSuite()
+    suite.addTests(loader.loadTestsFromTestCase(TestHQCorePhase611))
+    suite.addTests(loader.loadTestsFromTestCase(TestHQInternalAutonomyPhase612))
+
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
 
     print("\n======================================================================")
-    print(f"TESTS RUN: {result.testsRun}")
+    print(f"TOTAL TESTS RUN: {result.testsRun}")
     print(f"FAILURES: {len(result.failures)}")
     print(f"ERRORS: {len(result.errors)}")
-    print(f"RESULT: {'PASS (100% SUCCESS)' if result.wasSuccessful() else 'FAIL'}")
+    print(f"FINAL RESULT: {'PASS (100% SUCCESS)' if result.wasSuccessful() else 'FAIL'}")
     print("======================================================================")
 
     if not result.wasSuccessful():

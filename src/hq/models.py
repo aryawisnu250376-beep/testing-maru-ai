@@ -34,6 +34,10 @@ class DependencyNotSatisfiedError(Exception):
     """Raised when a job's dependencies are not yet completed."""
     pass
 
+class DependencyNotFoundError(Exception):
+    """Raised when a dependency task_id does not exist."""
+    pass
+
 class DependencyLoopError(Exception):
     """Raised when circular or self-dependencies are detected."""
     pass
