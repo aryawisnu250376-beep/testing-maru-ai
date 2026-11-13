@@ -1,14 +1,16 @@
 """
 MARU HQ Persistent Organizational Memory & Knowledge Base Subsystem
-Phase 6.1.2 Internal Autonomy
+Phase 6.1.3 Hardened
 Implements:
  - Persistent SQLite Storage with WAL Mode
  - Task-Context Memory & Organizational Shared Knowledge
- - Agent-Specific Scoped Permissions & Provenance
- - Relevance & Semantic Tag-Based Retrieval
- - Deduplication via Content Hashes
- - Tombstone Deletion & Update Records
- - Restart Recovery & Zero External Dependencies
+ - Strict Scoped Permissions:
+    * ORGANIZATIONAL: Accessible to HQ, Leaders & Specialists with explicit permission
+    * AGENT:<id>: Accessible only to the owning Agent (and HQ supervisor)
+    * DIVISION:<id>: Accessible only to members of that specific division (and HQ)
+    * HQ_ONLY: Accessible strictly to HQ Core (e.g. EMP-L01 / Director)
+ - Provenance, Versioning, and Content-Hash Deduplication
+ - Tombstone Deletion & Restart Recovery
 """
 
 import sqlite3
@@ -21,10 +23,23 @@ from dataclasses import dataclass, asdict
 
 DEFAULT_MEMORY_DB = Path(__file__).resolve().parent.parent.parent / "data" / "hq_memory.db"
 
+# Division membership mapping for strict authorization
+AGENT_DIVISION_MAP = {
+    "EMP-L01": "EXECUTIVE_SUITE",
+    "EMP-L02": "CREATIVE_CORE",
+    "EMP-L03": "ACADEMIC_INTELLIGENCE",
+    "EMP-L04": "TELEMETRY_GROWTH",
+    "EMP-L05": "AUDIO_PRODUCTION",
+    "EMP-L06": "QUALITY_ASSURANCE",
+    "EMP-L07": "VISUAL_DESIGN",
+    "EMP-L08": "SYSTEM_OPERATIONS",
+    "EMP-L09": "PIPELINE_ORCHESTRATION",
+}
+
 @dataclass
 class MemoryRecord:
     memory_id: str
-    scope: str                  # 'ORGANIZATIONAL' or 'AGENT:<agent_id>' or 'DIVISION:<div_id>'
+    scope: str                  # 'ORGANIZATIONAL', 'HQ_ONLY', 'AGENT:<id>', 'DIVISION:<id>'
     category: str               # 'RESEARCH', 'GUIDELINE', 'TASK_CONTEXT', 'DECISION', 'POLICY'
     title: str
     content: str
@@ -37,8 +52,7 @@ class MemoryRecord:
     updated_at: float
 
     def to_dict(self) -> Dict[str, Any]:
-        d = asdict(self)
-        return d
+        return asdict(self)
 
 class HQMemoryManager:
     def __init__(self, db_path: Optional[Path] = None):
@@ -93,12 +107,10 @@ class HQMemoryManager:
         prov.setdefault("stored_at", now)
 
         with self._get_connection() as conn:
-            # Check deduplication
             cur = conn.execute("SELECT * FROM hq_memory WHERE content_hash = ?", (c_hash,))
             row = cur.fetchone()
             if row:
                 if row["is_deleted"] == 1:
-                    # Undelete
                     conn.execute(
                         "UPDATE hq_memory SET is_deleted = 0, updated_at = ? WHERE memory_id = ?",
                         (now, row["memory_id"])
@@ -120,7 +132,6 @@ class HQMemoryManager:
             return self._row_to_record(cur.fetchone())
 
     def update(self, memory_id: str, new_content: str, editor: str) -> Optional[MemoryRecord]:
-        """Updates memory content, incrementing version and preserving history."""
         now = time.time()
         with self._get_connection() as conn:
             cur = conn.execute("SELECT * FROM hq_memory WHERE memory_id = ? AND is_deleted = 0", (memory_id,))
@@ -149,7 +160,6 @@ class HQMemoryManager:
             return self._row_to_record(cur.fetchone())
 
     def delete(self, memory_id: str, actor: str) -> bool:
-        """Tombstone soft-deletion for auditable history."""
         now = time.time()
         with self._get_connection() as conn:
             cur = conn.execute("SELECT provenance_json FROM hq_memory WHERE memory_id = ? AND is_deleted = 0", (memory_id,))
@@ -168,23 +178,51 @@ class HQMemoryManager:
             return True
 
     def query(self, reader_agent_id: Optional[str] = None,
+              reader_division: Optional[str] = None,
+              is_hq: bool = False,
               scope: Optional[str] = None,
               category: Optional[str] = None,
               keyword: Optional[str] = None,
               tag: Optional[str] = None,
               limit: int = 50) -> List[MemoryRecord]:
-        """Queries memory honoring permission boundaries."""
+        """Queries memory honoring strict permission boundaries (Priority 4)."""
         with self._get_connection() as conn:
             sql = "SELECT * FROM hq_memory WHERE is_deleted = 0"
             params: List[Any] = []
 
-            # Permission check: Agent can access ORGANIZATIONAL or its own AGENT:<id> scope
-            if reader_agent_id:
-                sql += " AND (scope = 'ORGANIZATIONAL' OR scope = ? OR scope LIKE 'DIVISION:%')"
+            # Priority 4: Strict Permission Enforcement
+            if is_hq or reader_agent_id in ("HQ", "PEMILIK", "EMP-L01"):
+                # HQ Core / Lead Director can access ORGANIZATIONAL, HQ_ONLY, all AGENT and DIVISION scopes
+                if scope:
+                    sql += " AND scope = ?"
+                    params.append(scope)
+            elif reader_agent_id:
+                # Specialist agent access rule:
+                # 1. ORGANIZATIONAL
+                # 2. AGENT:<reader_agent_id>
+                # 3. DIVISION:<own_division> ONLY
+                # NEVER HQ_ONLY or other agents/divisions
+                div = reader_division or AGENT_DIVISION_MAP.get(reader_agent_id)
+                allowed_clauses = ["scope = 'ORGANIZATIONAL'", "scope = ?"]
                 params.append(f"AGENT:{reader_agent_id}")
+                
+                if div:
+                    allowed_clauses.append("scope = ?")
+                    params.append(f"DIVISION:{div}")
+
+                sql += f" AND ({' OR '.join(allowed_clauses)})"
+                sql += " AND scope != 'HQ_ONLY'"
             elif scope:
-                sql += " AND scope = ?"
-                params.append(scope)
+                # Unauthenticated or anonymous query: strictly cannot see private agent, division or HQ_ONLY scopes
+                if scope in ("ORGANIZATIONAL",):
+                    sql += " AND scope = ?"
+                    params.append(scope)
+                else:
+                    # Deny unauthorized access to private scopes without reader credentials
+                    sql += " AND 1 = 0"
+            else:
+                # Default anonymous access: only ORGANIZATIONAL
+                sql += " AND scope = 'ORGANIZATIONAL'"
 
             if category:
                 sql += " AND category = ?"

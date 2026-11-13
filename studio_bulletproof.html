@@ -1216,12 +1216,10 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
   async function api(path, payload) {
     const headers = { "Content-Type": "application/json" };
     let targetUrl = path;
-    // P0: Never attach stale or expired token when authenticating via /api/login
+    // P1: Strictly pass token via Authorization and X-Maru-Token headers only. Never leak into URL query parameters!
     if (S.token && path !== "/api/login") {
       headers["Authorization"] = "Bearer " + S.token;
       headers["X-Maru-Token"] = S.token;
-      const sep = targetUrl.includes("?") ? "&" : "?";
-      targetUrl = targetUrl + sep + "_st=" + encodeURIComponent(S.token);
     }
     const res = await fetch(targetUrl, {
       method: payload !== undefined ? "POST" : "GET",
@@ -1915,12 +1913,13 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     } catch (err) {
       S.failCount = (S.failCount || 0) + 1;
       const is401 = !!(err && err.status === 401);
-      if (is401 && S.failCount >= 3) {
-        try { toast("Sesi berakhir \u2014 silakan login ulang."); } catch (e) {}
+      if (is401) {
+        // Priority 1: Immediate session invalidation on confirmed HTTP 401
+        try { toast("Sesi berakhir atau tidak sah — silakan login ulang."); } catch (e) {}
         try { S.token = ""; safeSetToken(""); } catch (e) {}
         const ls = document.getElementById("login-screen");
         if (ls) ls.classList.remove("hidden");
-      } else if (!is401 && S.failCount === 1) {
+      } else if (S.failCount === 1) {
         try { toast("\u26a0\ufe0f Data dashboard gagal dimuat \u2014 pastikan server (mulai.cmd) hidup; akan dicoba lagi otomatis."); } catch (e) {}
       }
     }

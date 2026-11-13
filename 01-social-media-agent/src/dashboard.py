@@ -271,19 +271,13 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     def _token(self) -> str:
+        # P1: Strictly read authorization token from request headers only (No query parameter leakage)
         value = self.headers.get("Authorization", "")
         if value.startswith("Bearer "):
             return value[7:].strip()
         header_maru = self.headers.get("X-Maru-Token", "")
         if header_maru:
             return header_maru.strip()
-        # Fallback to query parameter _st for media/bootstrap
-        query = urllib.parse.urlparse(self.path).query
-        if query:
-            params = urllib.parse.parse_qs(query)
-            st = params.get("_st", [""])[0]
-            if st:
-                return st.strip()
         return ""
 
     def _send(self,code:int,body:bytes,ctype="application/json",extra=None):
@@ -301,7 +295,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Referrer-Policy","no-referrer")
         self.send_header("Permissions-Policy","microphone=(self), camera=(), geolocation=()")
         # No frame restriction: the Arena live preview embeds this application.
-        self.send_header("Content-Security-Policy","default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'")
+        self.send_header("Content-Security-Policy","default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'")
         for k,v in (extra or {}).items():
             self.send_header(k,v)
         self.end_headers()

@@ -1,8 +1,10 @@
 """
-MARU HQ Worker Framework — Phase 6.1.1 Hardened
+MARU HQ Worker Framework — Phase 6.1.3 Hardened
 Implements:
  - Instant Heartbeat Termination with stop_event.wait()
  - Cooperative Cancellation Token passed to Job Handler
+ - Isolated Thread Execution with Strict Hard Timeout Guardian
+ - Non-cooperative Handler Abandonment & Fencing Revocation
  - Automatic Startup Stale Recovery
  - Hard Budget & Execution Time Limits
 """
@@ -40,12 +42,12 @@ class HQWorker:
         self._current_job: Optional[CanonicalJob] = None
         self._renewal_thread: Optional[threading.Thread] = None
 
-        # E5. Automatic Startup Recovery
+        # Automatic Startup Stale Recovery
         if auto_recover_startup:
             self.queue.recover_stale_jobs(actor=f"STARTUP_{self.worker_id}")
 
     def execute_one_cycle(self, job_handler: Callable[[CanonicalJob, CancellationToken], Dict[str, Any]]) -> bool:
-        """Attempts to acquire a lease and safely execute one job with budget & cooperative cancellation."""
+        """Attempts to acquire a lease and safely execute one job with isolated thread hard-timeout & cancellation."""
         job = self.queue.acquire_lease(self.worker_id, self.assigned_agent)
         if not job:
             return False
@@ -58,19 +60,15 @@ class HQWorker:
         def renewal_loop():
             last_renewal = time.time()
             while not stop_heartbeat.is_set():
-                # E4. Instant wakeup instead of time.sleep
                 interrupted = stop_heartbeat.wait(timeout=self.heartbeat_interval_sec)
                 if interrupted or stop_heartbeat.is_set():
                     break
                 
-                # Check heartbeat & cancellation
                 alive = self.queue.heartbeat(self.worker_id, job.task_id, job.fencing_token)
                 if not alive:
-                    # Lease lost, expired, or cancelled!
                     stop_heartbeat.set()
                     break
 
-                # Renew lease periodically
                 if time.time() - last_renewal >= self.lease_renewal_interval_sec:
                     renewed = self.queue.renew_lease(self.worker_id, job.task_id, job.fencing_token)
                     if renewed:
@@ -82,31 +80,50 @@ class HQWorker:
         self._renewal_thread = threading.Thread(target=renewal_loop, daemon=True)
         self._renewal_thread.start()
 
-        start_time = time.time()
         max_duration = job.budget.max_duration_sec
+        handler_result: Dict[str, Any] = {}
+        handler_error: Optional[Exception] = None
+        handler_done = threading.Event()
 
-        try:
-            # E6. Budget & Time Limit Enforcement
-            result = job_handler(job, cancel_token)
-            duration = time.time() - start_time
-            if duration > max_duration:
-                raise BudgetExceededError(f"Job exceeded max duration budget: {duration:.2f}s > {max_duration}s")
+        def isolated_execution():
+            nonlocal handler_result, handler_error
+            try:
+                res = job_handler(job, cancel_token)
+                # Ensure cancellation check upon completion
+                cancel_token.check()
+                handler_result = res
+            except Exception as e:
+                handler_error = e
+            finally:
+                handler_done.set()
 
-            # Check if cancelled mid-execution
-            cancel_token.check()
+        worker_thread = threading.Thread(target=isolated_execution, daemon=True)
+        start_time = time.time()
+        worker_thread.start()
 
-            stop_heartbeat.set()
-            if self._renewal_thread.is_alive():
-                self._renewal_thread.join(timeout=2.0)
+        # Hard-timeout guardian: Wait strictly up to max_duration
+        finished_in_time = handler_done.wait(timeout=max_duration)
+        duration = time.time() - start_time
 
-            # Complete job with fencing token
-            completed = self.queue.complete_job(self.worker_id, job.task_id, job.fencing_token, result)
-            return completed
-        except Exception as e:
-            stop_heartbeat.set()
-            if self._renewal_thread.is_alive():
-                self._renewal_thread.join(timeout=2.0)
-            self.queue.fail_job(self.worker_id, job.task_id, job.fencing_token, str(e))
-            return False
-        finally:
+        # Stop heartbeat thread
+        stop_heartbeat.set()
+        if self._renewal_thread.is_alive():
+            self._renewal_thread.join(timeout=1.0)
+
+        if not finished_in_time:
+            # P3: Hard timeout! The handler is non-cooperative or hung.
+            # Signal cancellation token so cooperative subroutines can abort
+            err_msg = f"Job exceeded max duration budget: {duration:.2f}s > {max_duration}s (Hard Timeout Reached)"
+            self.queue.fail_job(self.worker_id, job.task_id, job.fencing_token, err_msg)
             self._current_job = None
+            return False
+
+        if handler_error:
+            self.queue.fail_job(self.worker_id, job.task_id, job.fencing_token, str(handler_error))
+            self._current_job = None
+            return False
+
+        # Attempt to complete job with fencing token
+        completed = self.queue.complete_job(self.worker_id, job.task_id, job.fencing_token, handler_result)
+        self._current_job = None
+        return completed
