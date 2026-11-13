@@ -62,7 +62,7 @@ class HQWorker:
             self.queue.recover_stale_jobs(actor=f"STARTUP_{self.worker_id}")
 
     def execute_one_cycle(self, job_handler: Callable[[CanonicalJob, CancellationToken], Dict[str, Any]],
-                          use_process_isolation: bool = False) -> bool:
+                          use_process_isolation: Optional[bool] = None) -> bool:
         """
         Attempts to acquire a lease and safely execute one job.
         If use_process_isolation=True, runs in an OS child process with SIGTERM/SIGKILL hard termination.
@@ -102,6 +102,13 @@ class HQWorker:
 
         max_duration = job.budget.max_duration_sec
         start_time = time.time()
+
+        # Default: Process isolation if not explicitly set to False and handler is picklable
+        if use_process_isolation is None:
+            # Check if job handler is a module-level picklable function
+            import inspect
+            is_nested = "<locals>" in getattr(job_handler, "__qualname__", "")
+            use_process_isolation = not is_nested
 
         if use_process_isolation:
             # PRIORITY B: True OS Process Isolation for Hard Timeout

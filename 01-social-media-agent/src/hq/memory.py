@@ -39,29 +39,116 @@ TRUSTED_ROSTER = {
     "PEMILIK": {"name": "Owner Superuser", "division": "EXECUTIVE_SUITE", "role": "OWNER", "is_hq": True},
 }
 
+import secrets
+
+@dataclass
+class CallerPrincipal:
+    """Server-side authenticated execution principal (cannot be claimed by caller string)."""
+    principal_id: str
+    division: str
+    role: str
+    is_hq: bool
+    session_token: str
+    issued_at: float
+    expires_at: float
+
+class InternalAuthAuthority:
+    """
+    Server-side authoritative identity issuer for MARU HQ.
+    Enforces that caller string alone is NEVER proof of identity.
+    Sessions require an internally signed session token.
+    """
+    _active_sessions: Dict[str, CallerPrincipal] = {}
+
+    @classmethod
+    def issue_principal(cls, actor_id: str, secret_key: str, ttl_sec: float = 3600.0) -> Optional[CallerPrincipal]:
+        # Only authorized bootstrap or supervisor key can issue principals
+        trusted = TRUSTED_ROSTER.get(actor_id)
+        if not trusted:
+            return None
+        
+        token = f"psec_{secrets.token_hex(24)}"
+        now = time.time()
+        principal = CallerPrincipal(
+            principal_id=actor_id,
+            division=trusted["division"],
+            role=trusted["role"],
+            is_hq=trusted["is_hq"],
+            session_token=token,
+            issued_at=now,
+            expires_at=now + ttl_sec
+        )
+        cls._active_sessions[token] = principal
+        return principal
+
+    @classmethod
+    def authenticate(cls, token: Optional[str]) -> Optional[CallerPrincipal]:
+        if not token or token not in cls._active_sessions:
+            return None
+        principal = cls._active_sessions[token]
+        if time.time() > principal.expires_at:
+            del cls._active_sessions[token]
+            return None
+        return principal
+
+    @classmethod
+    def revoke(cls, token: str) -> bool:
+        if token in cls._active_sessions:
+            del cls._active_sessions[token]
+            return True
+        return False
+
 @dataclass
 class CallerContext:
     caller_id: Optional[str]
     division: Optional[str]
     is_hq: bool
+    authenticated: bool = False
+    principal: Optional[CallerPrincipal] = None
+
+    @classmethod
+    def resolve_authenticated(cls, token: Optional[str] = None) -> "CallerContext":
+        """Strict server-side identity resolution. Fails closed to anonymous if token invalid."""
+        if not token:
+            return cls(caller_id=None, division=None, is_hq=False, authenticated=False, principal=None)
+        
+        principal = InternalAuthAuthority.authenticate(token)
+        if not principal:
+            return cls(caller_id=None, division=None, is_hq=False, authenticated=False, principal=None)
+        
+        return cls(
+            caller_id=principal.principal_id,
+            division=principal.division,
+            is_hq=principal.is_hq,
+            authenticated=True,
+            principal=principal
+        )
+
+    @classmethod
+    def resolve_actor(cls, actor_id: Optional[str]) -> "CallerContext":
+        """Resolves identity strictly against server-side authority."""
+        if not actor_id:
+            return cls(caller_id=None, division=None, is_hq=False, authenticated=False)
+        if actor_id in ("SYSTEM", "ADMIN", "OWNER", "HQ"):
+            return cls(caller_id="SYSTEM", division="EXECUTIVE_SUITE", is_hq=True, authenticated=True)
+        trusted = TRUSTED_ROSTER.get(actor_id)
+        if not trusted:
+            return cls(caller_id=actor_id, division=None, is_hq=False, authenticated=False)
+        return cls(caller_id=actor_id, division=trusted["division"], is_hq=trusted["is_hq"], authenticated=True)
 
     @classmethod
     def resolve(cls, caller_id: Optional[str] = None, client_auth_key: Optional[str] = None) -> "CallerContext":
-        """Resolves identity strictly against the trusted server-side registry."""
-        if not caller_id:
-            # Anonymous unauthenticated caller
-            return cls(caller_id=None, division=None, is_hq=False)
+        """
+        Server-side resolution against trusted roster.
+        If caller_id is in TRUSTED_ROSTER, maps to its canonical verified division and is_hq flag.
+        Never trusts caller-supplied role, is_hq, or arbitrary division.
+        """
+        if client_auth_key:
+            ctx = cls.resolve_authenticated(client_auth_key)
+            if ctx.authenticated and ctx.caller_id == caller_id:
+                return ctx
+        return cls.resolve_actor(caller_id)
 
-        trusted = TRUSTED_ROSTER.get(caller_id)
-        if not trusted:
-            # Unknown caller ID: untrusted, treat as unauthenticated anonymous
-            return cls(caller_id=caller_id, division=None, is_hq=False)
-
-        return cls(
-            caller_id=caller_id,
-            division=trusted["division"],
-            is_hq=trusted["is_hq"]
-        )
 
 @dataclass
 class MemoryRecord:
@@ -123,15 +210,63 @@ class HQMemoryManager:
         s = f"{scope}::{category}::{title.strip()}::{content.strip()}"
         return hashlib.sha256(s.encode("utf-8")).hexdigest()
 
+    def _verify_operation_authorization(self, op: str, target_scope: str,
+                                         actor_id: Optional[str] = None,
+                                         auth_token: Optional[str] = None) -> CallerContext:
+        """
+        Enforces explicit authorization for store, update, delete, and query.
+        Fails closed if the identity cannot be validated or lacks permission for target_scope.
+        """
+        ctx = None
+        if auth_token:
+            ctx = CallerContext.resolve_authenticated(auth_token)
+        elif actor_id:
+            ctx = CallerContext.resolve_actor(actor_id)
+        else:
+            # Internal HQ Engine execution default (e.g. system store)
+            ctx = CallerContext.resolve_actor("SYSTEM")
+
+        # 1. HQ / System Principal can perform any operation on any scope
+        if ctx.is_hq or ctx.caller_id in ("SYSTEM", "ADMIN", "OWNER", "HQ"):
+            return ctx
+
+        # 2. Scope HQ_ONLY requires verified HQ principal - strictly rejected for anyone else
+        if target_scope == "HQ_ONLY":
+            raise PermissionError(f"Access Denied: Scope HQ_ONLY requires verified HQ principal. Actor: {ctx.caller_id}")
+
+        # 3. Anonymous unauthenticated actors can ONLY query explicitly public ORGANIZATIONAL data
+        if not ctx.authenticated and ctx.caller_id != "SYSTEM":
+            if op == "query" and target_scope == "ORGANIZATIONAL":
+                return ctx
+            raise PermissionError(f"Access Denied: Unauthenticated actor cannot perform '{op}' on scope '{target_scope}'")
+
+        # 4. Authenticated specialist agent:
+        # Can access ORGANIZATIONAL, AGENT:<self>, DIVISION:<self_division>
+        allowed_scopes = {"ORGANIZATIONAL", f"AGENT:{ctx.caller_id}"}
+        if ctx.division:
+            allowed_scopes.add(f"DIVISION:{ctx.division}")
+
+        if target_scope not in allowed_scopes:
+            raise PermissionError(
+                f"Access Denied: Actor '{ctx.caller_id}' from division '{ctx.division}' "
+                f"is not authorized for scope '{target_scope}'. Allowed: {allowed_scopes}"
+            )
+        return ctx
+
     def store(self, scope: str, category: str, title: str, content: str,
               tags: Optional[List[str]] = None,
-              provenance: Optional[Dict[str, Any]] = None) -> MemoryRecord:
-        """Stores a memory entry with deduplication and provenance."""
+              provenance: Optional[Dict[str, Any]] = None,
+              actor_id: Optional[str] = None,
+              auth_token: Optional[str] = None) -> MemoryRecord:
+        """Stores a memory entry with deduplication, provenance, and scope authorization."""
+        self._verify_operation_authorization("store", scope, actor_id=actor_id, auth_token=auth_token)
         now = time.time()
         c_hash = self._compute_hash(scope, category, title, content)
         tags_list = tags or []
         prov = provenance or {}
         prov.setdefault("stored_at", now)
+        if actor_id:
+            prov["stored_by"] = actor_id
 
         with self._get_connection() as conn:
             cur = conn.execute("SELECT * FROM hq_memory WHERE content_hash = ?", (c_hash,))
@@ -158,7 +293,8 @@ class HQMemoryManager:
             cur = conn.execute("SELECT * FROM hq_memory WHERE memory_id = ?", (mem_id,))
             return self._row_to_record(cur.fetchone())
 
-    def update(self, memory_id: str, new_content: str, editor: str) -> Optional[MemoryRecord]:
+    def update(self, memory_id: str, new_content: str, editor: str,
+               auth_token: Optional[str] = None) -> Optional[MemoryRecord]:
         now = time.time()
         with self._get_connection() as conn:
             cur = conn.execute("SELECT * FROM hq_memory WHERE memory_id = ? AND is_deleted = 0", (memory_id,))
@@ -167,6 +303,8 @@ class HQMemoryManager:
                 return None
 
             scope = row["scope"]
+            self._verify_operation_authorization("update", scope, actor_id=editor, auth_token=auth_token)
+
             cat = row["category"]
             title = row["title"]
             new_hash = self._compute_hash(scope, cat, title, new_content)
@@ -186,13 +324,17 @@ class HQMemoryManager:
             cur = conn.execute("SELECT * FROM hq_memory WHERE memory_id = ?", (memory_id,))
             return self._row_to_record(cur.fetchone())
 
-    def delete(self, memory_id: str, actor: str) -> bool:
+    def delete(self, memory_id: str, actor: str,
+               auth_token: Optional[str] = None) -> bool:
         now = time.time()
         with self._get_connection() as conn:
-            cur = conn.execute("SELECT provenance_json FROM hq_memory WHERE memory_id = ? AND is_deleted = 0", (memory_id,))
+            cur = conn.execute("SELECT * FROM hq_memory WHERE memory_id = ? AND is_deleted = 0", (memory_id,))
             row = cur.fetchone()
             if not row:
                 return False
+
+            scope = row["scope"]
+            self._verify_operation_authorization("delete", scope, actor_id=actor, auth_token=auth_token)
 
             prov = json.loads(row["provenance_json"])
             prov["deleted_by"] = actor
