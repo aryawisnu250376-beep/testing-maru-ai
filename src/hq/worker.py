@@ -1,17 +1,22 @@
 """
-MARU HQ Worker Framework — Phase 6.1.3 Hardened
+MARU HQ Worker Framework — Phase 6.1.3 Remediation
+Priority B: Process Isolation & True Hard Timeout Guardian
 Implements:
- - Instant Heartbeat Termination with stop_event.wait()
- - Cooperative Cancellation Token passed to Job Handler
- - Isolated Thread Execution with Strict Hard Timeout Guardian
- - Non-cooperative Handler Abandonment & Fencing Revocation
+ - Genuine OS Process-Level Isolation via multiprocessing (or cooperative thread where appropriate)
+ - Hard Timeout Guardian with OS SIGTERM / SIGKILL Process Termination
+ - Inter-Process Result & Error Serialization via Queue / Pipe
+ - Safe Process Reaping (Clean Exit & Zombie Prevention)
+ - Fencing Token Invalidation upon Timeout
+ - Instant Heartbeat Termination
  - Automatic Startup Stale Recovery
- - Hard Budget & Execution Time Limits
 """
 
 import time
 import uuid
+import os
+import signal
 import threading
+import multiprocessing
 from typing import Callable, Optional, Dict, Any
 
 from src.hq.queue import HQJobQueue
@@ -29,6 +34,17 @@ class CancellationToken:
         if self._stop_event.is_set():
             raise TimeoutError("Execution cancelled: lease lost or job cancelled by owner")
 
+def _isolated_process_runner(job_dict: Dict[str, Any], handler_code_or_callable: Any, result_queue: Any):
+    """Entry point for isolated child process execution."""
+    try:
+        # Reconstruct CanonicalJob from dict representation to avoid unpicklable DB connections
+        job = CanonicalJob.from_dict(job_dict)
+        # In isolated process, execute handler
+        res = handler_code_or_callable(job, CancellationToken(threading.Event()))
+        result_queue.put({"success": True, "result": res})
+    except Exception as e:
+        result_queue.put({"success": False, "error": str(e)})
+
 class HQWorker:
     def __init__(self, queue: HQJobQueue, worker_id: Optional[str] = None,
                  assigned_agent: Optional[str] = None, heartbeat_interval_sec: float = 5.0,
@@ -42,12 +58,16 @@ class HQWorker:
         self._current_job: Optional[CanonicalJob] = None
         self._renewal_thread: Optional[threading.Thread] = None
 
-        # Automatic Startup Stale Recovery
         if auto_recover_startup:
             self.queue.recover_stale_jobs(actor=f"STARTUP_{self.worker_id}")
 
-    def execute_one_cycle(self, job_handler: Callable[[CanonicalJob, CancellationToken], Dict[str, Any]]) -> bool:
-        """Attempts to acquire a lease and safely execute one job with isolated thread hard-timeout & cancellation."""
+    def execute_one_cycle(self, job_handler: Callable[[CanonicalJob, CancellationToken], Dict[str, Any]],
+                          use_process_isolation: bool = False) -> bool:
+        """
+        Attempts to acquire a lease and safely execute one job.
+        If use_process_isolation=True, runs in an OS child process with SIGTERM/SIGKILL hard termination.
+        Otherwise runs in isolated guardian thread with cooperative cancellation token.
+        """
         job = self.queue.acquire_lease(self.worker_id, self.assigned_agent)
         if not job:
             return False
@@ -56,7 +76,7 @@ class HQWorker:
         stop_heartbeat = threading.Event()
         cancel_token = CancellationToken(stop_heartbeat)
 
-        # Dedicated background heartbeat & renewal thread
+        # Heartbeat & renewal thread
         def renewal_loop():
             last_renewal = time.time()
             while not stop_heartbeat.is_set():
@@ -81,49 +101,95 @@ class HQWorker:
         self._renewal_thread.start()
 
         max_duration = job.budget.max_duration_sec
-        handler_result: Dict[str, Any] = {}
-        handler_error: Optional[Exception] = None
-        handler_done = threading.Event()
-
-        def isolated_execution():
-            nonlocal handler_result, handler_error
-            try:
-                res = job_handler(job, cancel_token)
-                # Ensure cancellation check upon completion
-                cancel_token.check()
-                handler_result = res
-            except Exception as e:
-                handler_error = e
-            finally:
-                handler_done.set()
-
-        worker_thread = threading.Thread(target=isolated_execution, daemon=True)
         start_time = time.time()
-        worker_thread.start()
 
-        # Hard-timeout guardian: Wait strictly up to max_duration
-        finished_in_time = handler_done.wait(timeout=max_duration)
-        duration = time.time() - start_time
+        if use_process_isolation:
+            # PRIORITY B: True OS Process Isolation for Hard Timeout
+            ipc_queue = multiprocessing.Queue()
+            proc = multiprocessing.Process(
+                target=_isolated_process_runner,
+                args=(job.to_dict(), job_handler, ipc_queue),
+                daemon=True
+            )
+            proc.start()
+            proc.join(timeout=max_duration)
+            duration = time.time() - start_time
 
-        # Stop heartbeat thread
-        stop_heartbeat.set()
-        if self._renewal_thread.is_alive():
-            self._renewal_thread.join(timeout=1.0)
+            # Stop heartbeat thread
+            stop_heartbeat.set()
+            if self._renewal_thread.is_alive():
+                self._renewal_thread.join(timeout=1.0)
 
-        if not finished_in_time:
-            # P3: Hard timeout! The handler is non-cooperative or hung.
-            # Signal cancellation token so cooperative subroutines can abort
-            err_msg = f"Job exceeded max duration budget: {duration:.2f}s > {max_duration}s (Hard Timeout Reached)"
-            self.queue.fail_job(self.worker_id, job.task_id, job.fencing_token, err_msg)
+            if proc.is_alive():
+                # Hard timeout reached! Terminate and kill child process
+                proc.terminate()
+                proc.join(timeout=1.0)
+                if proc.is_alive():
+                    try:
+                        os.kill(proc.pid, signal.SIGKILL)
+                        proc.join(timeout=1.0)
+                    except Exception:
+                        pass
+
+                err_msg = f"Job exceeded max duration budget: {duration:.2f}s > {max_duration}s (Process Terminated via SIGTERM/SIGKILL)"
+                self.queue.fail_job(self.worker_id, job.task_id, job.fencing_token, err_msg)
+                self._current_job = None
+                return False
+
+            # Process finished within timeout
+            if not ipc_queue.empty():
+                payload = ipc_queue.get_nowait()
+                if payload.get("success"):
+                    completed = self.queue.complete_job(self.worker_id, job.task_id, job.fencing_token, payload.get("result", {}))
+                    self._current_job = None
+                    return completed
+                else:
+                    self.queue.fail_job(self.worker_id, job.task_id, job.fencing_token, payload.get("error", "Process handler error"))
+                    self._current_job = None
+                    return False
+            else:
+                self.queue.fail_job(self.worker_id, job.task_id, job.fencing_token, f"Process exited with exitcode {proc.exitcode}")
+                self._current_job = None
+                return False
+
+        else:
+            # Guardian Thread with Cooperative Cancellation Token
+            handler_result: Dict[str, Any] = {}
+            handler_error: Optional[Exception] = None
+            handler_done = threading.Event()
+
+            def thread_runner():
+                nonlocal handler_result, handler_error
+                try:
+                    res = job_handler(job, cancel_token)
+                    cancel_token.check()
+                    handler_result = res
+                except Exception as e:
+                    handler_error = e
+                finally:
+                    handler_done.set()
+
+            worker_thread = threading.Thread(target=thread_runner, daemon=True)
+            worker_thread.start()
+
+            finished_in_time = handler_done.wait(timeout=max_duration)
+            duration = time.time() - start_time
+
+            stop_heartbeat.set()
+            if self._renewal_thread.is_alive():
+                self._renewal_thread.join(timeout=1.0)
+
+            if not finished_in_time:
+                err_msg = f"Job exceeded max duration budget: {duration:.2f}s > {max_duration}s (Cooperative Timeout Reached)"
+                self.queue.fail_job(self.worker_id, job.task_id, job.fencing_token, err_msg)
+                self._current_job = None
+                return False
+
+            if handler_error:
+                self.queue.fail_job(self.worker_id, job.task_id, job.fencing_token, str(handler_error))
+                self._current_job = None
+                return False
+
+            completed = self.queue.complete_job(self.worker_id, job.task_id, job.fencing_token, handler_result)
             self._current_job = None
-            return False
-
-        if handler_error:
-            self.queue.fail_job(self.worker_id, job.task_id, job.fencing_token, str(handler_error))
-            self._current_job = None
-            return False
-
-        # Attempt to complete job with fencing token
-        completed = self.queue.complete_job(self.worker_id, job.task_id, job.fencing_token, handler_result)
-        self._current_job = None
-        return completed
+            return completed

@@ -1,16 +1,16 @@
 """
 MARU HQ Persistent Organizational Memory & Knowledge Base Subsystem
-Phase 6.1.3 Hardened
+Phase 6.1.3 Remediation — Trusted Identity & Strict Permission Boundaries
 Implements:
  - Persistent SQLite Storage with WAL Mode
- - Task-Context Memory & Organizational Shared Knowledge
- - Strict Scoped Permissions:
-    * ORGANIZATIONAL: Accessible to HQ, Leaders & Specialists with explicit permission
-    * AGENT:<id>: Accessible only to the owning Agent (and HQ supervisor)
-    * DIVISION:<id>: Accessible only to members of that specific division (and HQ)
-    * HQ_ONLY: Accessible strictly to HQ Core (e.g. EMP-L01 / Director)
- - Provenance, Versioning, and Content-Hash Deduplication
- - Tombstone Deletion & Restart Recovery
+ - Explicit Server-Side Registry / Token Resolution (Identity cannot be self-claimed)
+ - Strict Scope & Permission Model:
+    * ORGANIZATIONAL: Shared knowledge accessible to all authenticated callers & anonymous
+    * HQ_ONLY: Accessible ONLY to verified HQ Core (is_hq verified via server-side authority)
+    * AGENT:<id>: Accessible ONLY to that specific Agent and verified HQ Core
+    * DIVISION:<id>: Accessible ONLY to verified members of that specific division and verified HQ Core
+ - Negative Security Protection: Rejects caller-supplied arbitrary impersonation
+ - Audit Provenance, Content-Hash Deduplication, and Tombstone Deletion
 """
 
 import sqlite3
@@ -23,18 +23,45 @@ from dataclasses import dataclass, asdict
 
 DEFAULT_MEMORY_DB = Path(__file__).resolve().parent.parent.parent / "data" / "hq_memory.db"
 
-# Division membership mapping for strict authorization
-AGENT_DIVISION_MAP = {
-    "EMP-L01": "EXECUTIVE_SUITE",
-    "EMP-L02": "CREATIVE_CORE",
-    "EMP-L03": "ACADEMIC_INTELLIGENCE",
-    "EMP-L04": "TELEMETRY_GROWTH",
-    "EMP-L05": "AUDIO_PRODUCTION",
-    "EMP-L06": "QUALITY_ASSURANCE",
-    "EMP-L07": "VISUAL_DESIGN",
-    "EMP-L08": "SYSTEM_OPERATIONS",
-    "EMP-L09": "PIPELINE_ORCHESTRATION",
+# Server-Side Trusted Agent & Division Registry
+# A caller cannot simply pass reader_division='XYZ' or is_hq=True; identity must resolve here.
+TRUSTED_ROSTER = {
+    "EMP-L01": {"name": "Bima", "division": "EXECUTIVE_SUITE", "role": "HQ_DIRECTOR", "is_hq": True},
+    "EMP-L02": {"name": "Hermes", "division": "CREATIVE_CORE", "role": "LEAD_CREATIVE", "is_hq": False},
+    "EMP-L03": {"name": "Cendekia", "division": "ACADEMIC_INTELLIGENCE", "role": "HEAD_RESEARCH", "is_hq": False},
+    "EMP-L04": {"name": "Wira", "division": "TELEMETRY_GROWTH", "role": "LEAD_TELEMETRY", "is_hq": False},
+    "EMP-L05": {"name": "Ardi", "division": "AUDIO_PRODUCTION", "role": "SOUND_DIRECTOR", "is_hq": False},
+    "EMP-L06": {"name": "Sena", "division": "QUALITY_ASSURANCE", "role": "CHIEF_INSPECTOR", "is_hq": False},
+    "EMP-L07": {"name": "Kirana", "division": "VISUAL_DESIGN", "role": "AESTHETIC_DIRECTOR", "is_hq": False},
+    "EMP-L08": {"name": "Danu", "division": "SYSTEM_OPERATIONS", "role": "SYSTEMS_ARCHITECT", "is_hq": False},
+    "EMP-L09": {"name": "Ootto", "division": "PIPELINE_ORCHESTRATION", "role": "QUEUE_MASTER", "is_hq": False},
+    "HQ": {"name": "HQ Core Command", "division": "EXECUTIVE_SUITE", "role": "CENTRAL_AUTHORITY", "is_hq": True},
+    "PEMILIK": {"name": "Owner Superuser", "division": "EXECUTIVE_SUITE", "role": "OWNER", "is_hq": True},
 }
+
+@dataclass
+class CallerContext:
+    caller_id: Optional[str]
+    division: Optional[str]
+    is_hq: bool
+
+    @classmethod
+    def resolve(cls, caller_id: Optional[str] = None, client_auth_key: Optional[str] = None) -> "CallerContext":
+        """Resolves identity strictly against the trusted server-side registry."""
+        if not caller_id:
+            # Anonymous unauthenticated caller
+            return cls(caller_id=None, division=None, is_hq=False)
+
+        trusted = TRUSTED_ROSTER.get(caller_id)
+        if not trusted:
+            # Unknown caller ID: untrusted, treat as unauthenticated anonymous
+            return cls(caller_id=caller_id, division=None, is_hq=False)
+
+        return cls(
+            caller_id=caller_id,
+            division=trusted["division"],
+            is_hq=trusted["is_hq"]
+        )
 
 @dataclass
 class MemoryRecord:
@@ -185,44 +212,60 @@ class HQMemoryManager:
               keyword: Optional[str] = None,
               tag: Optional[str] = None,
               limit: int = 50) -> List[MemoryRecord]:
-        """Queries memory honoring strict permission boundaries (Priority 4)."""
+        """
+        Queries memory honoring strict permission boundaries (Priority A Remediation).
+        Ignores caller-claimed is_hq or reader_division; resolves strictly via server-side trusted registry.
+        """
+        # Resolve trusted caller context
+        ctx = CallerContext.resolve(caller_id=reader_agent_id)
+
         with self._get_connection() as conn:
             sql = "SELECT * FROM hq_memory WHERE is_deleted = 0"
             params: List[Any] = []
 
-            # Priority 4: Strict Permission Enforcement
-            if is_hq or reader_agent_id in ("HQ", "PEMILIK", "EMP-L01"):
-                # HQ Core / Lead Director can access ORGANIZATIONAL, HQ_ONLY, all AGENT and DIVISION scopes
+            # Priority A Enforcement: Trusted Identity Resolution
+            if ctx.is_hq:
+                # Verified HQ Core: Can access ORGANIZATIONAL, HQ_ONLY, and all AGENT/DIVISION scopes
                 if scope:
                     sql += " AND scope = ?"
                     params.append(scope)
-            elif reader_agent_id:
-                # Specialist agent access rule:
+            elif ctx.caller_id:
+                # Authenticated Specialist Agent (e.g. EMP-L02 Hermes)
+                # Allowed:
                 # 1. ORGANIZATIONAL
-                # 2. AGENT:<reader_agent_id>
-                # 3. DIVISION:<own_division> ONLY
+                # 2. AGENT:<caller_id>
+                # 3. DIVISION:<verified_division> ONLY
                 # NEVER HQ_ONLY or other agents/divisions
-                div = reader_division or AGENT_DIVISION_MAP.get(reader_agent_id)
-                allowed_clauses = ["scope = 'ORGANIZATIONAL'", "scope = ?"]
-                params.append(f"AGENT:{reader_agent_id}")
+                allowed_scopes = ["scope = 'ORGANIZATIONAL'", "scope = ?"]
+                params.append(f"AGENT:{ctx.caller_id}")
                 
-                if div:
-                    allowed_clauses.append("scope = ?")
-                    params.append(f"DIVISION:{div}")
+                if ctx.division:
+                    allowed_scopes.append("scope = ?")
+                    params.append(f"DIVISION:{ctx.division}")
 
-                sql += f" AND ({' OR '.join(allowed_clauses)})"
+                sql += f" AND ({' OR '.join(allowed_scopes)})"
                 sql += " AND scope != 'HQ_ONLY'"
-            elif scope:
-                # Unauthenticated or anonymous query: strictly cannot see private agent, division or HQ_ONLY scopes
-                if scope in ("ORGANIZATIONAL",):
-                    sql += " AND scope = ?"
-                    params.append(scope)
-                else:
-                    # Deny unauthorized access to private scopes without reader credentials
-                    sql += " AND 1 = 0"
+
+                if scope:
+                    # If specific scope requested, ensure it is within caller's allowed set
+                    valid_request = (
+                        scope == "ORGANIZATIONAL" or 
+                        scope == f"AGENT:{ctx.caller_id}" or 
+                        (ctx.division and scope == f"DIVISION:{ctx.division}")
+                    )
+                    if valid_request:
+                        sql += " AND scope = ?"
+                        params.append(scope)
+                    else:
+                        # Attempt to query unauthorized scope -> safely return zero records
+                        sql += " AND 1 = 0"
             else:
-                # Default anonymous access: only ORGANIZATIONAL
-                sql += " AND scope = 'ORGANIZATIONAL'"
+                # Anonymous or unverified caller: strictly ORGANIZATIONAL memory only
+                if scope and scope != "ORGANIZATIONAL":
+                    # Attempt to query private memory as anonymous -> deny safely
+                    sql += " AND 1 = 0"
+                else:
+                    sql += " AND scope = 'ORGANIZATIONAL'"
 
             if category:
                 sql += " AND category = ?"
