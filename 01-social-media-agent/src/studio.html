@@ -1216,11 +1216,10 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
   async function api(path, payload) {
     const headers = { "Content-Type": "application/json" };
     let targetUrl = path;
-    if (S.token) {
+    // P1: Strictly pass token via Authorization and X-Maru-Token headers only. Never leak into URL query parameters!
+    if (S.token && path !== "/api/login") {
       headers["Authorization"] = "Bearer " + S.token;
       headers["X-Maru-Token"] = S.token;
-      const sep = targetUrl.includes("?") ? "&" : "?";
-      targetUrl = targetUrl + sep + "_st=" + encodeURIComponent(S.token);
     }
     const res = await fetch(targetUrl, {
       method: payload !== undefined ? "POST" : "GET",
@@ -1914,12 +1913,13 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     } catch (err) {
       S.failCount = (S.failCount || 0) + 1;
       const is401 = !!(err && err.status === 401);
-      if (is401 && S.failCount >= 3) {
-        try { toast("Sesi berakhir \u2014 silakan login ulang."); } catch (e) {}
+      if (is401) {
+        // Priority 1: Immediate session invalidation on confirmed HTTP 401
+        try { toast("Sesi berakhir atau tidak sah — silakan login ulang."); } catch (e) {}
         try { S.token = ""; safeSetToken(""); } catch (e) {}
         const ls = document.getElementById("login-screen");
         if (ls) ls.classList.remove("hidden");
-      } else if (!is401 && S.failCount === 1) {
+      } else if (S.failCount === 1) {
         try { toast("\u26a0\ufe0f Data dashboard gagal dimuat \u2014 pastikan server (mulai.cmd) hidup; akan dicoba lagi otomatis."); } catch (e) {}
       }
     }
@@ -2022,6 +2022,11 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     if (isInitialized) return;
     const view = document.getElementById("office-3d-viewport");
     if (!view) return;
+    if (typeof THREE === "undefined") {
+      console.warn("[MARU 3D] Three.js library not loaded yet or CDN unavailable. Providing informative fallback UI.");
+      view.innerHTML = '<div style="display:grid;place-items:center;height:100%;color:var(--cyan);font-family:monospace;font-size:13px;background:rgba(6,9,19,0.8);border-radius:12px;padding:20px;text-align:center;"><div><div style="font-size:24px;margin-bottom:8px;">🏢</div><div><b>MARU HQ 3D Living Diorama Siaga</b></div><div style="color:var(--muted);font-size:11px;margin-top:6px;">Modul Three.js CDN offline atau sedang memuat. Kantor 2D Roster tetap 100% aktif & sinkron.</div></div></div>';
+      return;
+    }
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x060913);
