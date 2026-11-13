@@ -46,10 +46,6 @@ jobs:
         run: |
           python -m tests.hq.run_all
 
-      - name: Run Phase 6.1.3 & 6.1.4 Auth, Isolation & Rendering Security Suite (12 Tests)
-        run: |
-          pytest tests/test_auth_and_rendering.py -v
-
       - name: Run Phase 6.1.5 Comprehensive Security & Token Authority Suite (5 Tests)
         run: |
           python -m unittest tests/test_phase615_security.py -v
@@ -57,3 +53,13 @@ jobs:
       - name: Run Academic AI Test Suite (129 Tests)
         run: |
           python -c "import sys, pytest; sys.path.insert(0, '02-academic-ai'); sys.exit(pytest.main(['02-academic-ai/tests', '-q']))"
+
+      - name: Run Phase 6.1.3 & 6.1.4 Auth, Isolation & Rendering Security Suite (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          pytest tests/test_auth_and_rendering.py -v
+
+      - name: Run Phase 6.1.3 & 6.1.4 Auth, Isolation & Rendering Security Suite (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          python -m unittest discover -s tests -p "test_auth_and_rendering.py" -v
