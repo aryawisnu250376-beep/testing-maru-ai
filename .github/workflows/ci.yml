@@ -55,12 +55,11 @@ jobs:
         run: |
           python -c "import sys, pytest; sys.path.insert(0, '02-academic-ai'); sys.exit(pytest.main(['02-academic-ai/tests', '-q']))"
 
-      - name: Run Academic AI Test Suite (129 Tests - Windows)
+- name: Run Academic AI Test Suite (129 Tests - Windows)
         if: runner.os == 'Windows'
         working-directory: 02-academic-ai
         run: |
-          $env:PYTHONPATH = "."
-          python -m pytest tests -q
+          python -c "import sys, os, pytest; sys.path.insert(0, os.getcwd()); sys.exit(pytest.main(['tests', '-q']))"
 
       - name: Run Phase 6.1.3 & 6.1.4 Auth, Isolation & Rendering Security Suite (Linux)
         if: runner.os == 'Linux'
