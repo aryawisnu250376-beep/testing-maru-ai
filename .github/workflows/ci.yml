@@ -59,6 +59,7 @@ jobs:
         if: runner.os == 'Windows'
         working-directory: 02-academic-ai
         run: |
+          $env:PYTHONPATH = "."
           python -m pytest tests -q
 
       - name: Run Phase 6.1.3 & 6.1.4 Auth, Isolation & Rendering Security Suite (Linux)
