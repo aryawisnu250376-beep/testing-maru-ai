@@ -66,7 +66,8 @@ def state() -> dict:
             "aspects":__import__("src.revisor",fromlist=["ASPECTS"]).ASPECTS,
             "shortcuts":[{"key":k,"label":v[0].replace("_"," ")+" · "+v[1][:65]} for k,v in __import__("src.revisor",fromlist=["SHORTCUTS"]).SHORTCUTS.items()],
             "server_time":db.now(),
-            "queue4":queue4.list_items()}
+            "queue4":queue4.list_items(),
+            "employees":__import__("src.agents",fromlist=["snapshot"]).snapshot().get("agents",[])}
 
 
 def studio_state() -> dict:
@@ -270,8 +271,20 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     def _token(self) -> str:
-        value = self.headers.get("Authorization","")
-        return value[7:] if value.startswith("Bearer ") else ""
+        value = self.headers.get("Authorization", "")
+        if value.startswith("Bearer "):
+            return value[7:].strip()
+        header_maru = self.headers.get("X-Maru-Token", "")
+        if header_maru:
+            return header_maru.strip()
+        # Fallback to query parameter _st for media/bootstrap
+        query = urllib.parse.urlparse(self.path).query
+        if query:
+            params = urllib.parse.parse_qs(query)
+            st = params.get("_st", [""])[0]
+            if st:
+                return st.strip()
+        return ""
 
     def _send(self,code:int,body:bytes,ctype="application/json",extra=None):
         self.send_response(code)
@@ -312,6 +325,10 @@ class Handler(BaseHTTPRequestHandler):
         path=urllib.parse.urlparse(self.path).path
         if path=="/healthz":
             return self._json({"ok":True,"service":"nara-studio"})
+        if path=="/api/preview-bootstrap":
+            # Inform frontend whether preview mode is active or token auto-provisioning
+            is_preview = os.getenv("MARU_PREVIEW_MODE", "0") == "1"
+            return self._json({"preview_mode": is_preview})
         if path=="/manifest.webmanifest":
             data={"name":"Nara — AI Edukasi Studio","short_name":"Nara Studio","lang":"id","start_url":"/","scope":"/","display":"standalone","background_color":"#f6f7f2","theme_color":"#205c4b","icons":[{"src":"/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},{"src":"/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}
             return self._send(200,json.dumps(data).encode(),"application/manifest+json")

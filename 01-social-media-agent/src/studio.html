@@ -1216,7 +1216,8 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
   async function api(path, payload) {
     const headers = { "Content-Type": "application/json" };
     let targetUrl = path;
-    if (S.token) {
+    // P0: Never attach stale or expired token when authenticating via /api/login
+    if (S.token && path !== "/api/login") {
       headers["Authorization"] = "Bearer " + S.token;
       headers["X-Maru-Token"] = S.token;
       const sep = targetUrl.includes("?") ? "&" : "?";
@@ -2022,6 +2023,11 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     if (isInitialized) return;
     const view = document.getElementById("office-3d-viewport");
     if (!view) return;
+    if (typeof THREE === "undefined") {
+      console.warn("[MARU 3D] Three.js library not loaded yet or CDN unavailable. Providing informative fallback UI.");
+      view.innerHTML = '<div style="display:grid;place-items:center;height:100%;color:var(--cyan);font-family:monospace;font-size:13px;background:rgba(6,9,19,0.8);border-radius:12px;padding:20px;text-align:center;"><div><div style="font-size:24px;margin-bottom:8px;">🏢</div><div><b>MARU HQ 3D Living Diorama Siaga</b></div><div style="color:var(--muted);font-size:11px;margin-top:6px;">Modul Three.js CDN offline atau sedang memuat. Kantor 2D Roster tetap 100% aktif & sinkron.</div></div></div>';
+      return;
+    }
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x060913);
