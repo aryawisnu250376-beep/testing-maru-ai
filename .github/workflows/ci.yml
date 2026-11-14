@@ -68,8 +68,10 @@ jobs:
 
       - name: Run Academic AI Python Test Suite (129 Tests - Windows)
         if: runner.os == 'Windows'
+        working-directory: 02-academic-ai
         run: |
-          python -m pytest "02-academic-ai/tests" -q -o "pythonpath=02-academic-ai" 
+          pip install pytest-asyncio
+          python -m pytest tests -q -o "asyncio_mode=auto" -o "pythonpath=." 
 
       - name: Run Phase 6.1.3 & 6.1.4 Auth, Isolation & Rendering Security Suite (Linux)
         if: runner.os == 'Linux'
