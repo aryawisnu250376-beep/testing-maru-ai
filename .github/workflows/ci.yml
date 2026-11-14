@@ -51,9 +51,13 @@ jobs:
         run: |
           python -m tests.hq.run_all
 
-      - name: Run Phase 6.1.5 Comprehensive Security & Token Authority Suite (5 Tests)
+      - name: Run Phase 6.1.5 Comprehensive Security & Token Authority Suite (7 Tests)
         run: |
           python -m unittest tests/test_phase615_security.py -v
+
+      - name: Run Phase 6.1.5 Security Regression & Adversarial Closure Suite (14 Tests)
+        run: |
+          python -m unittest tests/security/test_phase615_security_closure.py -v
 
       - name: Run Academic AI Node.js Agent Office Tests
         working-directory: 02-academic-ai

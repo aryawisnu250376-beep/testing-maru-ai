@@ -17,6 +17,8 @@ import sqlite3
 import time
 import json
 import hashlib
+import hmac
+import os
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, asdict
@@ -56,15 +58,43 @@ class InternalAuthAuthority:
     """
     Server-side authoritative identity issuer for MARU HQ.
     Enforces that caller string alone is NEVER proof of identity.
-    Sessions require an internally signed session token.
+    Sessions require an internally signed session token issued by a verified authority.
     """
     _active_sessions: Dict[str, CallerPrincipal] = {}
+    _server_bootstrap_secret: str = os.getenv("MARU_INTERNAL_BOOTSTRAP_SECRET", "maru_hq_default_bootstrap_secret_2026")
+    _agent_secrets: Dict[str, str] = {}
+
+    @classmethod
+    def set_bootstrap_secret(cls, secret: str) -> None:
+        cls._server_bootstrap_secret = secret
+
+    @classmethod
+    def register_agent_credential(cls, agent_id: str, secret: str, bootstrap_key: str) -> bool:
+        """Register an agent's server-side credential using constant-time verification."""
+        if not cls._server_bootstrap_secret or not hmac.compare_digest(cls._server_bootstrap_secret, bootstrap_key):
+            return False
+        cls._agent_secrets[agent_id] = secret
+        return True
 
     @classmethod
     def issue_principal(cls, actor_id: str, secret_key: str, ttl_sec: float = 3600.0) -> Optional[CallerPrincipal]:
-        # Only authorized bootstrap or supervisor key can issue principals
+        """
+        Issue a cryptographically secure session token ONLY if secret_key matches:
+        1. The server bootstrap secret (for bootstrap / supervisor issuance)
+        2. Or the registered secret for the specific actor_id.
+        Fails closed otherwise!
+        """
         trusted = TRUSTED_ROSTER.get(actor_id)
         if not trusted:
+            return None
+        
+        valid = False
+        if cls._server_bootstrap_secret and hmac.compare_digest(cls._server_bootstrap_secret, secret_key):
+            valid = True
+        elif actor_id in cls._agent_secrets and hmac.compare_digest(cls._agent_secrets[actor_id], secret_key):
+            valid = True
+
+        if not valid:
             return None
         
         token = f"psec_{secrets.token_hex(24)}"
@@ -145,8 +175,12 @@ class CallerContext:
         """
         if client_auth_key:
             ctx = cls.resolve_authenticated(client_auth_key)
-            if ctx.authenticated and ctx.caller_id == caller_id:
+            if ctx.authenticated:
+                if caller_id and ctx.caller_id != caller_id:
+                    # Mismatched claimed caller_id and authenticated token -> Fail closed!
+                    return cls(caller_id=None, division=None, is_hq=False, authenticated=False)
                 return ctx
+            return cls(caller_id=None, division=None, is_hq=False, authenticated=False)
         return cls.resolve_actor(caller_id)
 
 
@@ -259,14 +293,14 @@ class HQMemoryManager:
               actor_id: Optional[str] = None,
               auth_token: Optional[str] = None) -> MemoryRecord:
         """Stores a memory entry with deduplication, provenance, and scope authorization."""
-        self._verify_operation_authorization("store", scope, actor_id=actor_id, auth_token=auth_token)
+        ctx = self._verify_operation_authorization("store", scope, actor_id=actor_id, auth_token=auth_token)
         now = time.time()
         c_hash = self._compute_hash(scope, category, title, content)
         tags_list = tags or []
         prov = provenance or {}
-        prov.setdefault("stored_at", now)
-        if actor_id:
-            prov["stored_by"] = actor_id
+        prov["stored_at"] = now
+        # Provenance must derive from verified principal, not untrusted caller input!
+        prov["stored_by"] = ctx.caller_id or "ANONYMOUS"
 
         with self._get_connection() as conn:
             cur = conn.execute("SELECT * FROM hq_memory WHERE content_hash = ?", (c_hash,))
@@ -303,7 +337,7 @@ class HQMemoryManager:
                 return None
 
             scope = row["scope"]
-            self._verify_operation_authorization("update", scope, actor_id=editor, auth_token=auth_token)
+            ctx = self._verify_operation_authorization("update", scope, actor_id=editor, auth_token=auth_token)
 
             cat = row["category"]
             title = row["title"]
@@ -311,7 +345,7 @@ class HQMemoryManager:
 
             prov = json.loads(row["provenance_json"])
             updates = prov.get("updates", [])
-            updates.append({"editor": editor, "timestamp": now, "previous_hash": row["content_hash"]})
+            updates.append({"editor": ctx.caller_id or "ANONYMOUS", "timestamp": now, "previous_hash": row["content_hash"]})
             prov["updates"] = updates
 
             new_version = row["version"] + 1
@@ -334,10 +368,10 @@ class HQMemoryManager:
                 return False
 
             scope = row["scope"]
-            self._verify_operation_authorization("delete", scope, actor_id=actor, auth_token=auth_token)
+            ctx = self._verify_operation_authorization("delete", scope, actor_id=actor, auth_token=auth_token)
 
             prov = json.loads(row["provenance_json"])
-            prov["deleted_by"] = actor
+            prov["deleted_by"] = ctx.caller_id or "ANONYMOUS"
             prov["deleted_at"] = now
 
             conn.execute(

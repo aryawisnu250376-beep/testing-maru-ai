@@ -12,6 +12,7 @@ class TestPhase615ComprehensiveSecurity(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.test_db = Path(self.temp_dir) / "test_phase615_mem.db"
         self.memory = HQMemoryManager(db_path=self.test_db)
+        InternalAuthAuthority.set_bootstrap_secret("secret")
 
     def tearDown(self):
         shutil.rmtree(self.temp_dir, ignore_errors=True)
@@ -25,7 +26,7 @@ class TestPhase615ComprehensiveSecurity(unittest.TestCase):
 
     def test_02_server_token_issuance_and_revocation(self):
         """Proof: Principals issued by InternalAuthAuthority validate identity and expire/revoke cleanly."""
-        principal = InternalAuthAuthority.issue_principal("EMP-L01", "bootstrap_secret", ttl_sec=2.0)
+        principal = InternalAuthAuthority.issue_principal("EMP-L01", "secret", ttl_sec=2.0)
         self.assertIsNotNone(principal)
         self.assertEqual(principal.principal_id, "EMP-L01")
         self.assertTrue(principal.is_hq)

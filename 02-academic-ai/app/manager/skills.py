@@ -97,9 +97,9 @@ async def _best_effort_sync_academic_skills(database) -> None:
             from maru_github_sync import GitHubSyncConfig, MaruGitHubSyncService
 
             gcfg = GitHubSyncConfig.from_env(repo_root=repo_root)
-            svc = MaruGitHubSyncService(gcfg)
-            svc.export_local_to_central(academic_db_path=db_path)
             if gcfg.is_ready:
+                svc = MaruGitHubSyncService(gcfg)
+                svc.export_local_to_central(academic_db_path=db_path)
                 svc.best_effort_push_single(
                     "skills/learned/academic_answer_skills.json",
                     commit_label="academic-skills",
