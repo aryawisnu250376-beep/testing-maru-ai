@@ -70,8 +70,7 @@ jobs:
         if: runner.os == 'Windows'
         working-directory: 02-academic-ai
         run: |
-          pip install pytest-asyncio
-          python -m pytest tests -q -o "asyncio_mode=auto" -o "pythonpath=." 
+          python -m pytest tests -q --basetemp=temp_pytest -o "pythonpath=." 
 
       - name: Run Phase 6.1.3 & 6.1.4 Auth, Isolation & Rendering Security Suite (Linux)
         if: runner.os == 'Linux'
