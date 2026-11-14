@@ -118,7 +118,7 @@ def rollback_batch(project_root: Path, backup_root: Path) -> list[str]:
         target = project_root / rel
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(backup_file, target)
-        restored.append(str(rel))
+        restored.append(rel.as_posix())
     return restored
 
 
