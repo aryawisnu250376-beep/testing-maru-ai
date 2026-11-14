@@ -136,19 +136,19 @@ class HQModelRouter:
             }, indent=2)
         elif "research" in task_type.lower() or "riset" in prompt_l:
             return json.dumps({
-                "status": "VERIFIED",
+                "status": "UNVERIFIED_DRAFT",
                 "findings": [
-                    {"topic": "Audience Psychology", "verified": True, "insight": "High retention depends on first 3 seconds anchor."},
-                    {"topic": "Engagement Metrics", "verified": True, "insight": "Interactive queries double comment volume."}
+                    {"topic": "Audience Psychology", "verified": False, "requires_verification": True, "insight": "High retention depends on first 3 seconds anchor."},
+                    {"topic": "Engagement Metrics", "verified": False, "requires_verification": True, "insight": "Interactive queries double comment volume."}
                 ],
-                "confidence_score": 0.95
+                "confidence_score": 0.60
             }, indent=2)
         elif "evaluate" in task_type.lower() or "qc" in prompt_l or "consolidate" in prompt_l:
             return json.dumps({
-                "decision": "APPROVED",
+                "decision": "PENDING_VERIFICATION",
                 "score": 92,
                 "notes": "Verified against internal standards. No hallucination detected.",
-                "readiness": True
+                "readiness": False, "requires_human_review": True
             }, indent=2)
         else:
             return f"MARU MMAI Autonomous Response for [{task_type}]: Objectives analyzed and verified internally."

@@ -407,6 +407,7 @@ class HQJobQueue:
             cur = conn.execute(
                 """UPDATE hq_jobs SET
                     status = ?, lease_owner = NULL, lease_expires_at = NULL,
+                    fencing_token = fencing_token + 1,
                     error_message = ?, updated_at = ?
                    WHERE task_id = ? AND status NOT IN (?, ?)""",
                 (JobStatus.CANCELLED.value, reason, now, task_id, JobStatus.COMPLETED.value, JobStatus.CANCELLED.value)

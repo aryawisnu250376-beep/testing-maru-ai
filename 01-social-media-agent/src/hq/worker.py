@@ -62,7 +62,7 @@ class HQWorker:
             self.queue.recover_stale_jobs(actor=f"STARTUP_{self.worker_id}")
 
     def execute_one_cycle(self, job_handler: Callable[[CanonicalJob, CancellationToken], Dict[str, Any]],
-                          use_process_isolation: bool = False) -> bool:
+                          use_process_isolation: Optional[bool] = None) -> bool:
         """
         Attempts to acquire a lease and safely execute one job.
         If use_process_isolation=True, runs in an OS child process with SIGTERM/SIGKILL hard termination.
@@ -103,8 +103,26 @@ class HQWorker:
         max_duration = job.budget.max_duration_sec
         start_time = time.time()
 
+        # Default: Process isolation if not explicitly set to False and handler is picklable
+        if use_process_isolation is None:
+            # Check if job handler is a module-level picklable function
+            import inspect
+            is_nested = "<locals>" in getattr(job_handler, "__qualname__", "")
+            use_process_isolation = not is_nested
+
         if use_process_isolation:
             # PRIORITY B: True OS Process Isolation for Hard Timeout
+            import inspect
+            is_nested = "<locals>" in getattr(job_handler, "__qualname__", "")
+            if is_nested:
+                err_msg = "Process Isolation Failure: Job handler is not a picklable top-level function. Silent thread downgrade prohibited for hard timeout jobs."
+                stop_heartbeat.set()
+                if self._renewal_thread.is_alive():
+                    self._renewal_thread.join(timeout=1.0)
+                self.queue.fail_job(self.worker_id, job.task_id, job.fencing_token, err_msg)
+                self._current_job = None
+                return False
+
             ipc_queue = multiprocessing.Queue()
             proc = multiprocessing.Process(
                 target=_isolated_process_runner,
@@ -112,7 +130,15 @@ class HQWorker:
                 daemon=True
             )
             proc.start()
-            proc.join(timeout=max_duration)
+            poll_interval = 0.25
+            while proc.is_alive():
+                proc.join(timeout=poll_interval)
+                duration = time.time() - start_time
+                if duration >= max_duration:
+                    break
+                if stop_heartbeat.is_set():
+                    # Lease expired, job cancelled, or worker stopped! Terminate child process immediately!
+                    break
             duration = time.time() - start_time
 
             # Stop heartbeat thread
@@ -126,12 +152,16 @@ class HQWorker:
                 proc.join(timeout=1.0)
                 if proc.is_alive():
                     try:
-                        os.kill(proc.pid, signal.SIGKILL)
+                        sig_kill = getattr(signal, "SIGKILL", signal.SIGTERM)
+                        os.kill(proc.pid, sig_kill)
                         proc.join(timeout=1.0)
                     except Exception:
                         pass
 
-                err_msg = f"Job exceeded max duration budget: {duration:.2f}s > {max_duration}s (Process Terminated via SIGTERM/SIGKILL)"
+                if duration >= max_duration:
+                    err_msg = f"Job exceeded max duration budget: {duration:.2f}s > {max_duration}s (Process Terminated via SIGTERM/SIGKILL)"
+                else:
+                    err_msg = f"Job execution aborted: lease lost, cancelled, or heartbeat failed (Process Terminated via SIGTERM/SIGKILL)"
                 self.queue.fail_job(self.worker_id, job.task_id, job.fencing_token, err_msg)
                 self._current_job = None
                 return False
