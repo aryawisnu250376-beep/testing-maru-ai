@@ -1,6 +1,6 @@
 """
-MARU HQ Core Models — Phase 6.1 Canonical Data Structures
-Defines Canonical Job Schema, Activity States, Priorities, and Transitions
+MARU HQ Core Models — Phase 6.1.1 Hardened
+Defines Canonical Job Schema, Exceptions, Activity States, Priorities, and Transitions
 """
 
 from dataclasses import dataclass, field, asdict
@@ -25,6 +25,30 @@ class JobPriority(int, Enum):
     NORMAL = 1
     HIGH = 2
     URGENT = 3
+
+class IdempotencyConflictError(Exception):
+    """Raised when an idempotency key is reused with a different payload or goal."""
+    pass
+
+class DependencyNotSatisfiedError(Exception):
+    """Raised when a job's dependencies are not yet completed."""
+    pass
+
+class DependencyNotFoundError(Exception):
+    """Raised when a dependency task_id does not exist."""
+    pass
+
+class DependencyLoopError(Exception):
+    """Raised when circular or self-dependencies are detected."""
+    pass
+
+class LeaseExpiredError(Exception):
+    """Raised when an operation requires an active lease but the lease has expired."""
+    pass
+
+class BudgetExceededError(Exception):
+    """Raised when a job execution exceeds its configured budget constraints."""
+    pass
 
 @dataclass
 class JobBudget:
@@ -56,6 +80,7 @@ class CanonicalJob:
     acceptance_criteria: List[str]
     assigned_agent: str
     idempotency_key: str
+    payload_hash: str
     parent_task_id: Optional[str] = None
     priority: int = JobPriority.NORMAL.value
     status: str = JobStatus.QUEUED.value
@@ -75,6 +100,35 @@ class CanonicalJob:
         res = asdict(self)
         res["budget"] = self.budget.to_dict()
         return res
+
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any]) -> "CanonicalJob":
+        return cls(
+            task_id=d["task_id"],
+            correlation_id=d.get("correlation_id", ""),
+            division=d["division"],
+            requested_by=d["requested_by"],
+            goal=d["goal"],
+            input_payload=d.get("input_payload", {}),
+            acceptance_criteria=d.get("acceptance_criteria", []),
+            assigned_agent=d["assigned_agent"],
+            idempotency_key=d["idempotency_key"],
+            payload_hash=d.get("payload_hash", ""),
+            parent_task_id=d.get("parent_task_id"),
+            priority=d.get("priority", JobPriority.NORMAL.value),
+            status=d.get("status", JobStatus.QUEUED.value),
+            dependencies=d.get("dependencies", []),
+            budget=JobBudget.from_dict(d.get("budget", {})),
+            attempts=d.get("attempts", 0),
+            max_attempts=d.get("max_attempts", 3),
+            lease_owner=d.get("lease_owner"),
+            lease_expires_at=d.get("lease_expires_at"),
+            fencing_token=d.get("fencing_token", 0),
+            created_at=d.get("created_at", 0.0),
+            updated_at=d.get("updated_at", 0.0),
+            result_payload=d.get("result_payload"),
+            error_message=d.get("error_message")
+        )
 
     @classmethod
     def from_row(cls, row: tuple) -> "CanonicalJob":
@@ -98,8 +152,9 @@ class CanonicalJob:
             lease_expires_at=float(row[16]) if row[16] is not None else None,
             fencing_token=int(row[17]),
             idempotency_key=row[18],
-            created_at=float(row[19]),
-            updated_at=float(row[20]),
-            result_payload=json.loads(row[21]) if row[21] else None,
-            error_message=row[22]
+            payload_hash=row[19] if len(row) > 23 else "",
+            created_at=float(row[20] if len(row) > 23 else row[19]),
+            updated_at=float(row[21] if len(row) > 23 else row[20]),
+            result_payload=json.loads(row[22] if len(row) > 23 else row[21]) if (row[22 if len(row) > 23 else 21]) else None,
+            error_message=row[23 if len(row) > 23 else 22]
         )

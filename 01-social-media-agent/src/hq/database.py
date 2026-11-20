@@ -1,5 +1,5 @@
 """
-MARU HQ Core Database Connection Manager — Phase 6.1
+MARU HQ Core Database Connection Manager — Phase 6.1.1 Hardened
 Manages SQLite WAL Mode, Pragmas, Table Schemas, and Safe Connections
 Location: data/hq_core.db (Isolated from legacy division databases)
 """
@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS hq_jobs (
     lease_expires_at REAL,
     fencing_token INTEGER DEFAULT 0,
     idempotency_key TEXT NOT NULL UNIQUE,
+    payload_hash TEXT NOT NULL,
     created_at REAL NOT NULL,
     updated_at REAL NOT NULL,
     result_payload TEXT,
