@@ -25,13 +25,13 @@ _LOCK = threading.RLock()
 
 STATUSES = (
     "DRAF", "MENUNGGU", "DISETUJUI", "DITOLAK", "REVISI",
-    "TERJADWAL", "TAYANG", "GAGAL", "DRAF_TIKTOK",
+    "TERJADWAL", "DIKIRIM_TIKTOK", "TAYANG", "GAGAL", "DRAF_TIKTOK",
 )
 # Pelaku -> status yang boleh ditulis. Pemilik adalah satu-satunya pemberi ACC.
 ALLOWED = {
     "hermes": {"DRAF", "MENUNGGU", "REVISI"},
     "pemilik": {"DISETUJUI", "DITOLAK", "REVISI", "MENUNGGU"},
-    "ootto": {"TERJADWAL", "TAYANG", "GAGAL", "DRAF_TIKTOK", "DISETUJUI"},
+    "ootto": {"TERJADWAL", "DIKIRIM_TIKTOK", "TAYANG", "GAGAL", "DRAF_TIKTOK", "DISETUJUI"},
     "mausbot": {"MENUNGGU"},
 }
 SAFE_ID = re.compile(r"^[A-Za-z0-9._-]{1,100}$")
@@ -111,7 +111,7 @@ def create(content_id: str, judul: str, *, naskah: str = "", caption: str = "",
 
 
 def transition(content_id: str, status: str, actor: str, reason: str = "",
-               **fields) -> dict:
+               *, expected_status: str | None = None, **fields) -> dict:
     if status not in STATUSES:
         raise ValueError(f"Status tidak dikenal: {status}")
     if actor not in ALLOWED or status not in ALLOWED[actor]:
@@ -122,8 +122,11 @@ def transition(content_id: str, status: str, actor: str, reason: str = "",
         if not item:
             raise ValueError("Konten tidak ditemukan")
         old = item.get("status")
+        if expected_status is not None and old != expected_status:
+            raise ValueError("Status konten sudah berubah. Muat ulang dashboard.")
         # Tidak ada lompatan dari draf/liar langsung ke tayang.
-        if status in ("TERJADWAL", "TAYANG", "DRAF_TIKTOK") and old not in ("DISETUJUI", "TERJADWAL"):
+        if ((status in ("TERJADWAL", "DIKIRIM_TIKTOK", "DRAF_TIKTOK") and old not in ("DISETUJUI", "TERJADWAL"))
+                or (status == "TAYANG" and old != "DIKIRIM_TIKTOK")):
             raise PermissionError("Ootto hanya memproses konten DISETUJUI")
         if actor == "ootto" and status == "DISETUJUI" and old != "TERJADWAL":
             raise PermissionError("Ootto tidak boleh memberi ACC")
@@ -131,7 +134,7 @@ def transition(content_id: str, status: str, actor: str, reason: str = "",
             raise PermissionError("Hanya draf menunggu yang dapat disetujui")
         item.update({k: v for k, v in fields.items() if k in (
             "naskah", "caption", "usulan_jam", "alasan_jam", "sumber", "video",
-            "jadwal", "ootto_result", "tiktok_publish_id", "catatan_revisi", "qc_passed")})
+            "jadwal", "ootto_result", "tiktok_publish_id", "catatan_revisi", "qc_passed", "episode_id", "verified_episode_video")})
         item["status"] = status
         item["diubah"] = now()
         item.setdefault("riwayat", []).append(
@@ -142,7 +145,7 @@ def transition(content_id: str, status: str, actor: str, reason: str = "",
 
 
 def owner_decision(content_id: str, decision: str, reason: str = "",
-                   jadwal: str | None = None) -> dict:
+                   jadwal: str | None = None, *, expected_status: str | None = None) -> dict:
     decision = decision.upper()
     mapping = {"SETUJU": "DISETUJUI", "TOLAK": "DITOLAK", "REVISI": "REVISI"}
     if decision not in mapping:
@@ -154,4 +157,4 @@ def owner_decision(content_id: str, decision: str, reason: str = "",
         fields["disetujui_pada"] = now()
     if decision == "REVISI":
         fields["catatan_revisi"] = reason
-    return transition(content_id, mapping[decision], "pemilik", reason, **fields)
+    return transition(content_id, mapping[decision], "pemilik", reason, expected_status=expected_status, **fields)

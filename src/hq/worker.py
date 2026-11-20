@@ -11,12 +11,12 @@ Implements:
  - Automatic Startup Stale Recovery
 """
 
+import json
 import time
 import uuid
-import os
-import signal
 import threading
 import multiprocessing
+from pickle import PicklingError
 from typing import Callable, Optional, Dict, Any
 
 from src.hq.queue import HQJobQueue
@@ -34,16 +34,24 @@ class CancellationToken:
         if self._stop_event.is_set():
             raise TimeoutError("Execution cancelled: lease lost or job cancelled by owner")
 
-def _isolated_process_runner(job_dict: Dict[str, Any], handler_code_or_callable: Any, result_queue: Any):
-    """Entry point for isolated child process execution."""
-    try:
-        # Reconstruct CanonicalJob from dict representation to avoid unpicklable DB connections
-        job = CanonicalJob.from_dict(job_dict)
-        # In isolated process, execute handler
-        res = handler_code_or_callable(job, CancellationToken(threading.Event()))
-        result_queue.put({"success": True, "result": res})
-    except Exception as e:
-        result_queue.put({"success": False, "error": str(e)})
+MAX_IPC_BYTES = 4 * 1024 * 1024
+
+
+def _isolated_process_runner(job_dict: Dict[str, Any], handler: Any, sender: Any):
+    """Only a bounded JSON result crosses the process boundary."""
+    with sender:
+        try:
+            job = CanonicalJob.from_dict(job_dict)
+            result = handler(job, CancellationToken(threading.Event()))
+            if not isinstance(result, dict):
+                raise ValueError("Expected job result object")
+            payload = json.dumps({"success": True, "result": result}, allow_nan=False).encode()
+            if len(payload) > MAX_IPC_BYTES:
+                raise ValueError("Job result exceeds IPC limit")
+        except Exception as exc:
+            payload = json.dumps({"success": False, "error": f"Job handler failed: {type(exc).__name__}"}).encode()
+        sender.send_bytes(payload)
+
 
 class HQWorker:
     def __init__(self, queue: HQJobQueue, worker_id: Optional[str] = None,
@@ -64,12 +72,15 @@ class HQWorker:
             self.queue.recover_stale_jobs(actor=f"STARTUP_{self.worker_id}")
 
     def execute_one_cycle(self, job_handler: Callable[[CanonicalJob, CancellationToken], Dict[str, Any]],
-                          use_process_isolation: Optional[bool] = None) -> bool:
+                          use_process_isolation: Optional[bool] = None,
+                          shutdown_event: Optional[threading.Event] = None) -> bool:
         """
         Attempts to acquire a lease and safely execute one job.
         If use_process_isolation=True, runs in an OS child process with SIGTERM/SIGKILL hard termination.
         Otherwise runs in isolated guardian thread with cooperative cancellation token.
         """
+        if shutdown_event and shutdown_event.is_set():
+            return False
         job = self.queue.acquire_lease(self.worker_id, self.assigned_agent)
         if not job:
             return False
@@ -103,7 +114,7 @@ class HQWorker:
         self._renewal_thread.start()
 
         max_duration = job.budget.max_duration_sec
-        start_time = time.time()
+        start_time = time.monotonic()
 
         # Default: Process isolation if not explicitly set to False and handler is picklable
         if use_process_isolation is None:
@@ -125,64 +136,78 @@ class HQWorker:
                 self._current_job = None
                 return False
 
-            ipc_queue = self.process_context.Queue()
+            receiver, sender = self.process_context.Pipe(duplex=False)
             proc = self.process_context.Process(
                 target=_isolated_process_runner,
-                args=(job.to_dict(), job_handler, ipc_queue),
-                daemon=True
+                args=(job.to_dict(), job_handler, sender), daemon=True,
             )
-            proc.start()
-            poll_interval = 0.25
-            while proc.is_alive():
-                proc.join(timeout=poll_interval)
-                duration = time.time() - start_time
-                if duration >= max_duration:
-                    break
+            payload = None
+            err = None
+            read_error = None
+            reader = None
+            received = threading.Event()
+            started = False
+            deadline = start_time + max_duration
+
+            def read_result():
+                nonlocal payload, read_error
+                try:
+                    payload = json.loads(receiver.recv_bytes(MAX_IPC_BYTES))
+                    if not isinstance(payload, dict) or payload.get("success") not in (True, False):
+                        raise ValueError("Invalid result envelope")
+                except (OSError, EOFError, ValueError, RecursionError):
+                    payload = None
+                    read_error = "Process exited without a valid result"
+                finally:
+                    received.set()
+
+            try:
+                proc.start()
+                started = True
+                sender.close()
+                # Drain while the child is alive. A partial frame cannot block this supervisor.
+                reader = threading.Thread(target=read_result, daemon=True)
+                reader.start()
+                while not stop_heartbeat.is_set():
+                    if shutdown_event and shutdown_event.is_set():
+                        err = "Job interrupted by worker shutdown"
+                        break
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        err = "Job exceeded max duration budget (isolated process)"
+                        break
+                    if received.wait(min(0.1, remaining)):
+                        err = read_error
+                        break
                 if stop_heartbeat.is_set():
-                    # Lease expired, job cancelled, or worker stopped! Terminate child process immediately!
-                    break
-            duration = time.time() - start_time
-
-            # Stop heartbeat thread
-            stop_heartbeat.set()
-            if self._renewal_thread.is_alive():
-                self._renewal_thread.join(timeout=1.0)
-
-            if proc.is_alive():
-                # Hard timeout reached! Terminate and kill child process
-                proc.terminate()
-                proc.join(timeout=1.0)
-                if proc.is_alive():
-                    try:
-                        sig_kill = getattr(signal, "SIGKILL", signal.SIGTERM)
-                        os.kill(proc.pid, sig_kill)
+                    err = "Job execution aborted: lease lost, cancelled, or heartbeat failed"
+                if payload and not err and time.monotonic() > deadline:
+                    err = "Job exceeded max duration budget (isolated process)"
+            except (OSError, ValueError, TypeError, EOFError, AttributeError, PicklingError) as exc:
+                err = f"Process isolation failed: {type(exc).__name__}"
+            finally:
+                stop_heartbeat.set()
+                sender.close()
+                if started:
+                    proc.join(timeout=0.25 if payload and not err else 0)
+                    if proc.is_alive():
+                        proc.terminate()
                         proc.join(timeout=1.0)
-                    except Exception:
-                        pass
-
-                if duration >= max_duration:
-                    err_msg = f"Job exceeded max duration budget: {duration:.2f}s > {max_duration}s (Process Terminated via SIGTERM/SIGKILL)"
-                else:
-                    err_msg = f"Job execution aborted: lease lost, cancelled, or heartbeat failed (Process Terminated via SIGTERM/SIGKILL)"
-                self.queue.fail_job(self.worker_id, job.task_id, job.fencing_token, err_msg)
+                    if proc.is_alive():
+                        proc.kill()
+                        proc.join(timeout=1.0)
+                if not started or not proc.is_alive():
+                    proc.close()
+                if reader:
+                    reader.join(timeout=0.25)
+                receiver.close()
+                self._renewal_thread.join(timeout=1.0)
                 self._current_job = None
-                return False
-
-            # Process finished within timeout
-            if not ipc_queue.empty():
-                payload = ipc_queue.get_nowait()
-                if payload.get("success"):
-                    completed = self.queue.complete_job(self.worker_id, job.task_id, job.fencing_token, payload.get("result", {}))
-                    self._current_job = None
-                    return completed
-                else:
-                    self.queue.fail_job(self.worker_id, job.task_id, job.fencing_token, payload.get("error", "Process handler error"))
-                    self._current_job = None
-                    return False
-            else:
-                self.queue.fail_job(self.worker_id, job.task_id, job.fencing_token, f"Process exited with exitcode {proc.exitcode}")
-                self._current_job = None
-                return False
+            if payload and not err and payload.get("success"):
+                return self.queue.complete_job(self.worker_id, job.task_id, job.fencing_token, payload.get("result", {}))
+            self.queue.fail_job(self.worker_id, job.task_id, job.fencing_token,
+                                err or (payload or {}).get("error", "Process handler error"))
+            return False
 
         else:
             # Guardian Thread with Cooperative Cancellation Token
@@ -204,15 +229,23 @@ class HQWorker:
             worker_thread = threading.Thread(target=thread_runner, daemon=True)
             worker_thread.start()
 
-            finished_in_time = handler_done.wait(timeout=max_duration)
-            duration = time.time() - start_time
+            deadline = start_time + max_duration
+            while not handler_done.is_set() and not stop_heartbeat.is_set():
+                remaining = deadline - time.monotonic()
+                if remaining <= 0 or (shutdown_event and shutdown_event.is_set()):
+                    break
+                handler_done.wait(min(0.1, remaining))
+            finished_in_time = handler_done.is_set()
+            duration = time.monotonic() - start_time
 
             stop_heartbeat.set()
             if self._renewal_thread.is_alive():
                 self._renewal_thread.join(timeout=1.0)
 
             if not finished_in_time:
-                err_msg = f"Job exceeded max duration budget: {duration:.2f}s > {max_duration}s (Cooperative Timeout Reached)"
+                worker_thread.join(timeout=0.5)  # Grace period for cooperative cleanup only.
+                err_msg = (f"Job exceeded max duration budget: {duration:.2f}s (cooperative handler)"
+                           if duration >= max_duration else "Job execution cancelled before completion")
                 self.queue.fail_job(self.worker_id, job.task_id, job.fencing_token, err_msg)
                 self._current_job = None
                 return False

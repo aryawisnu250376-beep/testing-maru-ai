@@ -18,10 +18,13 @@ import time
 import json
 import hashlib
 import hmac
+import math
+import threading
+from contextlib import closing
 import os
 from pathlib import Path
 from typing import Dict, Any, List, Optional
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field, replace
 
 DEFAULT_MEMORY_DB = Path(__file__).resolve().parent.parent.parent / "data" / "hq_memory.db"
 
@@ -43,14 +46,14 @@ TRUSTED_ROSTER = {
 
 import secrets
 
-@dataclass
+@dataclass(frozen=True)
 class CallerPrincipal:
     """Server-side authenticated execution principal (cannot be claimed by caller string)."""
     principal_id: str
     division: str
     role: str
     is_hq: bool
-    session_token: str
+    session_token: str = field(repr=False)
     issued_at: float
     expires_at: float
 
@@ -61,72 +64,75 @@ class InternalAuthAuthority:
     Sessions require an internally signed session token issued by a verified authority.
     """
     _active_sessions: Dict[str, CallerPrincipal] = {}
-    _server_bootstrap_secret: str = os.getenv("MARU_INTERNAL_BOOTSTRAP_SECRET", "maru_hq_default_bootstrap_secret_2026")
+    _server_bootstrap_secret: str = os.getenv("MARU_INTERNAL_BOOTSTRAP_SECRET", "")
     _agent_secrets: Dict[str, str] = {}
+    _lock = threading.RLock()
+
+    @staticmethod
+    def _digest(value: str) -> str:
+        return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
     @classmethod
     def set_bootstrap_secret(cls, secret: str) -> None:
-        cls._server_bootstrap_secret = secret
+        """Trusted startup / rotation hook. Rotating revokes prior credentials."""
+        with cls._lock:
+            cls._server_bootstrap_secret = secret
+            cls._active_sessions.clear()
+            cls._agent_secrets.clear()
 
     @classmethod
     def register_agent_credential(cls, agent_id: str, secret: str, bootstrap_key: str) -> bool:
-        """Register an agent's server-side credential using constant-time verification."""
-        if not cls._server_bootstrap_secret or not hmac.compare_digest(cls._server_bootstrap_secret, bootstrap_key):
+        if not isinstance(agent_id, str) or not isinstance(secret, str) or not secret or not isinstance(bootstrap_key, str):
             return False
-        cls._agent_secrets[agent_id] = secret
-        return True
+        with cls._lock:
+            if agent_id not in TRUSTED_ROSTER or not cls._server_bootstrap_secret or not hmac.compare_digest(
+                cls._digest(cls._server_bootstrap_secret), cls._digest(bootstrap_key)
+            ) or hmac.compare_digest(cls._digest(cls._server_bootstrap_secret), cls._digest(secret)):
+                return False
+            cls._agent_secrets[agent_id] = cls._digest(secret)
+            cls._active_sessions = {k: v for k, v in cls._active_sessions.items() if v.principal_id != agent_id}
+            return True
 
     @classmethod
     def issue_principal(cls, actor_id: str, secret_key: str, ttl_sec: float = 3600.0) -> Optional[CallerPrincipal]:
-        """
-        Issue a cryptographically secure session token ONLY if secret_key matches:
-        1. The server bootstrap secret (for bootstrap / supervisor issuance)
-        2. Or the registered secret for the specific actor_id.
-        Fails closed otherwise!
-        """
+        if not isinstance(actor_id, str) or not isinstance(secret_key, str) or not secret_key:
+            return None
+        if not isinstance(ttl_sec, (int, float)) or not math.isfinite(ttl_sec) or not 0 < ttl_sec <= 3600:
+            return None
         trusted = TRUSTED_ROSTER.get(actor_id)
         if not trusted:
             return None
-        
-        valid = False
-        if cls._server_bootstrap_secret and hmac.compare_digest(cls._server_bootstrap_secret, secret_key):
-            valid = True
-        elif actor_id in cls._agent_secrets and hmac.compare_digest(cls._agent_secrets[actor_id], secret_key):
-            valid = True
-
-        if not valid:
-            return None
-        
-        token = f"psec_{secrets.token_hex(24)}"
-        now = time.time()
-        principal = CallerPrincipal(
-            principal_id=actor_id,
-            division=trusted["division"],
-            role=trusted["role"],
-            is_hq=trusted["is_hq"],
-            session_token=token,
-            issued_at=now,
-            expires_at=now + ttl_sec
-        )
-        cls._active_sessions[token] = principal
-        return principal
+        digest = cls._digest(secret_key)
+        with cls._lock:
+            supervisor = bool(cls._server_bootstrap_secret) and hmac.compare_digest(cls._digest(cls._server_bootstrap_secret), digest)
+            agent = cls._agent_secrets.get(actor_id)
+            if not supervisor and not (agent and hmac.compare_digest(agent, digest)):
+                return None
+            token = f"psec_{secrets.token_hex(24)}"
+            now = time.monotonic()
+            principal = CallerPrincipal(actor_id, trusted["division"], trusted["role"], trusted["is_hq"], token, now, now + ttl_sec)
+            cls._active_sessions = {k: v for k, v in cls._active_sessions.items() if v.expires_at > now}
+            cls._active_sessions[cls._digest(token)] = replace(principal, session_token="")
+            return principal
 
     @classmethod
     def authenticate(cls, token: Optional[str]) -> Optional[CallerPrincipal]:
-        if not token or token not in cls._active_sessions:
+        if not isinstance(token, str) or not token or len(token) > 128:
             return None
-        principal = cls._active_sessions[token]
-        if time.time() > principal.expires_at:
-            del cls._active_sessions[token]
-            return None
-        return principal
+        key = cls._digest(token)
+        with cls._lock:
+            principal = cls._active_sessions.get(key)
+            if principal and principal.expires_at <= time.monotonic():
+                cls._active_sessions.pop(key, None)
+                return None
+            return principal
 
     @classmethod
     def revoke(cls, token: str) -> bool:
-        if token in cls._active_sessions:
-            del cls._active_sessions[token]
-            return True
-        return False
+        if not isinstance(token, str) or not token or len(token) > 128:
+            return False
+        with cls._lock:
+            return cls._active_sessions.pop(cls._digest(token), None) is not None
 
 @dataclass
 class CallerContext:
@@ -156,32 +162,15 @@ class CallerContext:
 
     @classmethod
     def resolve_actor(cls, actor_id: Optional[str]) -> "CallerContext":
-        """Resolves identity strictly against server-side authority."""
-        if not actor_id:
-            return cls(caller_id=None, division=None, is_hq=False, authenticated=False)
-        if actor_id in ("SYSTEM", "ADMIN", "OWNER", "HQ"):
-            return cls(caller_id="SYSTEM", division="EXECUTIVE_SUITE", is_hq=True, authenticated=True)
-        trusted = TRUSTED_ROSTER.get(actor_id)
-        if not trusted:
-            return cls(caller_id=actor_id, division=None, is_hq=False, authenticated=False)
-        return cls(caller_id=actor_id, division=trusted["division"], is_hq=trusted["is_hq"], authenticated=True)
+        """A claimed identity, including a roster ID, is never authentication."""
+        return cls(caller_id=None, division=None, is_hq=False, authenticated=False)
 
     @classmethod
     def resolve(cls, caller_id: Optional[str] = None, client_auth_key: Optional[str] = None) -> "CallerContext":
-        """
-        Server-side resolution against trusted roster.
-        If caller_id is in TRUSTED_ROSTER, maps to its canonical verified division and is_hq flag.
-        Never trusts caller-supplied role, is_hq, or arbitrary division.
-        """
-        if client_auth_key:
-            ctx = cls.resolve_authenticated(client_auth_key)
-            if ctx.authenticated:
-                if caller_id and ctx.caller_id != caller_id:
-                    # Mismatched claimed caller_id and authenticated token -> Fail closed!
-                    return cls(caller_id=None, division=None, is_hq=False, authenticated=False)
-                return ctx
-            return cls(caller_id=None, division=None, is_hq=False, authenticated=False)
-        return cls.resolve_actor(caller_id)
+        ctx = cls.resolve_authenticated(client_auth_key)
+        if caller_id and ctx.caller_id != caller_id:
+            return cls.resolve_actor(caller_id)
+        return ctx
 
 
 @dataclass
@@ -218,7 +207,7 @@ class HQMemoryManager:
         return conn
 
     def _init_db(self):
-        with self._get_connection() as conn:
+        with closing(self._get_connection()) as conn, conn:
             conn.execute("""
             CREATE TABLE IF NOT EXISTS hq_memory (
                 memory_id TEXT PRIMARY KEY,
@@ -251,28 +240,13 @@ class HQMemoryManager:
         Enforces explicit authorization for store, update, delete, and query.
         Fails closed if the identity cannot be validated or lacks permission for target_scope.
         """
-        ctx = None
-        if auth_token:
-            ctx = CallerContext.resolve_authenticated(auth_token)
-        elif actor_id:
-            ctx = CallerContext.resolve_actor(actor_id)
-        else:
-            # Internal HQ Engine execution default (e.g. system store)
-            ctx = CallerContext.resolve_actor("SYSTEM")
-
-        # 1. HQ / System Principal can perform any operation on any scope
-        if ctx.is_hq or ctx.caller_id in ("SYSTEM", "ADMIN", "OWNER", "HQ"):
+        ctx = CallerContext.resolve(caller_id=actor_id, client_auth_key=auth_token)
+        if ctx.authenticated and ctx.is_hq:
             return ctx
-
-        # 2. Scope HQ_ONLY requires verified HQ principal - strictly rejected for anyone else
+        if not ctx.authenticated:
+            raise PermissionError("Access Denied: authenticated memory principal required")
         if target_scope == "HQ_ONLY":
-            raise PermissionError(f"Access Denied: Scope HQ_ONLY requires verified HQ principal. Actor: {ctx.caller_id}")
-
-        # 3. Anonymous unauthenticated actors can ONLY query explicitly public ORGANIZATIONAL data
-        if not ctx.authenticated and ctx.caller_id != "SYSTEM":
-            if op == "query" and target_scope == "ORGANIZATIONAL":
-                return ctx
-            raise PermissionError(f"Access Denied: Unauthenticated actor cannot perform '{op}' on scope '{target_scope}'")
+            raise PermissionError("Access Denied: HQ scope requires verified HQ authority")
 
         # 4. Authenticated specialist agent:
         # Can access ORGANIZATIONAL, AGENT:<self>, DIVISION:<self_division>
@@ -297,12 +271,12 @@ class HQMemoryManager:
         now = time.time()
         c_hash = self._compute_hash(scope, category, title, content)
         tags_list = tags or []
-        prov = provenance or {}
+        prov = dict(provenance or {})
         prov["stored_at"] = now
         # Provenance must derive from verified principal, not untrusted caller input!
         prov["stored_by"] = ctx.caller_id or "ANONYMOUS"
 
-        with self._get_connection() as conn:
+        with closing(self._get_connection()) as conn, conn:
             cur = conn.execute("SELECT * FROM hq_memory WHERE content_hash = ?", (c_hash,))
             row = cur.fetchone()
             if row:
@@ -311,7 +285,7 @@ class HQMemoryManager:
                         "UPDATE hq_memory SET is_deleted = 0, updated_at = ? WHERE memory_id = ?",
                         (now, row["memory_id"])
                     )
-                return self._row_to_record(row)
+                return self._row_to_record(conn.execute("SELECT * FROM hq_memory WHERE memory_id = ?", (row["memory_id"],)).fetchone())
 
             mem_id = f"MEM-{int(now)}-{c_hash[:8].upper()}"
             conn.execute("""
@@ -330,7 +304,7 @@ class HQMemoryManager:
     def update(self, memory_id: str, new_content: str, editor: str,
                auth_token: Optional[str] = None) -> Optional[MemoryRecord]:
         now = time.time()
-        with self._get_connection() as conn:
+        with closing(self._get_connection()) as conn, conn:
             cur = conn.execute("SELECT * FROM hq_memory WHERE memory_id = ? AND is_deleted = 0", (memory_id,))
             row = cur.fetchone()
             if not row:
@@ -361,7 +335,7 @@ class HQMemoryManager:
     def delete(self, memory_id: str, actor: str,
                auth_token: Optional[str] = None) -> bool:
         now = time.time()
-        with self._get_connection() as conn:
+        with closing(self._get_connection()) as conn, conn:
             cur = conn.execute("SELECT * FROM hq_memory WHERE memory_id = ? AND is_deleted = 0", (memory_id,))
             row = cur.fetchone()
             if not row:
@@ -395,15 +369,19 @@ class HQMemoryManager:
               category: Optional[str] = None,
               keyword: Optional[str] = None,
               tag: Optional[str] = None,
-              limit: int = 50) -> List[MemoryRecord]:
+              limit: int = 50, *, auth_token: Optional[str] = None) -> List[MemoryRecord]:
         """
         Queries memory honoring strict permission boundaries (Priority A Remediation).
         Ignores caller-claimed is_hq or reader_division; resolves strictly via server-side trusted registry.
         """
         # Resolve trusted caller context
-        ctx = CallerContext.resolve(caller_id=reader_agent_id)
+        ctx = CallerContext.resolve(caller_id=reader_agent_id, client_auth_key=auth_token)
+        if auth_token is not None and not ctx.authenticated:
+            raise PermissionError("Access Denied: invalid memory principal")
+        if not isinstance(limit, int) or not 1 <= limit <= 500:
+            raise ValueError("Invalid memory query limit")
 
-        with self._get_connection() as conn:
+        with closing(self._get_connection()) as conn, conn:
             sql = "SELECT * FROM hq_memory WHERE is_deleted = 0"
             params: List[Any] = []
 

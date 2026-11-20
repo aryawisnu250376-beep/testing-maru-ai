@@ -483,6 +483,33 @@ class HQJobQueue:
         finally:
             conn.close()
 
+    def review_detail(self, task_id: str) -> Optional[Dict[str, Any]]:
+        job = self.get_job(task_id)
+        if not job:
+            return None
+        logs = [row for row in self.get_event_logs(task_id) if row['event_type'] == 'OWNER_REVIEW']
+        return {'task_id': job.task_id, 'goal': job.goal, 'status': job.status,
+                'assigned_agent': job.assigned_agent, 'result': job.result_payload,
+                'error': job.error_message, 'review': json.loads(logs[-1]['details']) if logs else None}
+
+    def review_job(self, task_id: str, decision: str, note: str) -> Dict[str, Any]:
+        if decision not in {'APPROVED', 'REVISION'}:
+            raise ValueError('Keputusan HQ tidak dikenal')
+        conn = get_connection(self.db_path)
+        try:
+            conn.execute('BEGIN IMMEDIATE')
+            job = self.get_job(task_id, conn)
+            if not job or job.status != JobStatus.COMPLETED.value or not (job.result_payload or {}).get('requires_hq_review'):
+                raise ValueError('Tidak ada rekomendasi yang siap ditinjau')
+            if conn.execute("SELECT 1 FROM hq_event_logs WHERE task_id=? AND event_type='OWNER_REVIEW'", (task_id,)).fetchone():
+                raise ValueError('Rekomendasi sudah diputuskan')
+            review = {'decision': decision, 'note': note, 'actor': 'PEMILIK', 'at': time.time()}
+            self._log_event(conn, task_id, 'OWNER_REVIEW', 'PEMILIK', job.fencing_token, job.status, job.status, review)
+            conn.commit()
+            return review
+        finally:
+            conn.close()
+
     # AUDIT LOG VIEWER
     def get_event_logs(self, task_id: str) -> List[Dict[str, Any]]:
         conn = get_connection(self.db_path)

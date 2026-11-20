@@ -32,6 +32,8 @@ from src.hq import (
     BudgetExceededError
 )
 
+from src.hq.memory import InternalAuthAuthority
+
 class TestHQInternalAutonomyPhase612(unittest.TestCase):
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
@@ -39,14 +41,21 @@ class TestHQInternalAutonomyPhase612(unittest.TestCase):
         self.mem_db_path = Path(self.test_dir) / "test_hq_mem.db"
         self.queue = HQJobQueue(self.db_path)
         self.memory = HQMemoryManager(self.mem_db_path)
+        self.bootstrap = "fixture-hq-bootstrap-phase62-01"
+        InternalAuthAuthority.set_bootstrap_secret(self.bootstrap)
+        self.addCleanup(InternalAuthAuthority.set_bootstrap_secret, "")
+        self.hq_token = self._token("HQ")
         self.router = HQModelRouter()
         self.ai_manager = HQAIManager(router=self.router, memory=self.memory)
         self.orchestrator = HQOrchestrator(
             queue=self.queue,
             manager=self.ai_manager,
             memory=self.memory,
-            router=self.router
+            router=self.router, bootstrap_secret=self.bootstrap
         )
+
+    def _token(self, agent):
+        return InternalAuthAuthority.issue_principal(agent, self.bootstrap).session_token
 
     def tearDown(self):
         shutil.rmtree(self.test_dir, ignore_errors=True)
@@ -92,7 +101,7 @@ class TestHQInternalAutonomyPhase612(unittest.TestCase):
             category="POLICY",
             title="Brand Guideline",
             content="Official MARU character must wear retro pixel art sunglasses.",
-            tags=["BRAND", "AVATAR"]
+            tags=["BRAND", "AVATAR"], auth_token=self.hq_token
         )
         self.assertIsNotNone(m1.memory_id)
 
@@ -102,17 +111,17 @@ class TestHQInternalAutonomyPhase612(unittest.TestCase):
             category="TASK_CONTEXT",
             title="Hermes Draft Notes",
             content="Hook: 3 psychology tricks to double your video comments.",
-            tags=["HOOK", "CREATIVE"]
+            tags=["HOOK", "CREATIVE"], auth_token=self.hq_token
         )
 
         # Query as EMP-L02: should see organizational AND own agent memory
-        hermes_view = self.memory.query(reader_agent_id="EMP-L02")
+        hermes_view = self.memory.query(reader_agent_id="EMP-L02", auth_token=self._token("EMP-L02"))
         titles_hermes = [m.title for m in hermes_view]
         self.assertIn("Brand Guideline", titles_hermes)
         self.assertIn("Hermes Draft Notes", titles_hermes)
 
         # Query as EMP-L05 (Ardi): should see organizational, but NOT EMP-L02 private memory
-        ardi_view = self.memory.query(reader_agent_id="EMP-L05")
+        ardi_view = self.memory.query(reader_agent_id="EMP-L05", auth_token=self._token("EMP-L05"))
         titles_ardi = [m.title for m in ardi_view]
         self.assertIn("Brand Guideline", titles_ardi)
         self.assertNotIn("Hermes Draft Notes", titles_ardi)
@@ -123,7 +132,7 @@ class TestHQInternalAutonomyPhase612(unittest.TestCase):
             scope="ORGANIZATIONAL",
             category="DECISION",
             title="Strategic Priority 2026",
-            content="Focus purely on Internal Autonomy before external platforms."
+            content="Focus purely on Internal Autonomy before external platforms.", auth_token=self.hq_token
         )
 
         # Re-initialize Memory Manager with same database file

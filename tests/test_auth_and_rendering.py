@@ -45,7 +45,7 @@ sys.path.insert(0, str(REPO_ROOT / "01-social-media-agent"))
 sys.path.insert(0, str(REPO_ROOT))
 
 from src import security, db, dashboard
-from src.hq.memory import HQMemoryManager
+from src.hq.memory import HQMemoryManager, InternalAuthAuthority
 from src.hq.queue import HQJobQueue
 from src.hq.worker import HQWorker, CancellationToken
 from src.hq.models import CanonicalJob, JobPriority, JobBudget
@@ -108,16 +108,23 @@ class TestPhase613Remediation(unittest.TestCase):
     # PRIORITY A: FIX HQ MEMORY AUTHORIZATION (NEGATIVE & POSITIVE SECURITY)
     # =========================================================================
 
+    def _memory_token(self):
+        secret = "test-hq-bootstrap-for-memory"
+        InternalAuthAuthority.set_bootstrap_secret(secret)
+        self.addCleanup(InternalAuthAuthority.set_bootstrap_secret, "")
+        return InternalAuthAuthority.issue_principal("EMP-L01", secret).session_token
+
     def test_01_memory_rejects_is_hq_spoofing(self):
         """Negative test: Specialist agent (EMP-L02) cannot pass is_hq=True to access HQ_ONLY memory."""
         mem_db = Path(self.temp_dir) / "test_mem_spoof.db"
         mem = HQMemoryManager(mem_db)
+        hq = self._memory_token()
 
         mem.store(
             scope="HQ_ONLY",
             category="DECISION",
             title="Director Confidential Plan",
-            content="Top secret HQ strategic decisions."
+            content="Top secret HQ strategic decisions.", auth_token=hq
         )
 
         # Malicious call: Agent EMP-L02 tries to claim is_hq=True
@@ -130,13 +137,14 @@ class TestPhase613Remediation(unittest.TestCase):
         """Negative test: Agent A cannot spoof reader_division to access Division B's private memory."""
         mem_db = Path(self.temp_dir) / "test_mem_div_spoof.db"
         mem = HQMemoryManager(mem_db)
+        hq = self._memory_token()
 
         # Division B (AUDIO_PRODUCTION) private memory
         mem.store(
             scope="DIVISION:AUDIO_PRODUCTION",
             category="POLICY",
             title="Audio Hardware Calibration",
-            content="Audio mastering specs."
+            content="Audio mastering specs.", auth_token=hq
         )
 
         # Hermes (EMP-L02, CREATIVE_CORE) tries to supply reader_division='AUDIO_PRODUCTION'
@@ -149,8 +157,9 @@ class TestPhase613Remediation(unittest.TestCase):
         """Agent A (Creative) cannot retrieve Agent B (Audio) private memory."""
         mem_db = Path(self.temp_dir) / "test_mem_cross.db"
         mem = HQMemoryManager(mem_db)
+        hq = self._memory_token()
 
-        mem.store(scope="AGENT:EMP-L05", category="TASK_CONTEXT", title="Ardi Private Notes", content="Voice synth")
+        mem.store(scope="AGENT:EMP-L05", category="TASK_CONTEXT", title="Ardi Private Notes", content="Voice synth", auth_token=hq)
         results = mem.query(reader_agent_id="EMP-L02")
         self.assertNotIn("Ardi Private Notes", [r.title for r in results])
 
@@ -158,12 +167,13 @@ class TestPhase613Remediation(unittest.TestCase):
         """Authorized HQ Core (EMP-L01 / Director) can access all memory categories."""
         mem_db = Path(self.temp_dir) / "test_mem_hq.db"
         mem = HQMemoryManager(mem_db)
+        hq = self._memory_token()
 
-        mem.store(scope="HQ_ONLY", category="DECISION", title="HQ Strategic Plan", content="Content")
-        mem.store(scope="DIVISION:AUDIO_PRODUCTION", category="POLICY", title="Audio Specs", content="Specs")
-        mem.store(scope="ORGANIZATIONAL", category="GUIDELINE", title="Code of Conduct", content="Conduct")
+        mem.store(scope="HQ_ONLY", category="DECISION", title="HQ Strategic Plan", content="Content", auth_token=hq)
+        mem.store(scope="DIVISION:AUDIO_PRODUCTION", category="POLICY", title="Audio Specs", content="Specs", auth_token=hq)
+        mem.store(scope="ORGANIZATIONAL", category="GUIDELINE", title="Code of Conduct", content="Conduct", auth_token=hq)
 
-        results = mem.query(reader_agent_id="EMP-L01")
+        results = mem.query(reader_agent_id="EMP-L01", auth_token=hq)
         titles = [r.title for r in results]
         self.assertIn("HQ Strategic Plan", titles)
         self.assertIn("Audio Specs", titles)
@@ -173,10 +183,11 @@ class TestPhase613Remediation(unittest.TestCase):
         """Soft-deleted memory cannot be retrieved."""
         mem_db = Path(self.temp_dir) / "test_mem_del.db"
         mem = HQMemoryManager(mem_db)
+        hq = self._memory_token()
 
-        item = mem.store(scope="ORGANIZATIONAL", category="GUIDELINE", title="Old Guideline", content="Old")
-        mem.delete(item.memory_id, actor="ADMIN")
-        results = mem.query(reader_agent_id="EMP-L01")
+        item = mem.store(scope="ORGANIZATIONAL", category="GUIDELINE", title="Old Guideline", content="Old", auth_token=hq)
+        mem.delete(item.memory_id, actor="EMP-L01", auth_token=hq)
+        results = mem.query(reader_agent_id="EMP-L01", auth_token=hq)
         self.assertNotIn("Old Guideline", [r.title for r in results])
 
     # =========================================================================
@@ -211,7 +222,7 @@ class TestPhase613Remediation(unittest.TestCase):
 
         updated_j = q.get_job(job.task_id)
         self.assertIn(updated_j.status, ["FAILED", "RETRYING"])
-        self.assertIn("Process Terminated via SIGTERM/SIGKILL", updated_j.error_message)
+        self.assertIn("exceeded max duration budget", updated_j.error_message)
 
     def test_07_normal_process_handler_completes(self):
         """Normal handler running in process-isolation mode completes successfully."""

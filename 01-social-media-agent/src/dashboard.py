@@ -92,7 +92,7 @@ def _get_hq_data() -> dict:
 
 
 def _approval_cards(items, episodes):
-    linked = {row.get('episode_id') for row in items if row.get('episode_id')}
+    linked = {row.get('episode_id') for row in items if row.get('episode_id') and row.get('status') == 'MENUNGGU'}
     return ([{'id': row['id'], 'content_id': row['id'], 'status': 'pending',
               'title': row.get('judul', row['id']), 'summary': row.get('naskah', '')}
              for row in items if row.get('status') == 'MENUNGGU'] +
@@ -135,7 +135,7 @@ def state() -> dict:
             "shortcuts":[{"key":k,"label":v[0].replace("_"," ")+" · "+v[1][:65]} for k,v in __import__("src.revisor",fromlist=["SHORTCUTS"]).SHORTCUTS.items()],
             "server_time":db.now(),
             "queue4":q4, "mausbot_cards":cards, "hq_agents":agents,
-            "chat":dashboard_ops.records('chat'), "watchlist":dashboard_ops.watchlist(),
+            "chat":dashboard_ops.records('chat'), "watchlist":dashboard_ops.watchlist(limit=200),
             "skills_catalog":_skills_catalog(),
             "employees":__import__("src.agents",fromlist=["snapshot"]).snapshot().get("agents",[]),
             "hq":hq}
@@ -297,9 +297,15 @@ def action(payload: dict) -> dict:
         jadwal = payload.get("jadwal") or None
         return queue4.owner_decision(cid, decision, reason, jadwal)
     if act == "queue4_hermes":
-        path = str(payload.get("path") or "")
-        topic = str(payload.get("topic") or "")[:120]
-        return {"queued": queue.enqueue("hermes", payload={"path": path, "topic": topic}, max_attempts=1)}
+        raw = dashboard_ops.text(payload, 'path', 300)
+        base = Path(os.getenv('HERMES_INPUT_DIR', str(ROOT / 'masuk'))).resolve()
+        candidate = (base / raw).resolve()
+        if not candidate.is_relative_to(base) or not candidate.is_file():
+            raise ValueError('Berkas tidak tersedia di direktori input Hermes.')
+        topic = str(payload.get('topic') or '')[:120]
+        return {'queued': queue.enqueue('hermes', payload={'path': str(candidate), 'topic': topic}, max_attempts=1)}
+    if act == "ootto_attach_approved_video":
+        return dashboard_ops.attach_approved_video(payload)
     if act == "ootto_schedule":
         from ootto import jadwalkan
         return jadwalkan(str(payload.get("content_id") or ""), str(payload.get("waktu") or ""))
@@ -332,6 +338,11 @@ def action(payload: dict) -> dict:
         except IdempotencyConflictError as exc:
             raise ValueError('Kunci sudah dipakai untuk tugas berbeda.') from exc
         return {'ok': True, 'task_id': job.task_id, 'status': job.status}
+    if act == 'hq_job_review':
+        from .hq.queue import HQJobQueue
+        key = dashboard_ops.text(payload, 'task_id', 100)
+        decision = dashboard_ops.text(payload, 'decision', 10)
+        return HQJobQueue().review_job(key, decision, str(payload.get('note') or '')[:1000])
     if act == 'chat_assistant':
         return dashboard_ops.chat(LLM_INSTANCE, payload)
     if act == 'hermes_create_draft':
@@ -339,15 +350,14 @@ def action(payload: dict) -> dict:
     if act == 'watchlist_add':
         return dashboard_ops.add_watchlist(payload)
     if act == 'mausbot_card_decision':
-        which = {'ALLOW': 'SETUJU', 'DENY': 'TOLAK', 'REVISI': 'REVISI'}.get(payload.get('decision'))
+        decision = dashboard_ops.text(payload, 'decision', 10)
+        which = {'ALLOW': 'SETUJU', 'DENY': 'TOLAK', 'REVISI': 'REVISI'}.get(decision)
         if not which:
             raise ValueError('Keputusan tidak valid.')
         kind = payload.get('card_kind')
         key = str(payload.get('card_id') or '')
         if kind == 'content':
-            if (queue4.get(key) or {}).get('status') != 'MENUNGGU':
-                raise ValueError('Kartu persetujuan sudah berubah. Muat ulang dashboard.')
-            return queue4.owner_decision(key, which, str(payload.get('reason') or '')[:500])
+            return queue4.owner_decision(key, which, str(payload.get('reason') or '')[:500], expected_status='MENUNGGU')
         if kind == 'episode' and which != 'REVISI':
             if _require_ep(key).get('status') != 'pending_approval':
                 raise ValueError('Episode tidak lagi menunggu persetujuan.')
@@ -368,7 +378,7 @@ def _hq_worker_thread(stop: threading.Event) -> None:
         RUNTIME_INFO['hq_worker'] = 'running'
         while not stop.is_set():
             worker.queue.recover_stale_jobs()
-            if not worker.execute_one_cycle(dashboard_ops.execute_hq_job, use_process_isolation=True):
+            if not worker.execute_one_cycle(dashboard_ops.execute_hq_job, use_process_isolation=True, shutdown_event=stop):
                 stop.wait(2)
     except Exception:
         RUNTIME_INFO['hq_worker'] = 'failed'
@@ -419,7 +429,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("X-Content-Type-Options","nosniff")
         origin = self.headers.get("Origin", "")
         allowed = set(filter(None,os.getenv("STUDIO_ALLOWED_ORIGINS","").split(",")))
-        allowed.update(("null","https://"+self.headers.get("Host","")))
+        allowed.add("https://"+self.headers.get("Host",""))
         if origin in allowed:
             self.send_header("Access-Control-Allow-Origin",origin)
             self.send_header("Vary","Origin")
@@ -431,7 +441,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header(k,v)
         self.end_headers()
         try:
-            self.wfile.write(body)
+            if self.command != "HEAD":
+                self.wfile.write(body)
         except (BrokenPipeError,ConnectionResetError):
             pass
 
@@ -462,7 +473,7 @@ class Handler(BaseHTTPRequestHandler):
         if path=="/sw.js":
             return self._send(200,b"self.addEventListener('fetch',()=>{});","application/javascript")
         if path in ("/","/index.html"):
-            return self._send(200,b"" if head else PAGE.encode(),"text/html; charset=utf-8")
+            return self._send(200,PAGE.encode(),"text/html; charset=utf-8")
         if not RUNTIME.auth.valid(self._token()):
             return self._json({"error":"Silakan masuk kembali"},401)
         try:
@@ -470,6 +481,23 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(state())
             if path=="/api/hq":
                 return self._json(_get_hq_data())
+            if path.startswith('/api/hq/jobs/'):
+                from .hq.queue import HQJobQueue
+                key = path.rsplit('/', 1)[-1]
+                if not SAFE_EP.fullmatch(key):
+                    return self._json({'error':'ID tugas tidak valid'},400)
+                item = HQJobQueue().review_detail(key)
+                return self._json(item if item else {'error':'Tugas HQ tidak ditemukan'},200 if item else 404)
+            if path == '/api/watchlist':
+                params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+                try:
+                    offset = int(params.get('offset', ['0'])[0])
+                    if offset < 0 or offset > 1000000:
+                        raise ValueError()
+                except ValueError:
+                    return self._json({'error':'Offset tidak valid'},400)
+                items = dashboard_ops.watchlist(limit=101, offset=offset)
+                return self._json({'items':items[:100], 'next_offset':offset+100 if len(items)>100 else None})
             if path=="/api/telemetry":
                 return self._json(_get_telemetry())
             if path=="/api/studio":
@@ -547,7 +575,7 @@ class Handler(BaseHTTPRequestHandler):
         if origin:
             parsed=urllib.parse.urlparse(origin)
             allowed = set(filter(None,os.getenv("STUDIO_ALLOWED_ORIGINS","").split(",")))
-            if parsed.netloc and parsed.netloc!=self.headers.get("Host") and origin not in allowed:
+            if origin not in allowed and (parsed.scheme not in ("http", "https") or parsed.netloc != self.headers.get("Host")):
                 return self._json({"error":"Origin tidak diizinkan"},403)
         if not self.headers.get("Content-Type","").startswith("application/json"):
             return self._json({"error":"Gunakan application/json"},415)
@@ -563,7 +591,10 @@ class Handler(BaseHTTPRequestHandler):
             self.close_connection=True
             return self._json({"error":"JSON tidak valid"},400)
         if path=="/api/login":
-            token,wait=RUNTIME.auth.login(str(payload.get("password") or ""),self.client_address[0])
+            password = payload.get("password")
+            if not isinstance(password, str) or not 1 <= len(password) <= 1024:
+                return self._json({"error":"Kata sandi wajib diisi"},400)
+            token,wait=RUNTIME.auth.login(password,self.client_address[0])
             if not token:
                 return self._json({"error":"Kata sandi salah atau terlalu banyak percobaan.","retry_after":wait},429 if wait else 401)
             return self._json({"token":token,"expires_in":wait})
@@ -575,7 +606,9 @@ class Handler(BaseHTTPRequestHandler):
         try:
             result=action(payload)
             return self._json(result,400 if result.get("error") else 200)
-        except (ValueError,PermissionError) as exc:
+        except PermissionError:
+            return self._json({"error":"Aksi tidak diizinkan"},403)
+        except ValueError as exc:
             return self._json({"error":str(exc)},400)
         except FileNotFoundError:
             return self._json({"error":"Berkas belum tersedia"},404)
@@ -583,7 +616,7 @@ class Handler(BaseHTTPRequestHandler):
             LOG.warning('Aksi dashboard tidak dapat dijalankan: %s', type(exc).__name__)
             return self._json({"error": "Layanan tidak tersedia. Periksa konfigurasi dan log server."},503)
         except Exception:
-            LOG.exception('Aksi dashboard gagal')
+            LOG.error('Aksi dashboard gagal')
             return self._json({"error":"Aksi gagal. Periksa status sistem dan log server."},500)
 
 
@@ -600,8 +633,10 @@ def serve(host="127.0.0.1",port=8080,worker=True,orchestrate=True,skip_preflight
     else:
         RUNTIME_INFO["orchestrator"]="paused"
     stop_hq = threading.Event()
+    hq_thread = None
     if worker:
-        threading.Thread(target=_hq_worker_thread,args=(stop_hq,),daemon=True).start()
+        hq_thread = threading.Thread(target=_hq_worker_thread,args=(stop_hq,),daemon=True)
+        hq_thread.start()
         threading.Thread(target=_worker_thread,daemon=True).start()
     else:
         RUNTIME_INFO["worker"]="paused"
@@ -615,6 +650,8 @@ def serve(host="127.0.0.1",port=8080,worker=True,orchestrate=True,skip_preflight
         pass
     finally:
         stop_hq.set()
+        if hq_thread is not None:
+            hq_thread.join(timeout=5)
         httpd.server_close()
 
 

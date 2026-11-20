@@ -10,6 +10,8 @@ Implements:
 """
 
 import time
+import os
+import uuid
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 
@@ -17,7 +19,7 @@ from src.hq.models import CanonicalJob, JobPriority, JobStatus
 from src.hq.queue import HQJobQueue
 from src.hq.worker import HQWorker, CancellationToken
 from src.hq.manager import HQAIManager
-from src.hq.memory import HQMemoryManager
+from src.hq.memory import HQMemoryManager, InternalAuthAuthority
 from src.hq.router import HQModelRouter
 
 @dataclass
@@ -40,8 +42,10 @@ class HQOrchestrator:
     def __init__(self, queue: HQJobQueue,
                  manager: Optional[HQAIManager] = None,
                  memory: Optional[HQMemoryManager] = None,
-                 router: Optional[HQModelRouter] = None):
+                 router: Optional[HQModelRouter] = None,
+                 bootstrap_secret: Optional[str] = None):
         self.queue = queue
+        self.bootstrap_secret = bootstrap_secret or os.getenv("MARU_INTERNAL_BOOTSTRAP_SECRET", "")
         self.memory = memory or HQMemoryManager()
         self.router = router or HQModelRouter()
         self.manager = manager or HQAIManager(router=self.router, memory=self.memory)
@@ -49,7 +53,16 @@ class HQOrchestrator:
     def execute_autonomous_goal(self, goal: str, requested_by: str = "OWNER",
                                 context: Optional[Dict[str, Any]] = None) -> WorkflowExecutionReport:
         """Executes full autonomous multi-agent workflow from goal to HQ approval."""
-        workflow_id = f"WF-{int(time.time())}"
+        hq = InternalAuthAuthority.issue_principal("HQ", self.bootstrap_secret)
+        if not hq:
+            raise PermissionError("HQ orchestrator requires trusted server bootstrap configuration")
+        try:
+            return self._execute(goal, requested_by, context, hq.session_token)
+        finally:
+            InternalAuthAuthority.revoke(hq.session_token)
+
+    def _execute(self, goal, requested_by, context, hq_token):
+        workflow_id = f"WF-{uuid.uuid4().hex}"
         start_time = time.time()
 
         # Step 1: HQ interprets & requests AI Manager decomposition
@@ -87,7 +100,6 @@ class HQOrchestrator:
             def agent_handler(j: CanonicalJob, token: CancellationToken) -> Dict[str, Any]:
                 token.check()
                 # Query agent specific or organizational memory
-                mems = self.memory.query(reader_agent_id=j.assigned_agent, limit=3)
                 # Call model router for agent reasoning
                 resp = self.router.route_task(
                     task_type="specialist_execution",
@@ -100,20 +112,18 @@ class HQOrchestrator:
                     "execution_summary": resp.content,
                     "status": "SUCCESS"
                 }
-                # Store output to memory
-                self.memory.store(
-                    scope=f"AGENT:{j.assigned_agent}",
-                    category="TASK_CONTEXT",
-                    title=f"Result for {j.task_id}",
-                    content=str(output_data),
-                    tags=[j.assigned_agent, workflow_id],
-                    provenance={"task_id": j.task_id, "agent": j.assigned_agent}
-                )
                 return output_data
 
             success = worker.execute_one_cycle(agent_handler)
             updated_j = self.queue.get_job(job.task_id)
             if success and updated_j:
+                self.memory.store(
+                    scope=f"AGENT:{updated_j.assigned_agent}", category="TASK_CONTEXT",
+                    title=f"Result for {updated_j.task_id}", content=str(updated_j.result_payload),
+                    tags=[updated_j.assigned_agent, workflow_id],
+                    provenance={"task_id": updated_j.task_id, "agent": updated_j.assigned_agent},
+                    auth_token=hq_token,
+                )
                 results.append({
                     "subtask_id": job.input_payload.get("subtask_id"),
                     "assigned_agent": job.assigned_agent,
@@ -150,7 +160,8 @@ class HQOrchestrator:
             title=f"HQ Decision for Workflow {workflow_id}",
             content=f"Goal: {goal} | Decision: {hq_decision} | Summary: {consolidation.consolidated_summary}",
             tags=["WORKFLOW", hq_decision],
-            provenance={"workflow_id": workflow_id, "requested_by": requested_by}
+            provenance={"workflow_id": workflow_id, "requested_by": requested_by},
+            auth_token=hq_token
         )
 
         return WorkflowExecutionReport(

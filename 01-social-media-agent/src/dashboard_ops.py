@@ -8,7 +8,7 @@ from urllib.parse import urlsplit
 from pathlib import Path
 
 from . import db, queue4
-from .config import ROOT, load_config
+from .config import ROOT, load_config, out_dir
 from .hq.agents import get_agent_profile
 from .llm import LLM
 
@@ -45,7 +45,7 @@ def safe_url(value) -> str:
     return ''
 
 
-def watchlist(limit: int = 200) -> list[dict]:
+def watchlist(limit: int | None = None, offset: int = 0) -> list[dict]:
     source = Path(os.getenv('REFERENCE_WATCHLIST', str(ROOT / 'data' / 'reference_watchlist.json')))
     try:
         original = json.loads(source.read_text(encoding='utf8'))
@@ -54,8 +54,9 @@ def watchlist(limit: int = 200) -> list[dict]:
     if isinstance(original, dict):
         original = original.get("items", [])
     original = original if isinstance(original, list) else []
-    return list({row['url']: row for row in [*original, *records('watchlist', limit)]
-                 if isinstance(row, dict) and safe_url(row.get('url'))}.values())
+    items = list({row['url']: row for row in [*original, *records('watchlist', -1)]
+                  if isinstance(row, dict) and safe_url(row.get('url'))}.values())
+    return items[offset:] if limit is None else items[offset:offset+limit]
 
 
 def add_watchlist(payload: dict) -> dict:
@@ -74,11 +75,11 @@ def text(payload: dict, field: str, length: int) -> str:
     return raw.strip()
 
 
-def provider_text(llm, system: str, prompt: str) -> str:
+def provider_text(llm, system: str, prompt: str, *, history=()) -> str:
     if not llm.available:
         raise RuntimeError('Provider AI belum dikonfigurasi.')
     try:
-        output = llm.chat([{'role': 'system', 'content': system}, {'role': 'user', 'content': prompt}])
+        output = llm.chat([{'role': 'system', 'content': system}, *history, {'role': 'user', 'content': prompt}])
     except Exception as exc:
         raise RuntimeError('Provider AI tidak dapat dihubungi atau gagal menjawab.') from exc
     if not output or not output.strip():
@@ -92,7 +93,12 @@ def chat(llm, payload: dict) -> dict:
     profile = get_agent_profile(bot_id)
     if not profile:
         raise ValueError('Agen chat tidak dikenal.')
-    answer = provider_text(llm, profile.system_prompt + ' Jawab dalam bahasa Indonesia. Jangan klaim telah menjalankan tindakan eksternal.', prompt)
+    with db.conn() as conn:
+        _prepare(conn)
+        rows = conn.execute("SELECT body FROM dashboard_records WHERE kind='chat' AND json_extract(body,'$.bot_id')=? ORDER BY id DESC LIMIT 12", (bot_id,)).fetchall()
+    history = [{'role': row['role'], 'content': row['text'][:1200]} for row in
+               (json.loads(r[0]) for r in reversed(rows)) if row['role'] in ('user', 'assistant')]
+    answer = provider_text(llm, profile.system_prompt + ' Jawab dalam bahasa Indonesia. Jangan klaim telah menjalankan tindakan eksternal.', prompt, history=history)
     _append('chat', {'role': 'user', 'bot_id': bot_id, 'bot_name': 'Pemilik', 'text': prompt},
             {'role': 'assistant', 'bot_id': bot_id, 'bot_name': profile.name, 'text': answer})
     return {'ok': True}
@@ -107,6 +113,41 @@ def draft(llm, payload: dict) -> dict:
     queue4.create(key, topic, naskah=script, actor='hermes')
     queue4.transition(key, 'MENUNGGU', 'hermes', 'Draf dari provider AI; perlu ditinjau pemilik.')
     return {'content_id': key}
+
+
+def approved_video(episode_id: str) -> Path:
+    """Resolve the actual approved/rendered episode, not a client-supplied path or QC flag."""
+    from . import approve
+    if not queue4.SAFE_ID.fullmatch(episode_id) or episode_id in ('.', '..'):
+        raise ValueError('ID episode tidak valid.')
+    episode = db.get_episode(episode_id)
+    if not episode:
+        raise ValueError('Episode tidak ditemukan.')
+    approve.require_approval(episode_id, episode['script'])
+    video_path = (episode.get('paths') or {}).get('video')
+    if not video_path:
+        raise ValueError('Render episode belum tersedia.')
+    video = Path(video_path).resolve()
+    if not video.is_relative_to(out_dir(episode_id).resolve()) or not video.is_file():
+        raise ValueError('Artefak video episode tidak valid.')
+    qc_path = video.parent / 'qc_report.json'
+    if not qc_path.is_file():
+        raise ValueError('Laporan QC belum tersedia.')
+    qc = json.loads(qc_path.read_text(encoding='utf-8'))
+    if not isinstance(qc, dict) or not qc.get('video') or Path(qc['video']).resolve() != video or qc.get('passed') is not True or qc_path.stat().st_mtime_ns < video.stat().st_mtime_ns:
+        raise ValueError('Video belum lulus QC yang berlaku.')
+    return video
+
+
+def attach_approved_video(payload: dict) -> dict:
+    if payload.get('confirmed') is not True:
+        raise ValueError('Konfirmasi pemilik bahwa video sesuai dengan konten diperlukan.')
+    content_id = text(payload, 'content_id', 100)
+    episode_id = text(payload, 'episode_id', 100)
+    video = approved_video(episode_id)
+    return queue4.transition(content_id, 'DISETUJUI', 'pemilik', 'Pemilik menautkan video episode dengan QC lulus',
+                             expected_status='DISETUJUI', episode_id=episode_id, video=str(video), qc_passed=True,
+                             verified_episode_video=True)
 
 
 def execute_hq_job(job, token) -> dict:

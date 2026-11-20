@@ -37,6 +37,8 @@ class AuthManager:
     def login(self, password: str, client: str, now: float | None = None) -> tuple[str | None, int]:
         now = time.time() if now is None else now
         with self._lock:
+            self._attempts = {key: history for key, history in self._attempts.items()
+                              if history and now - history[-1] < 300}
             attempts = [t for t in self._attempts.get(client, []) if now - t < 300]
             if len(attempts) >= 5:
                 self._attempts[client] = attempts
@@ -57,8 +59,12 @@ class AuthManager:
         if not token or len(token) > 256:
             return False
         with self._lock:
-            expiry = self._sessions.get(self._hash(token), 0)
-            return expiry > now
+            key = self._hash(token)
+            expiry = self._sessions.get(key, 0)
+            if expiry <= now:
+                self._sessions.pop(key, None)
+                return False
+            return True
 
     def logout(self, token: str) -> None:
         with self._lock:
@@ -81,6 +87,5 @@ def from_environment(host: str) -> Runtime:
         raise RuntimeError("Akses non-lokal wajib memakai STUDIO_PASSWORD (minimal 16 karakter). "
                            "Jangan ekspos studio tanpa login.")
     if not password:
-        password = secrets.token_urlsafe(24)
-        print("Kata sandi sesi lokal (tidak disimpan): " + password)
+        raise RuntimeError("Tetapkan STUDIO_PASSWORD pada environment server sebelum menjalankan Studio lokal.")
     return Runtime(AuthManager(password))

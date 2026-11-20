@@ -48,6 +48,11 @@ def test_corporate_browser(tmp_path, monkeypatch, fresh_db, webgl):
                 page.on('pageerror', lambda error: errors.append(str(error)))
                 page.goto(f'http://127.0.0.1:{server.server_port}/')
                 pw.expect(page.locator('#preview-quick-login')).to_have_count(0)
+                pw.expect(page.locator('#login-screen')).to_be_visible()
+                page.evaluate("sessionStorage.setItem('maru_studio_token','stale-browser-session')")
+                page.reload()
+                pw.expect(page.locator('#login-screen')).to_be_visible()
+                pw.expect(page.locator('#toast')).to_contain_text('Sesi berakhir')
                 page.locator('#login-pass').fill('Local-Test-Password-2026')
                 page.locator('#login-form button[type=submit]').click()
                 pw.expect(page.locator('#login-screen')).to_be_hidden()
@@ -85,6 +90,16 @@ def test_corporate_browser(tmp_path, monkeypatch, fresh_db, webgl):
                 page.locator('#mobile-menu-btn').click()
                 page.locator('[data-page=squad]').click()
                 pw.expect(page.locator('#voxel-squad-grid button').first).to_be_visible()
+                token = page.evaluate("sessionStorage.getItem('maru_studio_token')")
+                page.locator('#mobile-menu-btn').click()
+                page.locator('#nav-btn-office').click()
+                page.locator('[data-goto=settings]').click()
+                with page.expect_response(lambda response: response.url.endswith('/api/logout')) as logout:
+                    page.locator('#hq-sign-out').click()
+                assert logout.value.status == 200
+                pw.expect(page.locator('#login-screen')).to_be_visible(timeout=15000)
+                assert page.request.get(f'http://127.0.0.1:{server.server_port}/api/state', headers={'Authorization':f'Bearer {token}'}).status == 401
+                assert not page.evaluate("sessionStorage.getItem('maru_studio_token')")
                 assert errors == []
                 browser.close()
         finally:
