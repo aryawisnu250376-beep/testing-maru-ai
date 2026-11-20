@@ -13,6 +13,8 @@ dependencies = [
     "edge-tts>=6.1",
     "imageio-ffmpeg>=0.5",
     "PyYAML>=6.0",
+    "psutil>=5.9",
+    "tzdata; platform_system == 'Windows'",
 ]
 
 [project.optional-dependencies]

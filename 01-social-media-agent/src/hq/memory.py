@@ -380,6 +380,14 @@ class HQMemoryManager:
             )
             return True
 
+    def count_organizational(self) -> int:
+        """Count only organizational records, without reading their contents."""
+        conn = self._get_connection()
+        try:
+            return conn.execute("SELECT COUNT(*) FROM hq_memory WHERE is_deleted = 0 AND scope = 'ORGANIZATIONAL'").fetchone()[0]
+        finally:
+            conn.close()
+
     def query(self, reader_agent_id: Optional[str] = None,
               reader_division: Optional[str] = None,
               is_hq: bool = False,

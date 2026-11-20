@@ -293,7 +293,7 @@ class TestPhase613Remediation(unittest.TestCase):
 
         self.assertNotIn("_st=", content)
         self.assertIn("Immediate session invalidation on confirmed HTTP 401", content)
-        self.assertIn("Three.js library not loaded yet or CDN unavailable", content)
+        self.assertIn("3D tidak tersedia pada perangkat atau jaringan ini", content)
         for l_id in ["EMP-L01", "EMP-L02", "EMP-L03", "EMP-L04", "EMP-L05", "EMP-L06", "EMP-L07", "EMP-L08", "EMP-L09"]:
             self.assertIn(l_id, content)
 

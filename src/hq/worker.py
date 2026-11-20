@@ -48,8 +48,10 @@ def _isolated_process_runner(job_dict: Dict[str, Any], handler_code_or_callable:
 class HQWorker:
     def __init__(self, queue: HQJobQueue, worker_id: Optional[str] = None,
                  assigned_agent: Optional[str] = None, heartbeat_interval_sec: float = 5.0,
-                 lease_renewal_interval_sec: float = 10.0, auto_recover_startup: bool = True):
+                 lease_renewal_interval_sec: float = 10.0, auto_recover_startup: bool = True,
+                 process_start_method: Optional[str] = None):
         self.queue = queue
+        self.process_context = multiprocessing.get_context(process_start_method)
         self.worker_id = worker_id or f"WORKER-{uuid.uuid4().hex[:6].upper()}"
         self.assigned_agent = assigned_agent
         self.heartbeat_interval_sec = heartbeat_interval_sec
@@ -123,8 +125,8 @@ class HQWorker:
                 self._current_job = None
                 return False
 
-            ipc_queue = multiprocessing.Queue()
-            proc = multiprocessing.Process(
+            ipc_queue = self.process_context.Queue()
+            proc = self.process_context.Process(
                 target=_isolated_process_runner,
                 args=(job.to_dict(), job_handler, ipc_queue),
                 daemon=True

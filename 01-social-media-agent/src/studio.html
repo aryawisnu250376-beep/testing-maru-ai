@@ -681,13 +681,29 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
   .conn-pill { display: none; }
   #chat-drawer { width: calc(100vw - 20px); inset: 10px; }
 }
+@media (max-width: 1100px) {
+  #hq-hud-bottom-dock { max-width:calc(100% - 24px); overflow-x:auto; justify-content:flex-start; }
+  #hq-hud-bottom-dock button { flex-shrink:0; }
+  #hq-hud-topbar { overflow-x:auto; gap:8px; }
+  #hq-hud-topbar > * { flex-shrink:0; }
+  #hq-hud-left-panel, #hq-hud-right-panel { max-width:calc(100% - 24px); }
+  #office-inspector-panel { max-width:calc(100% - 32px); max-height:65%; overflow:auto; }
+}
+@media (max-width: 650px) {
+  #hq-hud-left-panel, #hq-hud-right-panel { display:none !important; }
+  #page-office.mobile-hud #hq-hud-left-panel { display:flex !important; bottom:auto !important; max-height:calc(100% - 145px); overflow:auto; }
+  #page-office.mobile-hud #hq-hud-right-panel { display:flex !important; inset:66px 12px auto !important; left:auto !important; width:140px !important; max-height:calc(100% - 145px); overflow:auto; }
+  #page-office.mobile-hud #hq-hud-left-panel { width:calc(100% - 170px) !important; }
+  .overview-bottom-grid { grid-template-columns:1fr !important; }
+}
+@media (prefers-reduced-motion:reduce) { *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
 </style>
 <!-- MARU-TAMPILAN-MP4-1 -->
 </head>
-<body class="chat-open">
+<body>
 
-<!-- Login Gate (otomatis terlewati saat mode Live Preview Arena aktif) -->
-<div id="login-screen" class="hidden">
+<!-- Login gate -->
+<div id="login-screen">
   <div class="glass-card login-box">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
       <div class="brand-logo">M</div>
@@ -696,11 +712,10 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
         <h2 style="margin:2px 0 0;font-size:20px">Masuk ke Dashboard</h2>
       </div>
     </div>
-    <p class="card-sub" style="margin-bottom:16px">Terhubung ke Hermes Agent, MausBot Allow/Deny Gate, Ootto, dan 68 Skill GitHub.</p>
+    <p class="card-sub" style="margin-bottom:16px">Terhubung ke Hermes Agent, MausBot Allow/Deny Gate, Ootto, dan katalog skill lokal.</p>
     <form id="login-form" style="display:grid;gap:12px">
-      <input id="login-pass" type="password" class="input-field" placeholder="Masukkan STUDIO_PASSWORD..." autocomplete="current-password" required>
+      <input id="login-pass" type="password" class="input-field" placeholder="Masukkan kata sandi studio..." autocomplete="current-password" required>
       <button type="submit" class="btn primary">Buka Dashboard MARU HQ</button>
-      <button id="preview-quick-login" type="button" class="btn allow hidden">⚡ Masuk Cepat (Mode Preview Arena)</button>
       <p id="login-err" style="margin:0;color:var(--rose);font-size:12px" class="hidden"></p>
     </form>
   </div>
@@ -794,6 +809,16 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
   </header>
 
   <!-- ================= PAGE 1: OVERVIEW & KANTOR AI ================= -->
+  <section id="page-projects" class="page-view hidden">
+    <div class="glass-card"><h2>Tugas &amp; Proyek HQ</h2><p id="hq-worker-state"></p>
+      <form id="hq-task-form"><label for="hq-goal">Tujuan tugas</label>
+        <input id="hq-goal" class="input-field" maxlength="1000" required>
+        <button class="btn primary" type="submit">Buat tugas HQ</button></form>
+      <p id="hq-job-counts" role="status"></p><ul id="hq-job-list"></ul>
+    </div>
+  </section>
+  <section id="page-finance" class="page-view hidden"><div class="glass-card"><h2>Finance</h2><p id="finance-status">Tidak tersedia — belum ada sumber data keuangan yang terhubung.</p></div></section>
+  <section id="page-settings" class="page-view hidden"><div class="glass-card"><h2>Pengaturan</h2><p>Konfigurasi provider dan worker dibaca dari environment server.</p><p id="hq-settings-provider"></p><button type="button" class="btn" id="hq-sign-out">Keluar dari dashboard</button></div></section>
   <section id="page-overview" class="page-view">
     <div class="kpi-grid">
       <div class="glass-card kpi">
@@ -817,7 +842,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       <div class="glass-card kpi">
         <div class="kpi-glow" style="background:#34d399"></div>
         <div class="eyebrow">SKILL TERPASANG</div>
-        <div id="kpi-skills" class="kpi-val">68</div>
+        <div id="kpi-skills" class="kpi-val">—</div>
         <div class="kpi-note"><span class="dot"></span> Tersinkron ke GitHub testing-maru-ai</div>
       </div>
     </div>
@@ -856,9 +881,9 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
             <div class="eyebrow">TORII ANALYTICS · PERFORMA RETENSI & POLA KREATOR</div>
             <h3 class="card-title">Kurva Retensi Penonton & Efektivitas Gaya Referensi</h3>
           </div>
-          <span class="pill cyan">Live Telemetry</span>
+          <span class="pill cyan">Metrik tersimpan</span>
         </div>
-        <div id="analytics-svg-wrap" style="width:100%;overflow:hidden"></div>
+        <div id="analytics-svg-wrap" tabindex="-1" style="width:100%;overflow:hidden"></div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px">
           <div style="padding:10px;border-radius:12px;background:var(--glass-soft);border:1px solid var(--line)">
             <div style="font-size:11px;color:var(--muted)">Pola @gegaraid</div>
@@ -953,13 +978,13 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
         </div>
         <input id="skill-filter-input" class="input-field" style="max-width:280px" placeholder="Filter nama skill (mis. remotion, antislop)...">
       </div>
-      <div id="skills-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;max-height:420px;overflow-y:auto"></div>
+      <div id="skills-grid" tabindex="-1" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;max-height:420px;overflow-y:auto"></div>
     </div>
 
   </section>
 
     <!-- ================= PAGE 5: VIRTUAL OFFICE 3D (ISOMETRIC DIORAMA PHASE 1) ================= -->
-  <section id="page-office" class="page-view hidden" style="padding:0;position:relative;height:calc(100vh - 60px);overflow:hidden;background:#030712;user-select:none;">
+  <section id="page-office" class="page-view hidden" style="padding:0;position:relative;height:calc(100dvh - 76px);min-height:460px;overflow:hidden;background:#030712;user-select:none;">
     
     <!-- 3D Canvas Viewport Container (Central Natural Centerpiece) -->
     <div id="office-3d-viewport" style="width:100%;height:100%;position:absolute;top:0;left:0;z-index:1;"></div>
@@ -988,7 +1013,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
         <!-- Real-time HQ Mission Status -->
         <div style="display:flex;align-items:center;gap:6px;">
           <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 8px #34d399;" id="hq-status-dot"></span>
-          <span id="hq-status-text" style="font-size:11px;font-weight:800;color:#34d399;letter-spacing:0.3px;">SYSTEM ACTIVE</span>
+          <span id="hq-status-text" style="font-size:11px;font-weight:800;color:#34d399;letter-spacing:0.3px;">Memuat data</span>
         </div>
       </div>
 
@@ -999,7 +1024,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
           <span style="font-size:12px;">💰</span>
           <div>
             <div style="font-size:8.5px;color:rgba(148,163,184,0.8);font-weight:700;text-transform:uppercase;">Saldo Perusahaan</div>
-            <div id="hud-company-balance" style="font-size:11.5px;font-weight:900;color:#34d399;font-family:monospace;">Rp 128.450.000</div>
+            <div id="hud-company-balance" style="font-size:11.5px;font-weight:900;color:#34d399;font-family:monospace;">Tidak tersedia</div>
           </div>
         </div>
 
@@ -1008,16 +1033,16 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
           <span style="font-size:12px;">🤖</span>
           <div>
             <div style="font-size:8.5px;color:rgba(148,163,184,0.8);font-weight:700;text-transform:uppercase;">Active Agents</div>
-            <div id="hud-active-agents-count" style="font-size:11.5px;font-weight:900;color:#38bdf8;">9 Leaders / 22 Squad</div>
+            <div id="hud-active-agents-count" style="font-size:11.5px;font-weight:900;color:#38bdf8;">—</div>
           </div>
         </div>
 
         <!-- Pending Approvals (ACC) -->
-        <div style="display:flex;align-items:center;gap:7px;background:rgba(15,23,42,0.6);padding:4px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);cursor:pointer;" onclick="switchPage('workflow')">
+        <div style="display:flex;align-items:center;gap:7px;background:rgba(15,23,42,0.6);padding:4px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);cursor:pointer;" data-goto="workflow">
           <span style="font-size:12px;">🔒</span>
           <div>
             <div style="font-size:8.5px;color:rgba(148,163,184,0.8);font-weight:700;text-transform:uppercase;">Maus ACC Gate</div>
-            <div id="hud-pending-approvals" style="font-size:11.5px;font-weight:900;color:#f59e0b;">0 Pending</div>
+            <div id="hud-pending-approvals" style="font-size:11.5px;font-weight:900;color:#f59e0b;">—</div>
           </div>
         </div>
 
@@ -1035,7 +1060,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
           <button id="cam-free-btn" onclick="window.MaruOffice3D && window.MaruOffice3D.setCameraMode('free')" style="background:transparent;color:var(--muted);border:none;padding:4px 9px;border-radius:6px;font-size:9.5px;font-weight:800;cursor:pointer;">🌐 FREE</button>
         </div>
         <button onclick="window.MaruOffice3D && window.MaruOffice3D.resetCamera()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--ink);padding:5px 9px;border-radius:8px;font-size:9.5px;font-weight:700;cursor:pointer;">↺ Reset</button>
-        <button id="hud-toggle-panels-btn" onclick="window.toggleHqHudPanels && window.toggleHqHudPanels()" title="Toggle Sidebar Visibility" style="background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);color:#38bdf8;padding:5px 8px;border-radius:8px;font-size:10px;font-weight:800;cursor:pointer;">⛶ HUD</button>
+        <button id="hud-toggle-panels-btn" aria-controls="hq-hud-left-panel hq-hud-right-panel" aria-expanded="false" onclick="window.toggleHqHudPanels && window.toggleHqHudPanels()" title="Toggle Sidebar Visibility" style="background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);color:#38bdf8;padding:5px 8px;border-radius:8px;font-size:10px;font-weight:800;cursor:pointer;">⛶ HUD</button>
       </div>
     </header>
 
@@ -1061,13 +1086,13 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
         </div>
         <!-- Fast Navigation Shortcuts -->
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
-          <button onclick="switchPage('workflow')" style="background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.25);border-radius:7px;padding:6px 4px;color:#38bdf8;font-size:9.5px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;">
+          <button data-goto="workflow" style="background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.25);border-radius:7px;padding:6px 4px;color:#38bdf8;font-size:9.5px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;">
             <span>⚡</span><span>Workflow</span>
           </button>
-          <button onclick="switchPage('kanban')" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.25);border-radius:7px;padding:6px 4px;color:#c084fc;font-size:9.5px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;">
+          <button data-goto="kanban" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.25);border-radius:7px;padding:6px 4px;color:#c084fc;font-size:9.5px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;">
             <span>📋</span><span>Kanban</span>
           </button>
-          <button onclick="switchPage('studio')" style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:7px;padding:6px 4px;color:#34d399;font-size:9.5px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;">
+          <button data-goto="studio" style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:7px;padding:6px 4px;color:#34d399;font-size:9.5px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;">
             <span>🎬</span><span>Studio</span>
           </button>
         </div>
@@ -1096,7 +1121,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
           <div style="font-size:11px;font-weight:800;color:#fff;display:flex;align-items:center;gap:6px;">
             <span>📊</span><span>TELEMETRI INFRASTRUKTUR</span>
           </div>
-          <span id="hud-telemetry-badge" style="font-size:8.5px;font-weight:800;color:#34d399;background:rgba(52,211,153,0.12);padding:1px 5px;border-radius:4px;border:1px solid rgba(52,211,153,0.25);">LIVE</span>
+          <span id="hud-telemetry-badge" style="font-size:8.5px;font-weight:800;color:#34d399;background:rgba(52,211,153,0.12);padding:1px 5px;border-radius:4px;border:1px solid rgba(52,211,153,0.25);">Menunggu data</span>
         </div>
         
         <!-- CPU Gauge Bar -->
@@ -1191,41 +1216,41 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
 
     <!-- Mobile Touch D-Pad Controls -->
     <div style="position:absolute;right:14px;bottom:68px;z-index:35;display:grid;grid-template-columns:repeat(3,32px);grid-template-rows:repeat(2,32px);gap:4px;">
-      <div onclick="window.MaruOffice3D && window.MaruOffice3D.panCam(0,3)" style="background:rgba(10,16,32,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.3);border-radius:7px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:11px;">▲</div>
-      <div onclick="window.MaruOffice3D && window.MaruOffice3D.zoomCam(0.85)" style="background:rgba(10,16,32,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.3);border-radius:7px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:10px;">🔍+</div>
-      <div onclick="window.MaruOffice3D && window.MaruOffice3D.rotateCam(-0.25)" style="background:rgba(10,16,32,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.3);border-radius:7px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:11px;">↶</div>
-      <div onclick="window.MaruOffice3D && window.MaruOffice3D.panCam(0,-3)" style="background:rgba(10,16,32,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.3);border-radius:7px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:11px;">▼</div>
-      <div onclick="window.MaruOffice3D && window.MaruOffice3D.zoomCam(1.15)" style="background:rgba(10,16,32,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.3);border-radius:7px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:10px;">🔍-</div>
-      <div onclick="window.MaruOffice3D && window.MaruOffice3D.rotateCam(0.25)" style="background:rgba(10,16,32,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.3);border-radius:7px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:11px;">↷</div>
+      <button type="button" onclick="window.MaruOffice3D && window.MaruOffice3D.panCam(0,3)" style="background:rgba(10,16,32,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.3);border-radius:7px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:11px;">▲</button>
+      <button type="button" onclick="window.MaruOffice3D && window.MaruOffice3D.zoomCam(0.85)" style="background:rgba(10,16,32,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.3);border-radius:7px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:10px;">🔍+</button>
+      <button type="button" onclick="window.MaruOffice3D && window.MaruOffice3D.rotateCam(-0.25)" style="background:rgba(10,16,32,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.3);border-radius:7px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:11px;">↶</button>
+      <button type="button" onclick="window.MaruOffice3D && window.MaruOffice3D.panCam(0,-3)" style="background:rgba(10,16,32,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.3);border-radius:7px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:11px;">▼</button>
+      <button type="button" onclick="window.MaruOffice3D && window.MaruOffice3D.zoomCam(1.15)" style="background:rgba(10,16,32,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.3);border-radius:7px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:10px;">🔍-</button>
+      <button type="button" onclick="window.MaruOffice3D && window.MaruOffice3D.rotateCam(0.25)" style="background:rgba(10,16,32,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.3);border-radius:7px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:11px;">↷</button>
     </div>
 
     <!-- ================= BOTTOM QUICK-DOCK NAVIGATION ================= -->
-    <nav id="hq-hud-bottom-dock" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:35;background:rgba(10,16,32,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(56,189,248,0.3);border-radius:16px;padding:5px 12px;display:flex;align-items:center;gap:6px;box-shadow:0 8px 32px rgba(0,0,0,0.7);">
-      <button onclick="switchPage('office')" class="hud-dock-btn active" data-dock="office" style="background:rgba(56,189,248,0.2);border:1px solid #38bdf8;color:#38bdf8;padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;">
+    <nav aria-label="Modul Corporate HQ" id="hq-hud-bottom-dock" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:35;background:rgba(10,16,32,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(56,189,248,0.3);border-radius:16px;padding:5px 12px;display:flex;align-items:center;gap:6px;box-shadow:0 8px 32px rgba(0,0,0,0.7);">
+      <button data-goto="office" class="hud-dock-btn active" data-dock="office" style="background:rgba(56,189,248,0.2);border:1px solid #38bdf8;color:#38bdf8;padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;">
         <span>🏢</span><span>Home/HQ</span>
       </button>
-      <button onclick="switchPage('squad')" class="hud-dock-btn" data-dock="squad" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+      <button data-goto="squad" class="hud-dock-btn" data-dock="squad" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
         <span>🤖</span><span>AI Agents</span>
       </button>
-      <button onclick="switchPage('overview')" class="hud-dock-btn" data-dock="overview" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+      <button data-goto="overview" class="hud-dock-btn" data-dock="overview" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
         <span>⚡</span><span>HQ Core</span>
       </button>
-      <button onclick="switchPage('kanban')" class="hud-dock-btn" data-dock="kanban" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+      <button data-goto="projects" class="hud-dock-btn" data-dock="projects" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
         <span>📁</span><span>Projects</span>
       </button>
-      <button onclick="switchPage('workflow')" class="hud-dock-btn" data-dock="workflow" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+      <button data-goto="workflow" class="hud-dock-btn" data-dock="workflow" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
         <span>📱</span><span>Social Media</span>
       </button>
-      <button onclick="switchPage('analytics')" class="hud-dock-btn" data-dock="analytics" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+      <button data-goto="analytics" class="hud-dock-btn" data-dock="analytics" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
         <span>📈</span><span>Analytics</span>
       </button>
       <button onclick="window.openDepartmentModule && window.openDepartmentModule('finance')" class="hud-dock-btn" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
         <span>💰</span><span>Finance</span>
       </button>
-      <button onclick="switchPage('skills')" class="hud-dock-btn" data-dock="skills" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+      <button data-goto="skills" class="hud-dock-btn" data-dock="skills" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
         <span>📄</span><span>Skills/Docs</span>
       </button>
-      <button onclick="toast('Pengaturan MARU AI HQ: Konfigurasi model Gemini 2.5/Claude 3.5 & database SQLite operasional.')" class="hud-dock-btn" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+      <button data-goto="settings" class="hud-dock-btn" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
         <span>⚙️</span><span>Settings</span>
       </button>
     </nav>
@@ -1275,6 +1300,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
             <input id="wl-url" class="input-field" placeholder="Tempel URL TikTok/YouTube referensi..." required>
             <input id="wl-note" class="input-field" placeholder="Catatan pola (hook / transisi / tempo)">
             <button type="submit" class="btn">+ Simpan</button>
+            <textarea id="wl-transcript" aria-label="Ringkasan referensi" placeholder="Ringkasan pengamatan (opsional)" class="input-field" maxlength="3000" style="grid-column:1/-1"></textarea>
           </form>
           <div id="watchlist-items" style="display:grid;gap:8px"></div>
         </div>
@@ -1340,12 +1366,12 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
   }
 
   const S = {
-    token: (typeof window.__MARU_PREVIEW_TOKEN__ === "string" && window.__MARU_PREVIEW_TOKEN__) || safeGetToken(),
+    token: safeGetToken(),
     pollTimer: null,
     page: "overview",
     divisionFilter: "all",
     search: "",
-    selectedBot: "hermes",
+    selectedBot: "EMP-L02",
     selectedSquadEmp: "hermes",
     selectedCreator: "gegaraid",
     selectedEpId: "",
@@ -1514,8 +1540,8 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     if (!clockEl || !dateEl) return;
     const now = new Date();
     // WIB / UTC+7 representation
-    const timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " WIB";
-    const dateStr = now.toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+    const timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "Asia/Jakarta" }) + " WIB";
+    const dateStr = now.toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Jakarta" });
     clockEl.innerText = timeStr;
     dateEl.innerText = dateStr;
   }
@@ -1523,7 +1549,13 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
   updateHqHudClock();
 
   window.toggleHqHudPanels = function() {
+    if (matchMedia('(max-width: 650px)').matches) {
+      const expanded = document.getElementById('page-office').classList.toggle('mobile-hud');
+      document.getElementById('hud-toggle-panels-btn').setAttribute('aria-expanded', String(expanded));
+      return;
+    }
     hudPanelsVisible = !hudPanelsVisible;
+    document.getElementById('hud-toggle-panels-btn').setAttribute('aria-expanded', String(hudPanelsVisible));
     const leftP = document.getElementById("hq-hud-left-panel");
     const rightP = document.getElementById("hq-hud-right-panel");
     const btn = document.getElementById("hud-toggle-panels-btn");
@@ -1541,85 +1573,41 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     }
   };
 
+  window.selectHqDepartment = (department) => { hudSelectedDepartment = department; };
   window.openDepartmentModule = function(deptKey) {
-    const target = deptKey || (hudSelectedDepartment && hudSelectedDepartment.id) || "workflow";
-    const map = {
-      "bima": "overview",
-      "executive": "overview",
-      "hermes": "studio",
-      "creative": "studio",
-      "kirana": "studio",
-      "nara": "workflow",
-      "cendekia": "skills",
-      "academic": "skills",
-      "maus": "workflow",
-      "approval": "workflow",
-      "ardi": "studio",
-      "voice": "studio",
-      "wira": "overview",
-      "it": "overview",
-      "telemetry": "overview",
-      "ootto": "kanban",
-      "social": "kanban",
-      "finance": "finance",
-      "meeting": "squad",
-      "canteen": "squad",
-      "lounge": "squad"
-    };
-
-    if (target === "finance") {
-      const bal = (S.data && S.data.hq && S.data.hq.finance && S.data.hq.finance.formatted_balance) || "Rp 128.450.000";
-      toast("Finance & Treasury HQ: Saldo Bersih " + bal + " (Arus Kas Sehat, Alokasi AI Ops & Server 12%).");
-      return;
-    }
-
-    const page = map[target.toLowerCase()] || "workflow";
-    if (typeof switchPage === "function") {
-      switchPage(page);
-      toast("Membuka Modul: " + page.toUpperCase());
-    }
+    const target = deptKey || hudSelectedDepartment?.id;
+    const map = { bima:'overview', hermes:'studio', kirana:'studio', ardi:'studio',
+      nara:'workflow', maus:'workflow', cendekia:'skills', wira:'analytics', ootto:'workflow',
+      finance:'finance', meeting:'projects', canteen:'squad', lounge:'squad', lobby:'overview', mushola:'squad' };
+    if (!map[target]) return toast('Modul departemen belum tersedia.');
+    window.MaruOffice3D?.closeInspector();
+    switchPage(map[target]);
   };
 
   function renderHqHud(data) {
     if (!data) return;
-
-    // 1. Top Bar: Balance, Agents, Approvals, Status
     const hq = data.hq || {};
-    const finance = hq.finance || {};
-    const balEl = document.getElementById("hud-company-balance");
-    if (balEl) balEl.innerText = finance.formatted_balance || "Rp 128.450.000";
-
-    const employees = data.employees || [];
-    const activeAgentsCount = employees.length || 9;
-    const agEl = document.getElementById("hud-active-agents-count");
-    if (agEl) agEl.innerText = activeAgentsCount + " AI Specialists (" + (data.totals ? data.totals.skills || 68 : 68) + " Skills)";
-
-    const cards = data.mausbot_cards || [];
-    const pendingCards = cards.filter(c => c.status === "pending");
-    const pendEl = document.getElementById("hud-pending-approvals");
-    if (pendEl) {
-      pendEl.innerText = pendingCards.length + " Pending ACC";
-      pendEl.style.color = pendingCards.length > 0 ? "#ef4444" : "#34d399";
-    }
-
-    const statusDot = document.getElementById("hq-status-dot");
-    const statusText = document.getElementById("hq-status-text");
-    if (statusDot && statusText) {
-      if (pendingCards.length > 0) {
-        statusDot.style.background = "#f59e0b";
-        statusDot.style.boxShadow = "0 0 8px #f59e0b";
-        statusText.innerText = "WAITING ACC (" + pendingCards.length + ")";
-        statusText.style.color = "#f59e0b";
-      } else {
-        statusDot.style.background = "#34d399";
-        statusDot.style.boxShadow = "0 0 8px #34d399";
-        statusText.innerText = "ALL SYSTEMS GO";
-        statusText.style.color = "#34d399";
-      }
-    }
+    const employees = data.hq_agents || [];
+    const pendingCards = data.mausbot_cards || [];
+    $("#hud-company-balance").textContent = 'Tidak tersedia';
+    $("#hud-active-agents-count").textContent = hq.hq_status_counts == null ? 'Tidak tersedia' :
+      `${employees.filter(a => a.state === 'working').length} aktif / ${employees.length} terdaftar`;
+    $("#hud-pending-approvals").textContent = `${pendingCards.length} Pending ACC`;
+    const statusText = $("#hq-status-text");
+    const worker = data.runtime?.hq_worker;
+    const needAttention = pendingCards.length || hq.hq_status_counts == null || worker !== 'running';
+    statusText.textContent = pendingCards.length ? `MENUNGGU ACC (${pendingCards.length})` :
+      hq.hq_status_counts == null ? 'ANTREAN TIDAK TERSEDIA' : worker === 'running' ? 'WORKER HQ BERJALAN' : 'WORKER HQ TIDAK AKTIF';
+    statusText.style.color = $("#hq-status-dot").style.background = needAttention ? '#f59e0b' : '#34d399';
+    $("#hq-worker-state").textContent = worker === 'running' ? 'Worker HQ aktif; hasil tugas merupakan rekomendasi untuk HQ.' :
+      'Worker HQ tidak aktif; tugas tetap tersimpan sampai worker dan provider tersedia.';
+    $("#hq-job-counts").textContent = hq.hq_status_counts == null ? 'Status antrean tidak tersedia' :
+      Object.entries(hq.hq_status_counts).map(([state,n]) => `${state}: ${n}`).join(' · ') || 'Belum ada tugas';
+    $("#hq-job-list").innerHTML = (hq.hq_jobs || []).map(j => `<li>${esc(j.goal)} · ${esc(j.assigned_agent)} · ${esc(j.status)}</li>`).join('');
+    $("#hq-settings-provider").textContent = data.llm?.configured ? 'Provider AI dikonfigurasi.' : 'Provider AI belum dikonfigurasi.';
 
     // 2. Left Side: Today's Operations / Queue Tasks
-    const q4 = data.queue4 || [];
+    const q4 = (data.queue4 || []).filter(it => ["MENUNGGU", "DISETUJUI", "TERJADWAL"].includes(it.status));
     const taskBadge = document.getElementById("hud-task-count-badge");
     if (taskBadge) taskBadge.innerText = q4.length + " Antrean";
 
@@ -1634,14 +1622,14 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
           const statusBg = isPending ? "rgba(245,158,11,0.15)" : (isSched ? "rgba(52,211,153,0.15)" : "rgba(56,189,248,0.15)");
           const statusCol = isPending ? "#f59e0b" : (isSched ? "#34d399" : "#38bdf8");
           return `
-            <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:7px 9px;border:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:3px;cursor:pointer;" onclick="switchPage('kanban')">
+            <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:7px 9px;border:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:3px;cursor:pointer;" data-goto="workflow">
               <div style="display:flex;justify-content:space-between;align-items:center;">
                 <span style="font-size:9.5px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;">${esc(it.judul || 'Task')}</span>
                 <span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:4px;background:${statusBg};color:${statusCol};">${esc(it.status || 'DRAF')}</span>
               </div>
               <div style="font-size:8.5px;color:rgba(148,163,184,0.7);display:flex;justify-content:space-between;">
-                <span>${esc(it.gaya_referensi || '@gegaraid')}</span>
-                <span>${esc((it.jadwal || it.usulan_jam || '').slice(0, 10) || 'Hari ini')}</span>
+                <span>${esc(it.gaya_referensi || 'Referensi belum ditetapkan')}</span>
+                <span>${esc((it.jadwal || it.usulan_jam || '').slice(0, 10) || 'Belum dijadwalkan')}</span>
               </div>
             </div>`;
         }).join("");
@@ -1650,31 +1638,17 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
 
     // 3. Right Side: Telemetry Metrics
     const telem = hq.telemetry || {};
-    const cpuP = typeof telem.cpu_percent === "number" ? telem.cpu_percent : 18.4;
-    const ramU = typeof telem.memory_used_gb === "number" ? telem.memory_used_gb : 2.1;
-    const ramT = typeof telem.memory_total_gb === "number" ? telem.memory_total_gb : 8.0;
-    const ramP = typeof telem.memory_percent === "number" ? telem.memory_percent : Math.round((ramU / ramT) * 100);
-    const diskP = typeof telem.disk_percent === "number" ? telem.disk_percent : 42.0;
-
-    const cpuVal = document.getElementById("hud-cpu-val");
-    const cpuBar = document.getElementById("hud-cpu-bar");
-    if (cpuVal && cpuBar) {
-      cpuVal.innerText = cpuP.toFixed(1) + "%";
-      cpuBar.style.width = Math.min(Math.max(cpuP, 5), 100) + "%";
-    }
-
-    const ramVal = document.getElementById("hud-ram-val");
-    const ramBar = document.getElementById("hud-ram-bar");
-    if (ramVal && ramBar) {
-      ramVal.innerText = ramU.toFixed(1) + " / " + ramT.toFixed(1) + " GB (" + ramP + "%)";
-      ramBar.style.width = Math.min(Math.max(ramP, 5), 100) + "%";
-    }
-
-    const diskVal = document.getElementById("hud-disk-val");
-    if (diskVal) diskVal.innerText = diskP.toFixed(1) + "% Terpakai";
-
-    const memVal = document.getElementById("hud-memory-val");
-    if (memVal) memVal.innerText = (hq.hq_memory_count || 128) + " Memory Nodes";
+    const available = telem.status === 'available';
+    $("#hud-telemetry-badge").textContent = available ? 'Data server' : 'Tidak tersedia';
+    const percent = (value) => available && Number.isFinite(value) ? `${value.toFixed(1)}%` : '—';
+    const bar = (value) => available && Number.isFinite(value) ? `${Math.min(Math.max(value, 0), 100)}%` : '0%';
+    $("#hud-cpu-val").textContent = percent(telem.cpu_pct);
+    $("#hud-cpu-bar").style.width = bar(telem.cpu_pct);
+    $("#hud-ram-val").textContent = available && Number.isFinite(telem.ram_used_mb) && Number.isFinite(telem.ram_total_mb) ?
+      `${(telem.ram_used_mb/1024).toFixed(1)} / ${(telem.ram_total_mb/1024).toFixed(1)} GB (${percent(telem.ram_pct)})` : '—';
+    $("#hud-ram-bar").style.width = bar(telem.ram_pct);
+    $("#hud-disk-val").textContent = percent(telem.disk_pct);
+    $("#hud-memory-val").textContent = Number.isInteger(hq.hq_memory_count) ? `${hq.hq_memory_count} entri organisasi` : 'Tidak tersedia';
 
     // 4. Live Agent Activity Feed
     const feed = document.getElementById("hud-activity-feed");
@@ -1706,6 +1680,13 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
   }
 
   function renderAll() {
+    const freshness = document.getElementById('hq-status-text');
+    if (!S.data) { if (freshness) freshness.textContent = 'DATA TIDAK TERSEDIA'; return; }
+    for (const sel of ['#hermes-compose-form button[type=submit]', '#chat-form button[type=submit]']) {
+      $(sel).disabled = !S.data.llm?.configured || $(sel).dataset.inflight === 'true';
+      if (!S.data.llm?.configured) $(sel).title = 'Provider AI belum dikonfigurasi';
+      else $(sel).removeAttribute('title');
+    }
     // Sinkronisasi status nyata ke Office 3D Shell jika tersedia
     try {
       const pendingCnt = (S.data && S.data.mausbot_cards) ? S.data.mausbot_cards.filter(c => c.status === "pending").length : 0;
@@ -1723,7 +1704,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
           offPill.style.background = "rgba(52,211,153,0.15)";
           offPill.style.color = "var(--emerald)";
           offPill.style.borderColor = "var(--emerald)";
-          offSub.innerText = "9 Agen Pemimpin Siaga · Data bersumber langsung dari /api/state";
+          offSub.innerText = "Data bersumber dari /api/state";
         }
       }
     } catch (_) {}
@@ -1747,11 +1728,11 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
 
     $("#badge-pending").textContent = pendingCards.length;
     $("#bell-count").textContent = pendingCards.length;
-    $("#badge-skills").textContent = (d.totals && d.totals.skills) || 68;
+    $("#badge-skills").textContent = d.skills_catalog?.length ?? "—";
     $("#kpi-pending").textContent = pendingCards.length;
     $("#kpi-queue").textContent = q4.length;
     $("#kpi-sched-note").innerHTML = `<span class="dot cyan"></span> ${schedCnt} terjadwal di Ootto · ${pendingCards.length} tunggu ACC`;
-    $("#kpi-skills").textContent = (d.totals && d.totals.skills) || 68;
+    $("#kpi-skills").textContent = d.skills_catalog?.length ?? "—";
 
     const safe = (fn, label) => { try { fn(); } catch (err) { console.error(label, err); try { toast("\u26a0\ufe0f " + label + ": " + err.message); } catch (_) {} } };
     safe(() => renderOffice(d.employees || []), "Kantor AI");
@@ -1761,7 +1742,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     safe(() => renderSquad(d.employees || []), "Tim AI");
     { const n = (d.employees || []).length; const bt = document.getElementById("badge-team-count"); if (bt) bt.textContent = n; const tt = document.getElementById("team-title"); if (tt) tt.textContent = n + " KARYAWAN AI \u00b7 MARU CORPORATION"; const tc = document.getElementById("team-count-badge"); if (tc) tc.textContent = n; }
     renderStudio(d.reference_creators || [], d.watchlist || [], d.episodes || [], q4);
-    renderChat(d.employees || [], d.chat || []);
+    renderChat(d.hq_agents || [], d.chat || []);
     renderSkillsCatalog(d.skills_catalog || []);
   }
 
@@ -1773,34 +1754,22 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
 
   function renderOffice(employees) {
     const layer = $("#office-agents-layer");
-    const visible = employees.filter(e => matchesFilter(e.division, e.name + " " + e.role + " " + e.bubble + " " + (e.skills || []).join(" ")));
-    // Slight deterministic offset when two agents share a zone so bubbles never overlap
-    const zoneCounts = {};
-    layer.innerHTML = visible.map(emp => {
-      const idx = zoneCounts[emp.zone_id] || 0;
-      zoneCounts[emp.zone_id] = idx + 1;
-      const dx = idx === 0 ? 0 : (idx % 2 === 1 ? 5.2 : -5.2) * Math.ceil(idx / 2);
-      const dy = idx === 0 ? 0 : 2.5 * idx;
-      const dotColor = emp.state === "working" ? "#fbbf24" : (emp.state === "scheduled" ? "#22d3ee" : "#34d399");
-      return `
-        <div class="office-agent ${esc(emp.state)}" style="left:${emp.x + dx}%;top:${emp.y + dy}%" data-emp-click="${esc(emp.id)}" title="Klik untuk detail ${esc(emp.name)}">
-          <div class="agent-speech">${esc(emp.bubble)}</div>
-          ${voxelSVG(emp, 44)}
-          <div class="agent-nametag">
-            <span style="width:7px;height:7px;border-radius:50%;background:${dotColor}"></span>
-            <span>${esc(emp.name)} · ${esc(emp.role.split(" ")[0])}</span>
-          </div>
-        </div>`;
-    }).join("");
+    const visible = employees.filter(e => matchesFilter('social-media', `${e.name} ${e.duty} ${e.task}`));
+    layer.innerHTML = visible.map((emp, i) => `<button type="button" class="office-agent ${esc(emp.state)}"
+      style="left:${12 + (i % 5) * 18}%;top:${35 + Math.floor(i / 5) * 35}%" data-emp-click="${esc(emp.id)}">
+      <span class="agent-speech">${esc(emp.task || emp.duty)}</span>${voxelSVG(emp, 36)}
+      <span class="agent-nametag">${esc(emp.name)} · ${esc(emp.state)}</span></button>`).join('');
   }
 
   function renderAnalytics(episodes) {
-    const pts = [62, 68, 65, 74, 71, 79, 83];
-    const labels = ["Ep-1", "Ep-2", "Ep-3", "Ep-4", "Ep-5", "Ep-6", "Terbaru"];
+    const pts = episodes.filter(e => Number.isFinite(e.metrics?.retention_3s))
+      .slice(0, 7).reverse().map(e => e.metrics.retention_3s);
+    if (!pts.length) { $("#analytics-svg-wrap").textContent = 'Belum ada metrik retensi yang tersimpan.'; return; }
+    const labels = pts.map((_, i) => `Ep-${i + 1}`);
     const w = 560, h = 165, pad = 26;
     const coords = pts.map((v, i) => {
-      const x = pad + (i * (w - pad * 2)) / (pts.length - 1);
-      const y = h - pad - ((v - 45) / 50) * (h - pad * 2);
+      const x = pad + (i * (w - pad * 2)) / Math.max(1, pts.length - 1);
+      const y = h - pad - (v / 100) * (h - pad * 2);
       return [x, y, v, labels[i]];
     });
     const line = coords.map((c, i) => (i === 0 ? "M" : "L") + c[0].toFixed(1) + "," + c[1].toFixed(1)).join(" ");
@@ -1828,8 +1797,6 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
   function renderMausbotCards(cards) {
     const pending = cards.filter(c => {
       if (c.status !== "pending" || !matchesFilter("hq", c.title + " " + c.summary)) return false;
-      if (c.content_id) return (S.data.queue4 || []).some(i => i.id === c.content_id && i.status === "MENUNGGU");
-      if (c.episode_id) return (S.data.episodes || []).some(e => e.id === c.episode_id && ["draft", "pending_approval"].includes(e.status));
       return true;
     });
     const emptyHtml = `<div style="padding:18px;text-align:center;color:var(--muted);font-size:12px">Tidak ada kartu izin tertunda. Semua draf sudah ditinjau pemilik!</div>`;
@@ -1838,15 +1805,15 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       <div class="maus-card">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
           <span class="pill amber">🔒 MausBot Approval Card</span>
-          <span class="pill cyan">${esc(c.style_preset || "@gegaraid")}</span>
+          <span class="pill cyan">${c.content_id ? "Antrean konten" : "Episode pipeline"}</span>
         </div>
         <div style="font-weight:800;font-size:13px">${esc(c.title)}</div>
         <div style="font-size:11.5px;color:var(--ink-dim)">${esc(c.summary)}</div>
-        <div class="cmd-box">${esc(c.command_preview)}</div>
+
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn sm allow" type="button" data-card-act="ALLOW" data-card-id="${esc(c.id)}">✓ Allow (Beri ACC)</button>
-          <button class="btn sm" type="button" data-card-act="REVISI" data-card-id="${esc(c.id)}">✍️ Minta Revisi</button>
-          <button class="btn sm deny" type="button" data-card-act="DENY" data-card-id="${esc(c.id)}">✕ Deny (Tolak)</button>
+          <button class="btn sm allow" type="button" data-card-act="ALLOW" data-card-id="${esc(c.id)}" data-card-kind="${c.content_id ? 'content' : 'episode'}">✓ Allow (Beri ACC)</button>
+          ${c.content_id ? `<button class="btn sm" type="button" data-card-act="REVISI" data-card-id="${esc(c.id)}" data-card-kind="${c.content_id ? 'content' : 'episode'}">✍️ Minta Revisi</button>` : ""}
+          <button class="btn sm deny" type="button" data-card-act="DENY" data-card-id="${esc(c.id)}" data-card-kind="${c.content_id ? 'content' : 'episode'}">✕ Deny (Tolak)</button>
         </div>
       </div>`;
 
@@ -1858,11 +1825,12 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     const filtered = q4.filter(i => matchesFilter("social-media", i.judul + " " + i.naskah + " " + (i.gaya_referensi || "")));
     const draft = filtered.filter(i => i.status === "DRAF" || i.status === "REVISI" || i.status === "DITOLAK");
     const wait = filtered.filter(i => i.status === "MENUNGGU");
+    const episodePending = (S.data.mausbot_cards || []).filter(c => c.episode_id && matchesFilter('social-media', c.title)).length;
     const prod = filtered.filter(i => i.status === "DISETUJUI");
     const sched = filtered.filter(i => i.status === "TERJADWAL" || i.status === "TAYANG" || i.status === "DRAF_TIKTOK");
 
     $("#cnt-col-draft").textContent = draft.length;
-    $("#cnt-col-wait").textContent = wait.length;
+    $("#cnt-col-wait").textContent = wait.length + episodePending;
     $("#cnt-col-prod").textContent = prod.length;
     $("#cnt-col-sched").textContent = sched.length;
 
@@ -1902,39 +1870,15 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       : ["wira","widia"].includes(emp.id) ? "Sistem" : "Riset";
   }
   function renderSquad(employees) {
-    const visible = employees.filter(e => matchesFilter(e.division, e.name + " " + e.role + " " + e.skills.join(" ")));
-    $("#voxel-squad-grid").innerHTML = visible.map(emp => `
-      <div class="voxel-card" data-squad-select="${esc(emp.id)}" style="--emp-accent:${GROUP_COLOR[groupOf(emp)]};box-shadow:inset 0 3px 0 ${GROUP_COLOR[groupOf(emp)]};${S.selectedSquadEmp === emp.id ? 'border-color:#38bdf8;background:rgba(56,189,248,0.14)' : ''}">
-        <div style="display:flex;justify-content:center">${voxelSVG(emp, 58)}</div>
-        <h4>${esc(emp.name)}</h4>
-        <p>${esc(emp.role)}</p>
-        <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap;justify-content:center"><span class="pill ${emp.state === 'working' ? 'amber' : 'green'}">${esc(emp.zone_label)}</span><span class="pill cyan">${emp.tasks_aktif || 0} tugas aktif</span></div>
-      </div>`).join("");
-
-    const sel = employees.find(e => e.id === S.selectedSquadEmp) || employees[0];
-    if (!sel) return;
-    $("#selected-emp-detail").innerHTML = `
-      <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
-        <div>${voxelSVG(sel, 78)}</div>
-        <div style="flex:1;min-width:240px">
-          <div class="eyebrow">PROFIL KARYAWAN AI · DIVISI ${esc(sel.division.toUpperCase())}</div>
-          <h3 class="card-title" style="font-size:21px">${esc(sel.name)} — ${esc(sel.role)}</h3>
-          <p class="card-sub" style="margin:6px 0 10px">${esc(sel.bio)}</p>
-          <div style="display:flex;gap:7px;flex-wrap:wrap">
-            <span class="pill cyan">Mesin: ${esc(sel.engine)}</span>
-            <span class="pill green">Lokasi: ${esc(sel.zone_label)}</span>
-            <span class="pill amber">Status: ${esc(sel.bubble)}</span>
-            <span class="pill">Selesai hari ini: ${sel.done_today || 0}</span>
-            <span class="pill cyan">${sel.tasks_aktif || 0} tugas aktif</span>
-          </div>
-          <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
-            ${sel.skills.map(s => `<code style="font-size:11px;padding:3px 8px;border-radius:8px;background:var(--glass-soft);border:1px solid var(--line)">/${esc(s)}</code>`).join("")}
-          </div>
-        </div>
-        <div>
-          <button class="btn primary" type="button" data-chat-with="${esc(sel.id)}">💬 Chat Langsung dengan ${esc(sel.name)}</button>
-        </div>
-      </div>`;
+    const agents = [...(S.data.hq_agents || []), ...employees];
+    const visible = agents.filter(e => matchesFilter(e.division || 'social-media', `${e.name} ${e.role || e.duty}`));
+    $("#voxel-squad-grid").innerHTML = visible.map(e => `<button type="button" class="voxel-card" data-squad-select="${esc(e.id)}">
+      ${voxelSVG(e, 42)}<b>${esc(e.name)}</b><span>${esc(e.role || e.duty)} · ${esc(e.state)}</span></button>`).join('');
+    const sel = visible.find(e => e.id === S.selectedSquadEmp) || visible[0];
+    $("#selected-emp-detail").innerHTML = sel ? `<h3>${esc(sel.name)} — ${esc(sel.role || sel.duty)}</h3>
+      <p>Status: ${esc(sel.state)}${Number.isFinite(sel.progress) ? ` · ${Math.round(sel.progress*100)}%` : ''}</p>
+      <p>${esc(sel.task || sel.long)}</p>${sel.failed_recent ? `<p>Kegagalan terbaru: ${sel.failed_recent}</p>` : ''}
+      ${sel.division === 'hq' ? `<button type="button" class="btn" data-chat-with="${esc(sel.id)}">Chat dengan agen</button>` : ''}` : 'Tidak ada agen yang cocok.';
   }
 
   function renderStudio(creators, watchlist, episodes, q4) {
@@ -2054,12 +1998,16 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
           <b style="font-size:12.5px">/${esc(s.id)}</b>
           <span class="pill ${s.division === 'academic' ? 'green' : (s.division === 'social-media' ? 'cyan' : '')}">${esc(s.division || 'shared')}</span>
         </div>
-        <div style="font-size:11px;color:var(--muted);line-height:1.4">${esc((s.description || "Skill terkurasi ekosistem MARU AI").slice(0, 95))}</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.4">${esc((s.description || "Tersedia di katalog skill lokal").slice(0, 95))}</div>
       </div>`).join("");
   }
 
   // ---------------- Navigation & Event Delegation ----------------
   function switchPage(page) {
+    const anchors = { analytics: ['overview', 'analytics-svg-wrap'], skills: ['squad', 'skills-grid'], kanban: ['workflow', 'col-wait'] };
+    const [route, anchor] = anchors[page] || [page];
+    if (!document.getElementById('page-' + route)) return toast('Modul belum tersedia.');
+    page = route;
     S.page = page;
     $$(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.page === page));
     $$(".page-view").forEach(sec => sec.classList.toggle("hidden", sec.id !== "page-" + page));
@@ -2070,9 +2018,8 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       b.style.color = isAct ? "#38bdf8" : "rgba(255,255,255,0.7)";
     });
     document.body.classList.remove("nav-open");
-    if (page === "office" && window.MaruOffice3D) {
-      setTimeout(() => window.MaruOffice3D.init(), 50);
-    }
+    if (window.MaruOffice3D) window.MaruOffice3D.setActive(page === 'office');
+    if (anchor) $("#" + anchor).scrollIntoView({block:'start'});
     if (S.data) renderVideoList(S.data.episodes || []);
   }
 
@@ -2142,8 +2089,9 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       const cid = cardBtn.dataset.cardId;
       const reason = act === "REVISI" ? (prompt("Catatan revisi untuk Hermes:", "Perkuat hook 3 detik pertama") || "") : "Keputusan langsung pemilik di Dashboard MARU";
       if (act === "REVISI" && !reason) return;
+      if (cardBtn.dataset.cardKind === 'episode' && !confirm('Konfirmasi keputusan setelah meninjau naskah dan sumber?')) return;
       try {
-        await api("/api/action", { action: "mausbot_card_decision", card_id: cid, decision: act, reason });
+        await api("/api/action", { action: "mausbot_card_decision", card_id: cid, card_kind: cardBtn.dataset.cardKind, confirmed: true, decision: act, reason });
         toast(`Kartu MausBot diputuskan: ${act}`);
         await refresh();
       } catch (err) { toast(err.message); }
@@ -2226,23 +2174,26 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     e.preventDefault();
     const topic = $("#compose-topic").value.trim();
     const notes = $("#compose-notes").value.trim();
-    if (!topic) return;
+    const submit = e.currentTarget.querySelector('button[type=submit]');
+    if (!topic || !submit || submit.disabled) return;
+    submit.disabled = true;
+    submit.dataset.inflight = 'true';
     try {
-      window.MaruActiveAction = { type: "hermes_create_draft", start: Date.now() };
-      if (window.MaruOffice3D && window.MaruOffice3D.syncBackendState) window.MaruOffice3D.syncBackendState(S.data);
       const res = await api("/api/action", {
         action: "hermes_create_draft",
         topic,
         creator_id: S.selectedCreator,
         notes,
       });
-      window.MaruActiveAction = null;
       $("#compose-topic").value = "";
       $("#compose-notes").value = "";
       S.selectedEpId = res.episode_id;
       toast(`Draf ${res.content_id} selesai disusun Hermes! Menunggu ACC Anda.`);
       await refresh();
-    } catch (err) { toast(err.message); }
+    } catch (err) { toast(err.message); } finally {
+      delete submit.dataset.inflight;
+      submit.disabled = !S.data?.llm?.configured;
+    }
   });
 
   on("#watchlist-form", "submit", async (e) => {
@@ -2252,10 +2203,12 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
         action: "watchlist_add",
         url: $("#wl-url").value.trim(),
         catatan: $("#wl-note").value.trim(),
+        transcript: $("#wl-transcript").value.trim(),
         creator_id: S.selectedCreator,
       });
       $("#wl-url").value = "";
       $("#wl-note").value = "";
+      $("#wl-transcript").value = "";
       toast("Referensi baru ditambahkan ke Watchlist Radar!");
       await refresh();
     } catch (err) { toast(err.message); }
@@ -2265,24 +2218,48 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     e.preventDefault();
     const inp = $("#chat-input");
     const promptTxt = inp.value.trim();
-    if (!promptTxt) return;
-    inp.value = "";
+    const submit = e.currentTarget.querySelector('button[type=submit]');
+    if (!promptTxt || !submit || submit.disabled) return;
+    submit.disabled = true;
+    submit.dataset.inflight = 'true';
     try {
       const res = await api("/api/action", {
         action: "chat_assistant",
         prompt: promptTxt,
         bot_id: S.selectedBot,
       });
+      inp.value = "";
       if (res.created_draft) {
         S.selectedEpId = res.created_draft.episode_id;
         toast("Hermes berhasil menambahkan draf baru ke antrean!");
       }
       await refresh();
-    } catch (err) { toast(err.message); }
+    } catch (err) { toast(err.message); } finally {
+      delete submit.dataset.inflight;
+      submit.disabled = !S.data?.llm?.configured;
+    }
+  });
+
+  on('#hq-task-form', 'submit', async (ev) => {
+    ev.preventDefault();
+    const input = $("#hq-goal");
+    const button = ev.currentTarget.querySelector('button');
+    button.disabled = true;
+    try {
+      const idempotency_key = input.dataset.requestId || (input.dataset.requestId = crypto.randomUUID?.() || Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-'));
+      await api('/api/action', {action:'task_create', goal:input.value, idempotency_key});
+      input.value = ''; delete input.dataset.requestId; await refresh();
+    } catch (err) { toast(err.message); } finally { button.disabled = false; }
+  });
+  on('#hq-goal', 'input', (ev) => { delete ev.target.dataset.requestId; });
+  on('#hq-sign-out', 'click', async () => {
+    try { await api('/api/logout', {}); } catch (err) { if (err.status !== 401) toast(err.message); }
+    clearInterval(S.pollTimer); S.pollTimer = null; S.token = ''; S.data = null;
+    safeSetToken(''); releaseVideo(); window.MaruOffice3D?.setActive(false); location.reload();
   });
 
   function ensurePolling() {
-    if (!S.pollTimer) {
+    if (S.token && !S.pollTimer) {
       S.pollTimer = setInterval(refresh, 8000);
     }
   }
@@ -2306,69 +2283,36 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
   });
 
   async function refresh() {
+    if (!S.token || S.refreshing) return;
+    S.refreshing = true;
     try {
       S.data = await api("/api/state");
       S.failCount = 0;
       renderAll();
     } catch (err) {
       S.failCount = (S.failCount || 0) + 1;
+      $("#hq-status-text").textContent = 'DATA TIDAK TERKINI';
+      $("#hud-telemetry-badge").textContent = 'Data lama';
+      window.MaruOffice3D?.syncBackendState?.(null);
       const is401 = !!(err && err.status === 401);
       if (is401) {
         // Priority 1: Immediate session invalidation on confirmed HTTP 401
         try { toast("Sesi berakhir atau tidak sah — silakan login ulang."); } catch (e) {}
         try { S.token = ""; safeSetToken(""); } catch (e) {}
+        clearInterval(S.pollTimer); S.pollTimer = null; S.data = null;
+        window.MaruOffice3D?.setActive(false);
         const ls = document.getElementById("login-screen");
         if (ls) ls.classList.remove("hidden");
       } else if (S.failCount === 1) {
-        try { toast("\u26a0\ufe0f Data dashboard gagal dimuat \u2014 pastikan server (mulai.cmd) hidup; akan dicoba lagi otomatis."); } catch (e) {}
+        try { toast("\u26a0\ufe0f Data dashboard gagal dimuat \u2014 pastikan server menyala; akan dicoba lagi otomatis."); } catch (e) {}
       }
-    }
+    } finally { S.refreshing = false; }
   }
 
-  on("#preview-quick-login", "click", async () => {
-    try {
-      const bootRes = await fetch("/api/preview-bootstrap").then(r => r.json());
-      if (bootRes && bootRes.token) {
-        S.token = bootRes.token;
-        safeSetToken(S.token);
-        $("#login-screen").classList.add("hidden");
-        await refresh();
-        ensurePolling();
-        return;
-      }
-      toast("Mode preview tidak aktif; gunakan kata sandi STUDIO_PASSWORD.");
-    } catch (err) { toast(err.message); }
-  });
-
   async function boot() {
-    if (!S.token) {
-      try {
-        const bootRes = await fetch("/api/preview-bootstrap").then(r => r.json());
-        if (bootRes && bootRes.preview_mode) {
-          $("#preview-quick-login").classList.remove("hidden");
-          if (bootRes.token) {
-            S.token = bootRes.token;
-            safeSetToken(S.token);
-          }
-        }
-      } catch (_) {}
-    }
-    if (!S.token) {
-      try {
-        const st = await fetch("/api/state").then(r => (r.ok ? r.json() : null));
-        if (st && st.employees) {
-          S.data = st;
-          $("#login-screen").classList.add("hidden");
-          renderAll();
-          ensurePolling();
-          return;
-        }
-      } catch (_) {}
-      $("#login-screen").classList.remove("hidden");
-      return;
-    }
-    $("#login-screen").classList.add("hidden");
+    if (!S.token) return;
     await refresh();
+    if (S.token && S.data) $("#login-screen").classList.add("hidden");
     ensurePolling();
   }
 
@@ -2381,9 +2325,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
 })();
 </script>
 
-<!-- Three.js + OrbitControls (Phase 1 3D Integration) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
 
 <script>
 // ================= MARU HQ 3D VIRTUAL OFFICE MODULE (PHASE 3 - INTERIOR FURNISHING & DECORATION) =================
@@ -2391,7 +2333,40 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
   let isInitialized = false;
   let scene, camera, renderer, controls;
   let cameraMode = 'iso';
-  let targetFocus = new THREE.Vector3(0, 0, 0);
+  let targetFocus, frame = 0, animateFrame, dependencies, active = false;
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      const timeout = setTimeout(() => { script.remove(); reject(new Error('CDN timeout')); }, 8000);
+      script.src = src;
+      script.onload = () => { clearTimeout(timeout); resolve(); };
+      script.onerror = () => { clearTimeout(timeout); script.remove(); reject(new Error('CDN tidak tersedia')); };
+      document.head.append(script);
+    });
+  }
+  const fallback = () => {
+    const view = document.getElementById('office-3d-viewport');
+    view.innerHTML = '<div style="display:grid;place-content:center;height:100%;text-align:center;padding:20px"><p>3D tidak tersedia pada perangkat atau jaringan ini.</p><button type="button" class="btn" data-goto="overview">Buka roster 2D</button></div>';
+  };
+  function scheduleFrame() {
+    if (active && !document.hidden && animateFrame && !frame) frame = requestAnimationFrame(animateFrame);
+  }
+  async function setActive(value) {
+    active = value;
+    if (!value) { cancelAnimationFrame(frame); frame = 0; return; }
+    if (!isInitialized) {
+      dependencies ||= (async () => {
+        if (!window.THREE) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js');
+        if (!window.THREE?.OrbitControls) await loadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js');
+      })();
+      try { await dependencies; if (active) init3D(); }
+      catch (_) { dependencies = null; if (active) fallback(); return; }
+    }
+    scheduleFrame();
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { cancelAnimationFrame(frame); frame = 0; } else scheduleFrame();
+  });
 
   // 9 DEPARTEMEN RESMI + 5 FASILITAS BERSAMA (LENGKAP SPESIFIKASI INVENTARIS PERABOTAN)
   const departments = [
@@ -2422,12 +2397,9 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     if (isInitialized) return;
     const view = document.getElementById("office-3d-viewport");
     if (!view) return;
-    if (typeof THREE === "undefined") {
-      console.warn("[MARU 3D] Three.js library not loaded yet or CDN unavailable. Providing informative fallback UI.");
-      view.innerHTML = '<div style="display:grid;place-items:center;height:100%;color:var(--cyan);font-family:monospace;font-size:13px;background:rgba(6,9,19,0.8);border-radius:12px;padding:20px;text-align:center;"><div><div style="font-size:24px;margin-bottom:8px;">🏢</div><div><b>MARU HQ 3D Living Diorama Siaga</b></div><div style="color:var(--muted);font-size:11px;margin-top:6px;">Modul Three.js CDN offline atau sedang memuat. Kantor 2D Roster tetap 100% aktif & sinkron.</div></div></div>';
-      return;
-    }
-
+    if (!window.THREE?.OrbitControls) { fallback(); return; }
+    view.replaceChildren();
+    targetFocus = new THREE.Vector3();
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x060913);
     scene.fog = new THREE.FogExp2(0x060913, 0.012);
@@ -2438,7 +2410,8 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     camera = new THREE.PerspectiveCamera(38, w / h, 1, 1000);
     camera.position.set(48, 52, 60);
 
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); }
+    catch (_) { fallback(); return; }
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
@@ -3071,164 +3044,25 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
 
     // Sync Backend State with 9 Official Leaders (Ground Truth Engine)
     function syncBackendState(data) {
-      if (!data) {
-        // Disconnected or offline fallback
-        employeeRoster.forEach(emp => {
-          if (emp.isLead) {
-            emp.currentActivity = ACTIVITY_STATES.DISCONNECTED;
-            emp.status = "DISCONNECTED";
-            emp.statusOrigin = "ACTUAL_BACKEND_DATA";
-            emp.task = "Sambungan backend terputus atau offline";
-          }
-        });
-        if (selectedEmployeeData) openEmployeeInspector(selectedEmployeeData);
-        return;
-      }
-
-      const q4 = data.queue4 || [];
-      const cards = data.mausbot_cards || [];
-      const pendingCards = cards.filter(c => c.status === "pending");
-      const schedItems = q4.filter(i => i.status === "TERJADWAL");
-      const publishedItems = q4.filter(i => i.status === "TAYANG" || i.status === "DRAF_TIKTOK");
-
-      // Active in-flight action state flag check (from actual user action POST requests)
-      const activeAction = window.MaruActiveAction;
-      const isHermesDrafting = !!(activeAction && activeAction.type === "hermes_create_draft");
-      const isVoiceRecording = !!(activeAction && activeAction.type === "voice_production");
-      const isEvaluationActive = !!(activeAction && activeAction.type === "executive_evaluation");
-      const isCendekiaChecking = !!(activeAction && activeAction.type === "academic_verification");
-
-      // 1. BIMA (EMP-L01) - Chief Executive Intelligence
-      // Phase 5B Final Verification: Backend does NOT emit an executive_evaluation event.
-      // Bima remains strictly READY (SUPERVISI STANDBY). No REVIEWING state is assumed.
-      const bima = employeeRoster.find(e => e.id === "EMP-L01");
-      if (bima) {
-        bima.statusOrigin = "ACTUAL_BACKEND_DATA";
-        bima.currentActivity = ACTIVITY_STATES.READY;
-        bima.status = "READY (SUPERVISI STANDBY)";
-        bima.task = `Siaga supervisi; memantau ${pendingCards.length} draf tertunda di pipeline`;
-      }
-
-      // 2. HERMES (EMP-L02) - Creative & Scriptwriting
-      // Phase 5B Final Verification: Hermes transitions to WORKING (REQUEST IN-FLIGHT) during active POST to /api/action.
-      // Clarification: This represents an active network request to backend hermes_create_draft, not server AI compute stream.
-      const hermes = employeeRoster.find(e => e.id === "EMP-L02");
-      if (hermes) {
-        hermes.statusOrigin = "ACTUAL_BACKEND_DATA";
-        if (isHermesDrafting) {
-          hermes.currentActivity = ACTIVITY_STATES.WORKING;
-          hermes.status = "WORKING (REQUEST POST IN-FLIGHT)";
-          hermes.task = "Mengirim permintaan generasi draf naskah ke endpoint /api/action";
-        } else {
-          hermes.currentActivity = ACTIVITY_STATES.READY;
-          hermes.status = "READY (IDEASI SIAGA)";
-          hermes.task = "Siaga menerima instruksi perancangan topik naskah baru";
-        }
-      }
-
-      // 3. NARA (EMP-L03) - Brainstorming & Trends
-      // Phase 5B: Database queue items do not imply active scraping. Nara remains READY monitoring.
-      const nara = employeeRoster.find(e => e.id === "EMP-L03");
-      if (nara) {
-        nara.statusOrigin = "ACTUAL_BACKEND_DATA";
-        nara.currentActivity = ACTIVITY_STATES.READY;
-        nara.status = "READY (RADAR TREN SIAGA)";
-        nara.task = `Radar tren siaga; memantau ${q4.length} item topik dalam basis data`;
-      }
-
-      // 4. CENDEKIA (EMP-L04) - Academic Research Library
-      // Phase 5B Correction: queue4.status === "MENUNGGU" does NOT mean verification is actively running.
-      // Cendekia remains READY unless an explicit active academic check action event is triggered.
-      const cendekia = employeeRoster.find(e => e.id === "EMP-L04");
-      if (cendekia) {
-        cendekia.statusOrigin = "ACTUAL_BACKEND_DATA";
-        if (isCendekiaChecking) {
-          cendekia.currentActivity = ACTIVITY_STATES.REVIEWING;
-          cendekia.status = "REVIEWING (VERIFIKASI REFERENSI AKTIF)";
-          cendekia.task = "Memverifikasi sitasi literatur etika komunikasi via event";
-        } else {
-          cendekia.currentActivity = ACTIVITY_STATES.READY;
-          cendekia.status = "READY (PERPUSTAKAAN SIAGA)";
-          cendekia.task = "Siaga arsip kurikulum 7 departemen edukasi MARU; tidak ada verifikasi aktif";
-        }
-      }
-
-      // 5. MAUS (EMP-L05) - PR & Approval Gate
-      // Phase 5B: Pending cards in mausbot_cards explicitly reflect WAITING_APPROVAL state.
-      const maus = employeeRoster.find(e => e.id === "EMP-L05");
-      if (maus) {
-        maus.statusOrigin = "ACTUAL_BACKEND_DATA";
-        if (pendingCards.length > 0) {
-          maus.currentActivity = ACTIVITY_STATES.WAITING_APPROVAL;
-          maus.status = "WAITING_APPROVAL (BUTUH ACC!)";
-          maus.task = `URGENT: ${pendingCards.length} draf izin tertunda membutuhkan ACC pemilik!`;
-          mausAlert.visible = true;
-        } else {
-          maus.currentActivity = ACTIVITY_STATES.READY;
-          maus.status = "READY (GERBANG BERSIH)";
-          maus.task = "Antrean bersih, seluruh draf telah ditinjau pemilik";
-          mausAlert.visible = false;
-        }
-      }
-
-      // 6. KIRANA (EMP-L06) - Video Production
-      // Phase 5B: DISETUJUI grants permission but does not start render job. Kirana remains READY.
-      const kirana = employeeRoster.find(e => e.id === "EMP-L06");
-      if (kirana) {
-        kirana.statusOrigin = "ACTUAL_BACKEND_DATA";
-        kirana.currentActivity = ACTIVITY_STATES.READY;
-        kirana.status = "READY (STUDIO SIAGA)";
-        kirana.task = "Siaga render pipeline video 9:16 vertikal; tidak ada job aktif";
-      }
-
-      // 7. ARDI (EMP-L07) - Voice Production Studio
-      // Phase 5B Final Verification: Backend currently lacks real-time voice production streaming events.
-      // Ardi remains strictly at base workstation in READY (VOKAL SIAGA). No booth walking without confirmed backend task.
-      const ardi = employeeRoster.find(e => e.id === "EMP-L07");
-      if (ardi) {
-        ardi.statusOrigin = "ACTUAL_BACKEND_DATA";
-        ardi.currentActivity = ACTIVITY_STATES.READY;
-        ardi.status = "READY (VOKAL SIAGA)";
-        ardi.task = "Siaga di meja audio mixer; tidak ada sesi rekaman aktif di backend";
-        ardi.targetPos = { x: ardi.baseX, z: ardi.baseZ };
-      }
-
-      // 8. WIRA (EMP-L08) - IT Observability
-      // Phase 5B: Connection is separated from active computing. Wira is READY monitoring connection.
-      const wira = employeeRoster.find(e => e.id === "EMP-L08");
-      if (wira) {
-        wira.statusOrigin = "ACTUAL_BACKEND_DATA";
-        wira.currentActivity = ACTIVITY_STATES.READY;
-        wira.status = "READY (TELEMETRI SISTEM CONNECTED)";
-        wira.task = "Koneksi backend tersambung; server sehat dengan zero downtime";
-      }
-
-      // 9. OOTTO (EMP-L09) - TikTok Publisher
-      // Phase 5B: Scheduled items are future queue; published items are COMPLETED historical count.
-      const ootto = employeeRoster.find(e => e.id === "EMP-L09");
-      if (ootto) {
-        ootto.statusOrigin = "ACTUAL_BACKEND_DATA";
-        if (schedItems.length > 0) {
-          ootto.currentActivity = ACTIVITY_STATES.READY;
-          ootto.status = "READY (KONTEN TERJADWAL)";
-          ootto.task = `${schedItems.length} konten terjadwal di kalender rilis prime-time`;
-        } else if (publishedItems.length > 0) {
-          ootto.currentActivity = ACTIVITY_STATES.COMPLETED;
-          ootto.status = "COMPLETED (KONTEN TAYANG)";
-          ootto.task = `${publishedItems.length} konten berhasil tayang di platform TikTok`;
-        } else {
-          ootto.currentActivity = ACTIVITY_STATES.READY;
-          ootto.status = "READY (PIPELINE SIAGA)";
-          ootto.task = "Siaga rilis Direct Post API; antrean kosong";
-        }
-      }
-
-      // Refresh inspector if open
-      if (selectedEmployeeData) {
-        const updated = employeeRoster.find(e => e.id === selectedEmployeeData.id);
-        if (updated) openEmployeeInspector(updated);
-      }
-    }window.MaruOffice3D.syncBackendState = syncBackendState;
+      const agents = data?.hq_agents || [];
+      const jobs = data?.hq?.hq_jobs || [];
+      const pending = data?.mausbot_cards?.length || 0;
+      mausAlert.visible = pending > 0;
+      employeeRoster.filter(emp => emp.isLead).forEach(emp => {
+        // Static diorama identifiers are not canonical HQ IDs; match by role owner name.
+        const profile = agents.find(a => a.name.toLowerCase() === emp.name.toLowerCase());
+        const job = jobs.find(j => j.assigned_agent === profile?.id && ['RUNNING','LEASED'].includes(j.status));
+        const waiting = emp.deptId === 'maus' && pending > 0;
+        emp.currentActivity = waiting ? ACTIVITY_STATES.WAITING_APPROVAL : profile?.state === 'working' ? ACTIVITY_STATES.WORKING :
+          profile?.state === 'idle' ? ACTIVITY_STATES.IDLE : ACTIVITY_STATES.DISCONNECTED;
+        emp.status = waiting ? `MENUNGGU ACC (${pending})` : emp.currentActivity === 'DISCONNECTED' ?
+          (profile && profile.state !== 'unavailable' ? profile.state.toUpperCase() : 'STATUS TIDAK TERSEDIA') : emp.currentActivity;
+        emp.statusOrigin = profile && profile.state !== 'unavailable' || waiting ? 'ACTUAL_BACKEND_DATA' : 'UNAVAILABLE';
+        emp.task = job?.goal || (waiting ? `${pending} item menunggu keputusan` : 'Tidak ada tugas aktif yang terkonfirmasi');
+      });
+      if (selectedEmployeeData && document.getElementById('office-inspector-panel').style.display !== 'none') openEmployeeInspector(selectedEmployeeData);
+    }
+    window.MaruOffice3D.syncBackendState = syncBackendState;
 
     let selectedEmployeeData = null;
 
@@ -3248,7 +3082,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
 
     // Inspector Handler for Employee
     function openEmployeeInspector(emp) {
-      hudSelectedDepartment = { id: emp.id, name: emp.name };
+      window.selectHqDepartment({ id: emp.deptId, name: emp.name });
       const moduleBtn = document.getElementById("insp-module-btn-text");
       if (moduleBtn) moduleBtn.innerText = `Buka Modul & Profil ${emp.name}`;
       const isOfficial = emp.classification === "OFFICIAL_AI_LEADER";
@@ -3292,8 +3126,9 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     renderPillTags();
 
     let clock = new THREE.Clock();
-    function animate() {
-      requestAnimationFrame(animate);
+    animateFrame = () => {
+      frame = 0;
+      if (!active || document.hidden) return;
       const elapsedTime = clock.getElapsedTime();
 
       // 1. Subtle Procedural Animations for Characters (Zero CPU overhead)
@@ -3345,8 +3180,8 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       controls.update();
       updatePillTags();
       renderer.render(scene, camera);
-    }
-    animate();
+      scheduleFrame();
+    };
 
     window.addEventListener("resize", () => {
       if (!view) return;
@@ -3358,6 +3193,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     });
 
     isInitialized = true;
+    syncBackendState(window.S?.data);
     console.log("[MARU 3D] Interior Furnishing Phase 3 Initialized Successfully!");
   }
 
@@ -3366,7 +3202,8 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     if (!cont) return;
     cont.innerHTML = "";
     departments.forEach(d => {
-      const tag = document.createElement("div");
+      const tag = document.createElement("button");
+      tag.type = "button";
       tag.className = "room-tag";
       tag.style.cssText = "position:absolute;transform:translate(-50%,-50%);background:rgba(15,23,42,0.92);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.18);border-radius:999px;padding:4px 10px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:#fff;display:flex;align-items:center;gap:5px;cursor:pointer;pointer-events:auto;box-shadow:0 4px 15px rgba(0,0,0,0.6);";
       tag.innerHTML = `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${d.pillColor};"></span><span>${d.name}</span>`;
@@ -3387,18 +3224,18 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       if (!d.tagEl) return;
       const pos = new THREE.Vector3(d.x, 3.6, d.z);
       pos.project(camera);
-      if (pos.z > 1) {
-        d.tagEl.style.opacity = "0";
+      if (pos.z > 1 || pos.z < -1 || Math.abs(pos.x) > 1 || Math.abs(pos.y) > 1) {
+        d.tagEl.style.display = "none";
         return;
       }
-      d.tagEl.style.opacity = "1";
+      d.tagEl.style.display = "flex";
       d.tagEl.style.left = `${(pos.x * 0.5 + 0.5) * w}px`;
       d.tagEl.style.top = `${(-(pos.y * 0.5) + 0.5) * h}px`;
     });
   }
 
   function openInspector(d) {
-    hudSelectedDepartment = d;
+    window.selectHqDepartment(d);
     const moduleBtn = document.getElementById("insp-module-btn-text");
     if (moduleBtn) moduleBtn.innerText = `Buka Modul ${d.name}`;
     document.getElementById("insp-badge").innerText = d.leader === "Shared" ? "FASILITAS BERSAMA" : "DEPARTEMEN RESMI";
@@ -3437,7 +3274,8 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
         textures: renderer.info.memory.textures
       };
     },
-    init: init3D,
+    init: () => setActive(true),
+    setActive,
     setCameraMode: (mode) => {
       cameraMode = mode;
       document.getElementById("cam-iso-btn").style.background = mode === "iso" ? "var(--cyan)" : "transparent";

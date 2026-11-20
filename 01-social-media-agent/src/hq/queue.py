@@ -462,6 +462,27 @@ class HQJobQueue:
         finally:
             conn.close()
 
+    def get_status_counts(self) -> Dict[str, int]:
+        conn = get_connection(self.db_path)
+        try:
+            return dict(conn.execute("SELECT status, COUNT(*) FROM hq_jobs GROUP BY status"))
+        finally:
+            conn.close()
+
+    def get_agent_statuses(self) -> Dict[str, str]:
+        """Prefer active jobs; otherwise report the most recently updated job per agent."""
+        conn = get_connection(self.db_path)
+        try:
+            return dict(conn.execute("""SELECT assigned_agent, status FROM (
+                SELECT assigned_agent, status, ROW_NUMBER() OVER (
+                    PARTITION BY assigned_agent ORDER BY
+                      CASE WHEN status IN ('LEASED','RUNNING') THEN 0 ELSE 1 END,
+                      updated_at DESC, task_id DESC) AS priority_rank
+                FROM hq_jobs
+            ) WHERE priority_rank = 1"""))
+        finally:
+            conn.close()
+
     # AUDIT LOG VIEWER
     def get_event_logs(self, task_id: str) -> List[Dict[str, Any]]:
         conn = get_connection(self.db_path)

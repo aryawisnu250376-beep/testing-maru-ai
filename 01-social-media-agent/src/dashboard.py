@@ -6,7 +6,9 @@ non-sensitive PWA shell assets are public. No API key is accepted from a browser
 from __future__ import annotations
 
 import json
+import logging
 import os
+import uuid
 import re
 import threading
 import time
@@ -14,8 +16,8 @@ import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from . import db, health, learning, queue, queue4, security
-from .config import load_config, out_dir
+from . import dashboard_ops, db, health, learning, queue, queue4, security
+from .config import ROOT, load_config, out_dir
 from .llm import LLM
 from .studio_html import PAGE
 
@@ -25,6 +27,7 @@ RUNTIME = security.Runtime(security.AuthManager(""))
 SAFE_EP = re.compile(r"^[A-Za-z0-9._-]{1,100}$")
 ARTEFACTS = {"script.json", "decision.json", "render_meta.json", "qc_report.json"}
 RUNTIME_INFO = {"preflight": {}, "orchestrator": "stopped", "worker": "stopped", "started_at": time.time()}
+LOG = logging.getLogger(__name__)
 MAX_BODY = 12 * 1024 * 1024
 
 
@@ -50,64 +53,78 @@ def _episode_summary(e: dict) -> dict:
 
 
 
-def _get_hq_data() -> dict:
-    telemetry = {}
+def _get_telemetry() -> dict:
     try:
         import psutil
-        vm = psutil.virtual_memory()
-        du = psutil.disk_usage('/')
-        telemetry = {
-            'cpu_pct': psutil.cpu_percent(interval=None),
-            'ram_used_mb': round(vm.used / (1024*1024), 1),
-            'ram_total_mb': round(vm.total / (1024*1024), 1),
-            'ram_pct': vm.percent,
-            'disk_pct': du.percent,
-            'disk_free_gb': round(du.free / (1024*1024*1024), 1),
-            'status': 'OPERATIONAL'
-        }
-    except Exception as e:
-        telemetry = {'status': 'AVAILABLE', 'error': str(e)}
+        vm, disk = psutil.virtual_memory(), psutil.disk_usage(Path.cwd().anchor)
+        cpu = psutil.cpu_percent(interval=0.05)
+        return {'status': 'available', 'cpu_pct': cpu, 'ram_pct': vm.percent,
+                'ram_used_mb': round(vm.used / 2**20, 1), 'ram_total_mb': round(vm.total / 2**20, 1),
+                'disk_pct': disk.percent}
+    except (ImportError, OSError, RuntimeError):
+        return {'status': 'unavailable'}
 
-    hq_jobs = []
-    status_counts = {}
+
+def _get_hq_data() -> dict:
+    from .hq.agents import ROSTER
+    from .hq.memory import HQMemoryManager
+    from .hq.queue import HQJobQueue
+    counts, jobs, agent_states, memory = None, [], {}, None
     try:
-        from src.hq.queue import HQJobQueue
         q = HQJobQueue()
-        jobs = q.list_jobs(limit=10)
-        hq_jobs = [j.to_dict() for j in jobs]
-        status_counts = q.get_status_counts()
+        counts = q.get_status_counts()
+        jobs = [{k: getattr(job, k) for k in ('task_id', 'goal', 'assigned_agent', 'status', 'updated_at')}
+                for job in q.list_jobs(limit=10)]
+        statuses = q.get_agent_statuses()
+        states = {'RUNNING': 'working', 'LEASED': 'working', 'FAILED': 'error',
+                  'DEAD_LETTER': 'error', 'RETRYING': 'retrying', 'AWAITING_APPROVAL': 'waiting'}
+        agent_states = {agent_id: states.get(statuses.get(agent_id), 'idle') for agent_id in ROSTER}
     except Exception:
-        pass
-
-    hq_memory_count = 0
+        counts, jobs, agent_states = None, [], {}
+        LOG.exception('Tidak dapat membaca antrean HQ')
     try:
-        from src.hq.memory import HQMemoryManager
-        mem = HQMemoryManager()
-        hq_memory_count = len(mem.query(limit=50))
+        memory = HQMemoryManager().count_organizational()
     except Exception:
-        pass
+        LOG.exception('Tidak dapat membaca hitungan memori organisasi')
+    return {'telemetry': _get_telemetry(), 'hq_jobs': jobs, 'hq_status_counts': counts,
+            'agent_states': agent_states, 'hq_memory_count': memory,
+            'finance': {'status': 'unavailable'}}
 
-    return {
-        'telemetry': telemetry,
-        'hq_jobs': hq_jobs,
-        'hq_status_counts': status_counts,
-        'hq_memory_count': hq_memory_count,
-        'finance': {
-            'currency': 'IDR',
-            'balance': 25000000,
-            'burn_rate_est': 'Rp 120.000 / hari',
-            'token_cost_est': 'Rp 8.450 / 100k token'
-        }
-    }
+
+def _approval_cards(items, episodes):
+    linked = {row.get('episode_id') for row in items if row.get('episode_id')}
+    return ([{'id': row['id'], 'content_id': row['id'], 'status': 'pending',
+              'title': row.get('judul', row['id']), 'summary': row.get('naskah', '')}
+             for row in items if row.get('status') == 'MENUNGGU'] +
+            [{'id': ep['id'], 'episode_id': ep['id'], 'status': 'pending',
+              'title': ep['title'], 'summary': ep['hook']}
+             for ep in episodes if ep['status'] == 'pending_approval' and ep['id'] not in linked])
+
+
+def _skills_catalog() -> list[dict]:
+    base = ROOT.parent / 'skills'
+    if not base.is_dir():
+        base = ROOT / 'skills'
+    return [{'id': p.parent.name, 'division': p.relative_to(base).parts[0]
+             if len(p.relative_to(base).parts) > 2 else 'shared'}
+            for p in sorted(base.glob('**/SKILL.md'))]
+
 
 def state() -> dict:
     db.init()
     episodes = [_episode_summary(e) for e in db.list_episodes(limit=100)]
+    q4 = queue4.list_items()
+    pending = [_episode_summary(e) for e in db.list_episodes(status="pending_approval", limit=-1)]
+    cards = _approval_cards(q4, pending)
+    from .hq.agents import ROSTER
+    hq = _get_hq_data()
+    agents = [{'id': p.agent_id, 'name': p.name, 'role': p.role_title, 'division': 'hq',
+               'state': hq['agent_states'].get(p.agent_id, 'unavailable')} for p in ROSTER.values()]
     report = learning.report()
     llm_cfg = CFG.get("llm",{})
     return {"brand":CFG.get("brand",{}),"episodes":episodes,
             "totals":{"episodes":len(episodes),"rendered":sum(e["has_video"] for e in episodes),
-                      "pending":sum(e["status"]=="pending_approval" for e in episodes)},
+                      "pending":len(cards)},
             "jobs":queue.list_jobs(limit=20),"learning":report,
             "runtime":{**RUNTIME_INFO,"uptime_sec":round(time.time()-RUNTIME_INFO["started_at"])},
             "video":{k:CFG.get("video",{}).get(k) for k in ("style","caption_style","voice","allow_silent_fallback")},
@@ -117,9 +134,11 @@ def state() -> dict:
             "aspects":__import__("src.revisor",fromlist=["ASPECTS"]).ASPECTS,
             "shortcuts":[{"key":k,"label":v[0].replace("_"," ")+" · "+v[1][:65]} for k,v in __import__("src.revisor",fromlist=["SHORTCUTS"]).SHORTCUTS.items()],
             "server_time":db.now(),
-            "queue4":queue4.list_items(),
+            "queue4":q4, "mausbot_cards":cards, "hq_agents":agents,
+            "chat":dashboard_ops.records('chat'), "watchlist":dashboard_ops.watchlist(),
+            "skills_catalog":_skills_catalog(),
             "employees":__import__("src.agents",fromlist=["snapshot"]).snapshot().get("agents",[]),
-            "hq":_get_hq_data()}
+            "hq":hq}
 
 
 def studio_state() -> dict:
@@ -293,35 +312,67 @@ def action(payload: dict) -> dict:
     if act == "router_test":
         from . import router9
         return router9.test_question()
-    if act == "hq_enqueue":
-        from src.hq.queue import HQJobQueue
-        q = HQJobQueue()
-        job = q.enqueue(
-            division=str(payload.get("division") or "EXECUTIVE_SUITE"),
-            requested_by=str(payload.get("requested_by") or "PEMILIK"),
-            goal=str(payload.get("goal") or "HQ Task"),
-            input_payload=payload.get("input_payload", {}),
-            acceptance_criteria=payload.get("acceptance_criteria", ["Tugas diselesaikan dengan standar MARU HQ"]),
-            assigned_agent=str(payload.get("assigned_agent") or "EMP-L01")
-        )
-        return {"ok": True, "task_id": job.task_id, "status": job.status}
-    if act == "task_create":
-        # User task creation from dashboard task list
-        goal = str(payload.get("goal") or "").strip()
-        if not goal:
-            raise ValueError("Tujuan tugas tidak boleh kosong")
-        from src.hq.queue import HQJobQueue
-        q = HQJobQueue()
-        job = q.enqueue(
-            division=str(payload.get("division") or "EXECUTIVE_SUITE"),
-            requested_by="PEMILIK",
-            goal=goal,
-            input_payload={"note": goal, "created_via": "dashboard_tasks"},
-            acceptance_criteria=["Tinjau & selesaikan sesuai KPI"],
-            assigned_agent=str(payload.get("assigned_agent") or "EMP-L01")
-        )
-        return {"ok": True, "task_id": job.task_id, "status": job.status, "message": "Tugas baru berhasil dicatat di HQ Queue"}
+    if act in ('hq_enqueue', 'task_create'):
+        from .hq.agents import get_agent_profile
+        from .hq.models import IdempotencyConflictError
+        from .hq.queue import HQJobQueue
+        goal = dashboard_ops.text(payload, 'goal', 1000)
+        profile = get_agent_profile(str(payload.get('assigned_agent') or 'EMP-L01'))
+        if not profile or payload.get('division', profile.division) != profile.division:
+            raise ValueError('Agen atau divisi HQ tidak valid.')
+        key = payload.get('idempotency_key') or uuid.uuid4().hex
+        if not isinstance(key, str) or not re.fullmatch(r'[A-Za-z0-9._-]{1,128}', key):
+            raise ValueError('Kunci idempotensi tidak valid.')
+        detail = payload.get('input_payload', {})
+        if not isinstance(detail, dict) or len(json.dumps(detail)) > 8000:
+            raise ValueError('Detail tugas harus berupa objek maksimum 8000 karakter.')
+        try:
+            job = HQJobQueue().enqueue(profile.division, 'PEMILIK', goal, detail,
+                                        ['Siapkan rekomendasi untuk tinjauan HQ'], profile.agent_id, key)
+        except IdempotencyConflictError as exc:
+            raise ValueError('Kunci sudah dipakai untuk tugas berbeda.') from exc
+        return {'ok': True, 'task_id': job.task_id, 'status': job.status}
+    if act == 'chat_assistant':
+        return dashboard_ops.chat(LLM_INSTANCE, payload)
+    if act == 'hermes_create_draft':
+        return dashboard_ops.draft(LLM_INSTANCE, payload)
+    if act == 'watchlist_add':
+        return dashboard_ops.add_watchlist(payload)
+    if act == 'mausbot_card_decision':
+        which = {'ALLOW': 'SETUJU', 'DENY': 'TOLAK', 'REVISI': 'REVISI'}.get(payload.get('decision'))
+        if not which:
+            raise ValueError('Keputusan tidak valid.')
+        kind = payload.get('card_kind')
+        key = str(payload.get('card_id') or '')
+        if kind == 'content':
+            if (queue4.get(key) or {}).get('status') != 'MENUNGGU':
+                raise ValueError('Kartu persetujuan sudah berubah. Muat ulang dashboard.')
+            return queue4.owner_decision(key, which, str(payload.get('reason') or '')[:500])
+        if kind == 'episode' and which != 'REVISI':
+            if _require_ep(key).get('status') != 'pending_approval':
+                raise ValueError('Episode tidak lagi menunggu persetujuan.')
+            return action({'action': 'approve' if which == 'SETUJU' else 'reject', 'episode_id': key,
+                           'confirmed': payload.get('confirmed') is True})
+        raise ValueError('Gunakan panel revisi yang sesuai untuk jenis draf ini.')
     raise ValueError("Aksi tidak dikenal atau tidak tersedia dari handphone")
+
+
+def _hq_worker_thread(stop: threading.Event) -> None:
+    from .hq.queue import HQJobQueue
+    from .hq.worker import HQWorker
+    if not LLM_INSTANCE.available:
+        RUNTIME_INFO['hq_worker'] = 'unavailable'
+        return
+    try:
+        worker = HQWorker(HQJobQueue(), process_start_method="spawn")
+        RUNTIME_INFO['hq_worker'] = 'running'
+        while not stop.is_set():
+            worker.queue.recover_stale_jobs()
+            if not worker.execute_one_cycle(dashboard_ops.execute_hq_job, use_process_isolation=True):
+                stop.wait(2)
+    except Exception:
+        RUNTIME_INFO['hq_worker'] = 'failed'
+        LOG.exception('Worker HQ berhenti')
 
 
 def _worker_thread() -> None:
@@ -399,10 +450,6 @@ class Handler(BaseHTTPRequestHandler):
         path=urllib.parse.urlparse(self.path).path
         if path=="/healthz":
             return self._json({"ok":True,"service":"nara-studio"})
-        if path=="/api/preview-bootstrap":
-            # Inform frontend whether preview mode is active or token auto-provisioning
-            is_preview = os.getenv("MARU_PREVIEW_MODE", "0") == "1"
-            return self._json({"preview_mode": is_preview})
         if path=="/manifest.webmanifest":
             data={"name":"Nara — AI Edukasi Studio","short_name":"Nara Studio","lang":"id","start_url":"/","scope":"/","display":"standalone","background_color":"#f6f7f2","theme_color":"#205c4b","icons":[{"src":"/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},{"src":"/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}
             return self._send(200,json.dumps(data).encode(),"application/manifest+json")
@@ -424,7 +471,7 @@ class Handler(BaseHTTPRequestHandler):
             if path=="/api/hq":
                 return self._json(_get_hq_data())
             if path=="/api/telemetry":
-                return self._json(_get_hq_data().get("telemetry", {}))
+                return self._json(_get_telemetry())
             if path=="/api/studio":
                 return self._json(studio_state())
             if path=="/api/queue4":
@@ -532,7 +579,11 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({"error":str(exc)},400)
         except FileNotFoundError:
             return self._json({"error":"Berkas belum tersedia"},404)
+        except RuntimeError as exc:
+            LOG.warning('Aksi dashboard tidak dapat dijalankan: %s', type(exc).__name__)
+            return self._json({"error": "Layanan tidak tersedia. Periksa konfigurasi dan log server."},503)
         except Exception:
+            LOG.exception('Aksi dashboard gagal')
             return self._json({"error":"Aksi gagal. Periksa status sistem dan log server."},500)
 
 
@@ -548,10 +599,13 @@ def serve(host="127.0.0.1",port=8080,worker=True,orchestrate=True,skip_preflight
         threading.Thread(target=_orchestrator_thread,daemon=True).start()
     else:
         RUNTIME_INFO["orchestrator"]="paused"
+    stop_hq = threading.Event()
     if worker:
+        threading.Thread(target=_hq_worker_thread,args=(stop_hq,),daemon=True).start()
         threading.Thread(target=_worker_thread,daemon=True).start()
     else:
         RUNTIME_INFO["worker"]="paused"
+        RUNTIME_INFO["hq_worker"]="paused"
     httpd=ThreadingHTTPServer((host,port),Handler)
     httpd.daemon_threads=True
     print(f"Nara Studio siap di port {port}; login wajib; autonomy={RUNTIME_INFO['orchestrator']}",flush=True)
@@ -560,6 +614,7 @@ def serve(host="127.0.0.1",port=8080,worker=True,orchestrate=True,skip_preflight
     except KeyboardInterrupt:
         pass
     finally:
+        stop_hq.set()
         httpd.server_close()
 
 

@@ -1,7 +1,7 @@
 """Nara Studio: responsive, accessible single-file application shell.
 
-All data is loaded through authenticated same-origin requests. No external font,
-image, script or stylesheet is required. User/script content is always escaped.
+Operational data uses authenticated same-origin requests. Optional CDN scripts
+are loaded only for the 3D office; the 2D roster is independently available.
 """
 from pathlib import Path
 

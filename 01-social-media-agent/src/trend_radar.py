@@ -299,21 +299,10 @@ def collect_reference_watchlist() -> list[dict]:
     diberi sumber "reference" dan skor kecil: tujuannya memancing ide, bukan
     mengklaim sedang trending.
     """
-    import os as _os
-
-    path = Path(_os.environ.get("REFERENCE_WATCHLIST",
-                                Path(__file__).resolve().parents[1] / "data"
-                                / "reference_watchlist.json"))
-    if not path.exists():
-        return []
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except Exception as e:
-        print(f"  [warn] watchlist referensi: {e}")
-        return []
+    from .dashboard_ops import watchlist
 
     out = []
-    for item in data.get("items", []):
+    for item in watchlist():
         transcript = (item.get("transcript") or "").strip()
         if not transcript:
             continue
