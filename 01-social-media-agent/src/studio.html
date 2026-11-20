@@ -466,6 +466,12 @@ body.chat-open #shell { margin-right: calc(var(--chat-w) + 16px); }
   overflow-x: auto;
 }
 
+.phase62-dialog { width:min(680px,calc(100% - 24px)); max-height:85vh; padding:20px; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:16px; overflow:auto; }
+.phase62-dialog::backdrop { background:rgba(0,0,0,.65); }
+.phase62-copy { white-space:pre-wrap; overflow-wrap:anywhere; }
+.phase62-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:12px; }
+.phase62-dialog .input-field { width:100%; }
+.phase62-error { color:var(--rose); }
 .kanban-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -944,9 +950,13 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
         <div id="col-prod" style="display:grid;gap:10px"></div>
       </div>
       <div class="kanban-col">
-        <div class="kanban-head"><span>4 · Terjadwal / Tayang (Ootto)</span><span id="cnt-col-sched" class="pill green">0</span></div>
+        <div class="kanban-head"><span>4 · Pengiriman Ootto</span><span id="cnt-col-sched" class="pill green">0</span></div>
         <div id="col-sched" style="display:grid;gap:10px"></div>
       </div>
+    </div>
+    <div class="glass-card" style="margin-top:16px">
+      <h3>Gagal dikirim <span id="cnt-col-failed" class="pill">0</span></h3>
+      <div id="col-failed" style="display:grid;gap:10px"></div>
     </div>
   </section>
 
@@ -1282,7 +1292,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
               <input id="compose-notes" class="input-field" placeholder="Contoh: Hubungkan dengan pengalaman kuliah atau otomatisasi laptop lokal">
             </div>
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-              <button type="submit" class="btn primary">⚡ Jalankan Hermes → Buat Draf 6 Beat</button>
+              <button type="submit" class="btn primary">⚡ Jalankan Hermes → Buat Draf</button>
               <span style="font-size:11.5px;color:var(--muted)">Otomatis masuk antrean <code>MENUNGGU</code> + kartu MausBot Allow/Deny.</span>
             </div>
           </form>
@@ -1303,6 +1313,12 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
             <textarea id="wl-transcript" aria-label="Ringkasan referensi" placeholder="Ringkasan pengamatan (opsional)" class="input-field" maxlength="3000" style="grid-column:1/-1"></textarea>
           </form>
           <div id="watchlist-items" style="display:grid;gap:8px"></div>
+          <div class="phase62-actions">
+            <button id="wl-prev" class="btn sm" type="button" disabled>Sebelumnya</button>
+            <button id="wl-next" class="btn sm" type="button" disabled>Berikutnya</button>
+            <button id="wl-retry" class="btn sm hidden" type="button">Muat ulang daftar</button>
+            <span id="wl-status" class="card-sub" role="status"></span>
+          </div>
         </div>
       </div>
 
@@ -1351,7 +1367,14 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
   </form>
 </aside>
 
-<div id="toast" class="hidden"></div>
+<dialog id="phase62-dialog" class="phase62-dialog" aria-labelledby="phase62-title">
+  <div class="phase62-actions" style="justify-content:space-between;margin-top:0">
+    <h2 id="phase62-title"></h2><button id="phase62-close" class="btn sm" type="button">Tutup</button>
+  </div>
+  <div id="phase62-body"></div>
+  <p id="phase62-error" class="phase62-error" role="alert"></p>
+</dialog>
+<div id="toast" class="hidden" role="status"></div>
 
 <script>
 (() => {
@@ -1376,6 +1399,8 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     selectedCreator: "gegaraid",
     selectedEpId: "",
     data: null,
+    watchlistOffset: 0,
+    watchlistNext: null,
   };
 
   if (S.token) safeSetToken(S.token);
@@ -1449,7 +1474,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       err401.status = 401;
       throw err401;
     }
-    if (!res.ok) throw new Error(data.error || ("HTTP " + res.status));
+    if (!res.ok || data.error) throw new Error(data.error || ("HTTP " + res.status));
     return data;
   }
 
@@ -1603,7 +1628,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       'Worker HQ tidak aktif; tugas tetap tersimpan sampai worker dan provider tersedia.';
     $("#hq-job-counts").textContent = hq.hq_status_counts == null ? 'Status antrean tidak tersedia' :
       Object.entries(hq.hq_status_counts).map(([state,n]) => `${state}: ${n}`).join(' · ') || 'Belum ada tugas';
-    $("#hq-job-list").innerHTML = (hq.hq_jobs || []).map(j => `<li>${esc(j.goal)} · ${esc(j.assigned_agent)} · ${esc(j.status)}</li>`).join('');
+    $("#hq-job-list").innerHTML = (hq.hq_jobs || []).map(j => `<li><button class="btn sm" type="button" data-hq-detail="${esc(j.task_id)}">${esc(j.goal)}</button> · ${esc(j.assigned_agent)} · ${esc(j.status)}</li>`).join('');
     $("#hq-settings-provider").textContent = data.llm?.configured ? 'Provider AI dikonfigurasi.' : 'Provider AI belum dikonfigurasi.';
 
     // 2. Left Side: Today's Operations / Queue Tasks
@@ -1741,7 +1766,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     safe(() => renderKanban(q4, d.episodes || []), "Kanban");
     safe(() => renderSquad(d.employees || []), "Tim AI");
     { const n = (d.employees || []).length; const bt = document.getElementById("badge-team-count"); if (bt) bt.textContent = n; const tt = document.getElementById("team-title"); if (tt) tt.textContent = n + " KARYAWAN AI \u00b7 MARU CORPORATION"; const tc = document.getElementById("team-count-badge"); if (tc) tc.textContent = n; }
-    renderStudio(d.reference_creators || [], d.watchlist || [], d.episodes || [], q4);
+    renderStudio(d.reference_creators || [], d.episodes || []);
     renderChat(d.hq_agents || [], d.chat || []);
     renderSkillsCatalog(d.skills_catalog || []);
   }
@@ -1799,7 +1824,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       if (c.status !== "pending" || !matchesFilter("hq", c.title + " " + c.summary)) return false;
       return true;
     });
-    const emptyHtml = `<div style="padding:18px;text-align:center;color:var(--muted);font-size:12px">Tidak ada kartu izin tertunda. Semua draf sudah ditinjau pemilik!</div>`;
+    const emptyHtml = `<div style="padding:18px;text-align:center;color:var(--muted);font-size:12px">Tidak ada kartu izin tertunda pada tampilan ini.</div>`;
 
     const cardHtml = (c) => `
       <div class="maus-card">
@@ -1811,7 +1836,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
         <div style="font-size:11.5px;color:var(--ink-dim)">${esc(c.summary)}</div>
 
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn sm allow" type="button" data-card-act="ALLOW" data-card-id="${esc(c.id)}" data-card-kind="${c.content_id ? 'content' : 'episode'}">✓ Allow (Beri ACC)</button>
+          <button class="btn sm allow" type="button" data-review-card="${esc(c.id)}" data-review-kind="${c.content_id ? 'content' : 'episode'}">Tinjau naskah &amp; sumber</button>
           ${c.content_id ? `<button class="btn sm" type="button" data-card-act="REVISI" data-card-id="${esc(c.id)}" data-card-kind="${c.content_id ? 'content' : 'episode'}">✍️ Minta Revisi</button>` : ""}
           <button class="btn sm deny" type="button" data-card-act="DENY" data-card-id="${esc(c.id)}" data-card-kind="${c.content_id ? 'content' : 'episode'}">✕ Deny (Tolak)</button>
         </div>
@@ -1827,12 +1852,21 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     const wait = filtered.filter(i => i.status === "MENUNGGU");
     const episodePending = (S.data.mausbot_cards || []).filter(c => c.episode_id && matchesFilter('social-media', c.title)).length;
     const prod = filtered.filter(i => i.status === "DISETUJUI");
-    const sched = filtered.filter(i => i.status === "TERJADWAL" || i.status === "TAYANG" || i.status === "DRAF_TIKTOK");
+    const sched = filtered.filter(i => ["TERJADWAL", "DIKIRIM_TIKTOK", "TAYANG", "DRAF_TIKTOK"].includes(i.status));
+    const failed = filtered.filter(i => i.status === "GAGAL");
+    const canSchedule = it => Boolean(it.schedule_ready);
+    const statusNote = it => ({
+      DIKIRIM_TIKTOK: 'Video dikirim; TikTok belum mengonfirmasi tayang.',
+      DRAF_TIKTOK: 'Draf dikirim ke kotak masuk TikTok, bukan publikasi.',
+      GAGAL: 'Periksa status dan jalur pemulihan sebelum mengirim ulang.',
+    })[it.status];
 
     $("#cnt-col-draft").textContent = draft.length;
     $("#cnt-col-wait").textContent = wait.length + episodePending;
     $("#cnt-col-prod").textContent = prod.length;
     $("#cnt-col-sched").textContent = sched.length;
+
+    $("#cnt-col-failed").textContent = failed.length;
 
     const itemCard = (it) => `
       <div class="k-item">
@@ -1848,13 +1882,16 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           ${episodes.some(e => e.id === it.episode_id && playableVideo(e)) ? `<button class="btn sm" type="button" data-preview-ep="${esc(it.episode_id)}">▶ Lihat video</button>` : ""}
-          ${it.status === "MENUNGGU" ? `
-            <button class="btn sm allow" type="button" data-q4-acc="${esc(it.id)}">✓ ACC</button>
-            <button class="btn sm deny" type="button" data-q4-rev="${esc(it.id)}">Revisi</button>` : ""}
-          ${it.status === "DISETUJUI" ? `
-            <button class="btn sm primary" type="button" data-ootto-sched="${esc(it.id)}">📅 Jadwalkan Ootto</button>` : ""}
+          ${it.status === "MENUNGGU" ? `<button class="btn sm allow" type="button" data-review-card="${esc(it.id)}" data-review-kind="content">Tinjau sebelum ACC</button>` : ""}
+          ${it.status === "DISETUJUI" && canSchedule(it) ? `<button class="btn sm primary" type="button" data-ootto-sched="${esc(it.id)}">Jadwalkan Ootto</button>` : ""}
+          ${it.status === "DISETUJUI" ? `<button class="btn sm" type="button" data-ootto-link="${esc(it.id)}">${canSchedule(it) ? 'Ganti tautan video' : 'Tautkan video lolos QC'}</button>` : ""}
+          ${it.status === "GAGAL" ? `<button class="btn sm" type="button" data-ootto-recover="${esc(it.id)}">Periksa kegagalan</button>` : ""}
         </div>
+        ${it.status === 'DISETUJUI' && !canSchedule(it) ? '<p class="card-sub">ACC naskah tidak berarti video siap dijadwalkan. Tautkan hasil render yang lolos QC.</p>' : ''}
+        ${statusNote(it) ? `<p class="card-sub">${esc(statusNote(it))}</p>` : ''}
       </div>`;
+
+    $("#col-failed").innerHTML = failed.map(itemCard).join("") || '<p class="card-sub">Tidak ada kegagalan pada tampilan ini.</p>';
 
     $("#col-draft").innerHTML = draft.map(itemCard).join("") || `<div class="card-sub">Kosong</div>`;
     $("#col-wait").innerHTML = wait.map(itemCard).join("") || `<div class="card-sub">Tidak ada yang menunggu</div>`;
@@ -1881,7 +1918,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       ${sel.division === 'hq' ? `<button type="button" class="btn" data-chat-with="${esc(sel.id)}">Chat dengan agen</button>` : ''}` : 'Tidak ada agen yang cocok.';
   }
 
-  function renderStudio(creators, watchlist, episodes, q4) {
+  function renderStudio(creators, episodes) {
     $("#creator-presets").innerHTML = creators.map(c => `
       <div class="creator-card ${S.selectedCreator === c.id ? 'selected' : ''}" data-pick-creator="${esc(c.id)}">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -1893,6 +1930,10 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
         <span class="pill">${esc(c.visual_mode)}</span>
       </div>`).join("");
 
+    renderVideoList(episodes);
+  }
+
+  function renderWatchlist(watchlist) {
     $("#watchlist-items").innerHTML = watchlist.map(w => `
       <div style="padding:10px 12px;border-radius:12px;background:var(--glass-soft);border:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
         <div style="min-width:0;flex:1">
@@ -1902,7 +1943,33 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
         <a class="btn sm" href="${esc(w.url)}" target="_blank" rel="noopener noreferrer">Buka Referensi ↗</a>
       </div>`).join("");
 
-    renderVideoList(episodes);
+    if (!watchlist.length) $("#watchlist-items").textContent = 'Tidak ada referensi pada halaman ini.';
+  }
+
+  async function loadWatchlist(offset) {
+    const request = S.watchlistRequest = {};
+    const token = S.token;
+    const status = $("#wl-status");
+    status.textContent = 'Memuat referensi…';
+    $("#wl-prev").disabled = $("#wl-next").disabled = true;
+    $("#wl-retry").classList.add('hidden');
+    try {
+      const result = await api(`/api/watchlist?offset=${offset}`);
+      if (request !== S.watchlistRequest || token !== S.token) return;
+      S.watchlistOffset = offset;
+      S.watchlistNext = result.next_offset;
+      renderWatchlist(result.items);
+      status.textContent = `Halaman ${Math.floor(offset / 100) + 1} · ${result.items.length} referensi`;
+    } catch (err) {
+      if (request !== S.watchlistRequest || token !== S.token) return;
+      status.textContent = `Daftar tidak dapat dimuat: ${err.message}`;
+      $("#wl-retry").classList.remove('hidden');
+    } finally {
+      if (request === S.watchlistRequest && token === S.token) {
+        $("#wl-prev").disabled = S.watchlistOffset === 0;
+        $("#wl-next").disabled = S.watchlistNext == null;
+      }
+    }
   }
 
   const videoState = {key: "", controller: null, url: ""};
@@ -1977,11 +2044,12 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       </button>`).join("");
 
     const feed = $("#chat-feed");
-    feed.innerHTML = messages.map(m => `
+    feed.innerHTML = messages.filter(m => m.bot_id === S.selectedBot).map(m => `
       <div class="msg ${m.role === 'user' ? 'user' : ''}">
         <div class="msg-meta">${esc(m.bot_name || m.bot_id)}</div>
         <div>${esc(m.text).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\n/g, "<br>")}</div>
       </div>`).join("");
+    if (!feed.innerHTML) feed.textContent = "Belum ada percakapan dengan agen ini.";
     feed.scrollTop = feed.scrollHeight;
   }
 
@@ -2002,6 +2070,142 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       </div>`).join("");
   }
 
+  const dialog = $("#phase62-dialog");
+  function openPhasePanel(title) {
+    const view = S.panel = {};
+    $("#phase62-title").textContent = title;
+    $("#phase62-body").textContent = 'Memuat…';
+    $("#phase62-error").textContent = '';
+    if (!dialog.open) dialog.showModal();
+    return view;
+  }
+  function panelActive(view) { return dialog.open && S.panel === view; }
+  function panelError(view, err) {
+    if (panelActive(view)) $("#phase62-error").textContent = err.message;
+  }
+  on('#phase62-close', 'click', () => dialog.close());
+
+  function bindPanelForm(view, onSubmit) {
+    $("#phase62-body form").addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const button = event.currentTarget.querySelector('button[type=submit]');
+      if (button.disabled || !panelActive(view)) return;
+      button.disabled = true;
+      $("#phase62-error").textContent = '';
+      try { await onSubmit(new FormData(event.currentTarget)); }
+      catch (err) { panelError(view, err); }
+      finally { button.disabled = false; }
+    });
+  }
+
+  async function finishPanel(view, message) {
+    if (panelActive(view)) dialog.close();
+    toast(message);
+    await refresh();
+  }
+
+  async function openHqDetail(id) {
+    const view = openPhasePanel('Detail tugas & tinjauan HQ');
+    try {
+      const job = await api(`/api/hq/jobs/${encodeURIComponent(id)}`);
+      if (!panelActive(view)) return;
+      const review = job.review;
+      const reviewable = !review && job.status === 'COMPLETED' && job.result?.requires_hq_review;
+      const result = job.result ? (job.result.recommendation || JSON.stringify(job.result, null, 2)) : '';
+      $("#phase62-body").innerHTML = `<h3>${esc(job.goal)}</h3>
+        <p>${esc(job.assigned_agent)} · Status tugas: <b>${esc(job.status)}</b></p>
+        ${job.error ? `<p class="phase62-copy">Kesalahan worker: ${esc(job.error)}</p>` : ''}
+        <h4>Hasil kerja</h4><p class="phase62-copy">${esc(result || 'Belum ada hasil.')}</p>
+        <h4>Keputusan pemilik</h4>
+        ${review ? `<p><b>${review.decision === 'APPROVED' ? 'Disetujui' : 'Perlu revisi'}</b> · ${esc(review.actor)}</p><p class="phase62-copy">${esc(review.note)}</p>` : '<p>Belum diputuskan. Status tugas tidak sama dengan persetujuan.</p>'}
+        ${reviewable ? `<form><label>Keputusan <select class="input-field" name="decision" required><option value="">Pilih keputusan</option><option value="APPROVED">Setujui rekomendasi</option><option value="REVISION">Minta revisi</option></select></label>
+          <label>Catatan <textarea class="input-field" name="note" maxlength="1000"></textarea></label>
+          <p class="card-sub">Keputusan dicatat tanpa mengeksekusi rekomendasi atau menerbitkan konten.</p>
+          <button type="submit" class="btn primary">Catat keputusan HQ</button></form>` : ''}`;
+      if (reviewable) bindPanelForm(view, async form => {
+        await api('/api/action', {action:'hq_job_review', task_id:id, decision:form.get('decision'), note:form.get('note')});
+        await finishPanel(view, 'Keputusan pemilik tercatat.');
+      });
+    } catch (err) {
+      if (panelActive(view)) $("#phase62-body").textContent = 'Detail tugas tidak dapat dimuat.';
+      panelError(view, err);
+    }
+  }
+
+  function sourceList(sources) {
+    if (!Array.isArray(sources) || !sources.length) return '<p>Belum ada sumber tercatat.</p>';
+    return `<ul>${sources.map(source => {
+      const url = typeof source === 'string' ? source : source?.url;
+      const label = source?.title || url || 'Sumber tanpa judul';
+      let link;
+      try { const parsed = new URL(url); if (['http:', 'https:'].includes(parsed.protocol) && !parsed.username && !parsed.password) link = parsed.href; } catch (_) {}
+      return `<li>${link ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(label)} ↗</a>` : esc(label)}</li>`;
+    }).join('')}</ul>`;
+  }
+
+  async function openApprovalReview(id, kind) {
+    const view = openPhasePanel('Tinjau naskah dan sumber sebelum ACC');
+    try {
+      const item = kind === 'episode' ? await api(`/api/episode/${encodeURIComponent(id)}`) : S.data?.queue4?.find(i => i.id === id);
+      if (!panelActive(view)) return;
+      if (!item || (kind === 'episode' ? item.status !== 'pending_approval' : item.status !== 'MENUNGGU')) throw new Error('Kartu tidak lagi menunggu ACC. Muat ulang dashboard.');
+      const script = item.script;
+      if (kind === 'episode' && (!script || !Array.isArray(script.beats) || !script.beats.length)) throw new Error('Naskah episode belum tersedia untuk ditinjau.');
+      const text = kind === 'episode' ? script.beats.map((beat, i) => `${i + 1}. ${beat.headline || beat.kind || ''}\n${beat.narration || ''}`).join('\n\n') : item.naskah;
+      if (!text?.trim()) throw new Error('Naskah belum tersedia untuk ditinjau.');
+      $("#phase62-body").innerHTML = `<h3>${esc(item.title || item.judul)}</h3>
+        ${script?.hook ? `<p class="phase62-copy"><b>Hook:</b> ${esc(script.hook)}</p>` : ''}
+        <h4>Naskah</h4><div class="phase62-copy">${esc(text)}</div>
+        ${script?.caption || item.caption ? `<p class="phase62-copy"><b>Caption:</b> ${esc(script?.caption || item.caption)}</p>` : ''}
+        <h4>Sumber yang tercatat</h4>${sourceList(script?.sources || item.sumber)}
+        <form><label><input type="checkbox" name="confirmed" required> Saya sudah meninjau naskah dan sumber yang tersedia.</label>
+        <div class="phase62-actions"><button type="submit" class="btn primary">Beri ACC naskah</button></div></form>`;
+      bindPanelForm(view, async form => {
+        await api('/api/action', {action:'mausbot_card_decision', card_id:id, card_kind:kind, decision:'ALLOW', confirmed:form.get('confirmed') === 'on', reviewed_hash:item.reviewed_hash});
+        await finishPanel(view, 'ACC naskah tercatat. Konten belum diterbitkan.');
+      });
+    } catch (err) {
+      if (panelActive(view)) $("#phase62-body").textContent = 'Tinjauan tidak dapat dibuka.';
+      panelError(view, err);
+    }
+  }
+
+  function openVideoHandoff(id) {
+    const item = S.data?.queue4?.find(i => i.id === id);
+    if (!item || item.status !== 'DISETUJUI') return toast('Antrean berubah. Muat ulang dashboard.');
+    const view = openPhasePanel('Tautkan video dari episode');
+    const options = (S.data.episodes || []).filter(e => e.has_video && e.qc_passed === true && ['rendered','published','approved'].includes(e.status));
+    $("#phase62-body").innerHTML = `<h3>${esc(item.judul)}</h3>
+      <p>Pilih episode yang sesuai dengan draf ini dan sudah lolos QC. Jika belum ada, gunakan alur episode Studio yang ada untuk ACC, render, dan QC dahulu.</p>
+      <details><summary>Lihat naskah draf</summary><p class="phase62-copy">${esc(item.naskah)}</p></details>
+      <form><label>ID episode <input class="input-field" name="episode_id" list="phase62-episode-choices" maxlength="100" required></label>
+      <datalist id="phase62-episode-choices">${options.map(e => `<option value="${esc(e.id)}">${esc(e.title)}</option>`).join('')}</datalist>
+      ${!options.length ? '<p class="card-sub">Tidak ada episode lolos QC di daftar terbaru. ID episode lain tetap dapat diperiksa oleh server.</p>' : ''}
+      <label><input name="confirmed" type="checkbox" required> Saya sudah memeriksa bahwa video episode benar-benar sesuai dengan draf.</label>
+      <div class="phase62-actions"><button type="submit" class="btn primary">Tautkan video</button></div></form>`;
+    bindPanelForm(view, async form => {
+      await api('/api/action', {action:'ootto_attach_approved_video', content_id:id, episode_id:String(form.get('episode_id')).trim(), confirmed:form.get('confirmed') === 'on'});
+      await finishPanel(view, 'Video tertaut. Belum dijadwalkan atau dikirim.');
+    });
+  }
+
+  function openRecovery(id) {
+    const item = S.data?.queue4?.find(i => i.id === id);
+    if (!item || item.status !== 'GAGAL') return toast('Status antrean telah berubah.');
+    const view = openPhasePanel('Periksa kegagalan Ootto');
+    const result = item.ootto_result || {};
+    $("#phase62-body").innerHTML = `<h3>${esc(item.judul)}</h3>
+      ${result.error ? `<p class="phase62-copy">${esc(result.error)}</p>` : ''}
+      ${item.tiktok_publish_id ? `<p>ID pengiriman: <code>${esc(item.tiktok_publish_id)}</code></p>` : ''}
+      ${item.can_recover ? `<p>Pengiriman dihentikan oleh pemeriksaan lokal sebelum upload. Kembalikan item ke antrean tinjauan. Jadwal dan tautan video lama dilepas; Anda harus menyetujui naskah dan menautkan video kembali.</p>
+        <form><label>Catatan pemulihan <input class="input-field" name="note" required maxlength="500"></label>
+        <div class="phase62-actions"><button class="btn sm" type="submit">Kembalikan untuk ditinjau</button></div></form>` : '<p>Jangan mengirim ulang dari Studio. Periksa kotak masuk atau status publikasi pada akun TikTok; absennya ID pengiriman bukan bukti bahwa upload tidak terjadi.</p>'}`;
+    if (item.can_recover) bindPanelForm(view, async form => {
+      await api('/api/action', {action:'ootto_recover', content_id:id, note:form.get('note')});
+      await finishPanel(view, 'Menunggu tinjauan pemilik; tidak ada upload atau jadwal baru.');
+    });
+  }
+
   // ---------------- Navigation & Event Delegation ----------------
   function switchPage(page) {
     const anchors = { analytics: ['overview', 'analytics-svg-wrap'], skills: ['squad', 'skills-grid'], kanban: ['workflow', 'col-wait'] };
@@ -2019,6 +2223,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     });
     document.body.classList.remove("nav-open");
     if (window.MaruOffice3D) window.MaruOffice3D.setActive(page === 'office');
+    if (page === "studio" && S.token) void loadWatchlist(S.watchlistOffset);
     if (anchor) $("#" + anchor).scrollIntoView({block:'start'});
     if (S.data) renderVideoList(S.data.episodes || []);
   }
@@ -2083,6 +2288,15 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       return;
     }
 
+    const detail = ev.target.closest('[data-hq-detail]');
+    if (detail) return openHqDetail(detail.dataset.hqDetail);
+    const review = ev.target.closest('[data-review-card]');
+    if (review) return openApprovalReview(review.dataset.reviewCard, review.dataset.reviewKind);
+    const link = ev.target.closest('[data-ootto-link]');
+    if (link) return openVideoHandoff(link.dataset.oottoLink);
+    const recovery = ev.target.closest('[data-ootto-recover]');
+    if (recovery) return openRecovery(recovery.dataset.oottoRecover);
+
     const cardBtn = ev.target.closest("[data-card-act]");
     if (cardBtn) {
       const act = cardBtn.dataset.cardAct;
@@ -2098,31 +2312,10 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       return;
     }
 
-    const q4Acc = ev.target.closest("[data-q4-acc]");
-    if (q4Acc) {
-      try {
-        await api("/api/action", { action: "queue4_decision", content_id: q4Acc.dataset.q4Acc, decision: "SETUJU", reason: "Disetujui pemilik lewat Kanban" });
-        toast("Konten disetujui (ACC)!");
-        await refresh();
-      } catch (err) { toast(err.message); }
-      return;
-    }
-
-    const q4Rev = ev.target.closest("[data-q4-rev]");
-    if (q4Rev) {
-      const note = prompt("Tulis instruksi revisi untuk Hermes:", "Pertajam analogi di beat ke-3");
-      if (!note) return;
-      try {
-        await api("/api/action", { action: "queue4_decision", content_id: q4Rev.dataset.q4Rev, decision: "REVISI", reason: note });
-        toast("Dikembalikan ke Hermes untuk revisi");
-        await refresh();
-      } catch (err) { toast(err.message); }
-      return;
-    }
-
     const oottoSched = ev.target.closest("[data-ootto-sched]");
     if (oottoSched) {
-      const def = new Date(Date.now() + 24 * 3600 * 1000).toISOString().slice(0, 16) + ":00+07:00";
+      const tomorrow = Date.now() + (24 + 7) * 3600 * 1000; // Tomorrow at the same Jakarta wall time.
+      const def = new Date(tomorrow).toISOString().slice(0, 16) + ":00+07:00";
       const waktu = prompt("Masukkan waktu tayang ISO (+07:00) untuk Ootto:", def);
       if (!waktu) return;
       try {
@@ -2187,7 +2380,6 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       });
       $("#compose-topic").value = "";
       $("#compose-notes").value = "";
-      S.selectedEpId = res.episode_id;
       toast(`Draf ${res.content_id} selesai disusun Hermes! Menunggu ACC Anda.`);
       await refresh();
     } catch (err) { toast(err.message); } finally {
@@ -2195,6 +2387,10 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       submit.disabled = !S.data?.llm?.configured;
     }
   });
+
+  on("#wl-prev", "click", () => loadWatchlist(Math.max(0, S.watchlistOffset - 100)));
+  on("#wl-next", "click", () => S.watchlistNext != null && loadWatchlist(S.watchlistNext));
+  on("#wl-retry", "click", () => loadWatchlist(S.watchlistOffset));
 
   on("#watchlist-form", "submit", async (e) => {
     e.preventDefault();
@@ -2209,8 +2405,8 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       $("#wl-url").value = "";
       $("#wl-note").value = "";
       $("#wl-transcript").value = "";
-      toast("Referensi baru ditambahkan ke Watchlist Radar!");
-      await refresh();
+      toast("Referensi tersimpan.");
+      await loadWatchlist(S.watchlistOffset);
     } catch (err) { toast(err.message); }
   });
 
@@ -2266,30 +2462,40 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
 
   on("#login-form", "submit", async (e) => {
     e.preventDefault();
+    const button = e.currentTarget.querySelector('button[type=submit]');
+    if (button.disabled) return;
+    button.disabled = true;
     const errEl = $("#login-err");
     errEl.classList.add("hidden");
     try {
-      const res = await api("/api/login", { password: $("#login-pass").value.trim() });
+      const res = await api("/api/login", { password: $("#login-pass").value });
       S.token = res.token;
       safeSetToken(res.token);
-      $("#login-screen").classList.add("hidden");
-      await refresh();
+      $("#login-pass").value = '';
+      const loaded = await refresh();
       ensurePolling();
-      toast("Berhasil masuk ke MARU HQ Dashboard!");
+      if (loaded) toast("Berhasil masuk ke MARU HQ Dashboard!");
+      else throw new Error(S.token ? 'Sesi diterima, tetapi data dashboard belum bisa dimuat. Sistem akan mencoba lagi.' : 'Sesi tidak sah. Silakan login kembali.');
     } catch (err) {
       errEl.textContent = err.message;
       errEl.classList.remove("hidden");
-    }
+    } finally { button.disabled = false; }
   });
 
   async function refresh() {
     if (!S.token || S.refreshing) return;
     S.refreshing = true;
+    const token = S.token;
     try {
-      S.data = await api("/api/state");
+      const data = await api("/api/state");
+      if (token !== S.token) return false;
+      S.data = data;
       S.failCount = 0;
       renderAll();
+      $("#login-screen").classList.add("hidden");
+      return true;
     } catch (err) {
+      if (token !== S.token) return false;
       S.failCount = (S.failCount || 0) + 1;
       $("#hq-status-text").textContent = 'DATA TIDAK TERKINI';
       $("#hud-telemetry-badge").textContent = 'Data lama';
@@ -2301,6 +2507,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
         try { S.token = ""; safeSetToken(""); } catch (e) {}
         clearInterval(S.pollTimer); S.pollTimer = null; S.data = null;
         window.MaruOffice3D?.setActive(false);
+        if ($("#phase62-dialog").open) $("#phase62-dialog").close();
         const ls = document.getElementById("login-screen");
         if (ls) ls.classList.remove("hidden");
       } else if (S.failCount === 1) {
@@ -2312,7 +2519,6 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
   async function boot() {
     if (!S.token) return;
     await refresh();
-    if (S.token && S.data) $("#login-screen").classList.add("hidden");
     ensurePolling();
   }
 

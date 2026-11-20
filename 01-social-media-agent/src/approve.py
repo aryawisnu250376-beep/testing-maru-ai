@@ -250,7 +250,7 @@ def invalidate(episode_id: str, reason: str = "Naskah direvisi") -> None:
     db.log_event(episode_id, "approval_invalidated", {"reason": reason})
 
 
-def apply_decision(episode_id: str, decision: str, instruction: str = "") -> dict:
+def apply_decision(episode_id: str, decision: str, instruction: str = "", *, reviewed_hash: str | None = None) -> dict:
     db.init()
     ep = db.get_episode(episode_id)
     if not ep:
@@ -267,6 +267,8 @@ def apply_decision(episode_id: str, decision: str, instruction: str = "") -> dic
         if not ok:
             raise ValueError("Naskah belum lolos validasi: " + "; ".join(errors))
         digest = script_fingerprint(ep["script"])
+        if reviewed_hash is not None and (not isinstance(reviewed_hash, str) or digest != reviewed_hash):
+            raise ValueError("Naskah berubah sejak ditinjau. Buka ulang panel tinjauan sebelum ACC.")
         _atomic_json(d / "decision.json", {"status": "approve", "at": db.now(),
                                           "script_sha256": digest, "via": "human"})
         db.set_status(episode_id, "approved", via="human", script_sha256=digest)

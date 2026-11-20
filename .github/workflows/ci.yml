@@ -103,4 +103,4 @@ jobs:
       - name: Run Corporate HQ browser smoke checks
         if: runner.os == 'Linux' && matrix.python-version == '3.12'
         working-directory: 01-social-media-agent
-        run: python -m pytest tests/test_corporate_browser.py -q
+        run: python -m pytest tests/test_corporate_browser.py tests/test_phase62_studio_browser.py -q

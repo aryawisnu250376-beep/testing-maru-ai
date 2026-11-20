@@ -87,6 +87,17 @@ def provider_text(llm, system: str, prompt: str, *, history=()) -> str:
     return output.strip()
 
 
+def chat_feed() -> list[dict]:
+    """Return bounded history per agent; activity on one agent cannot evict another's feed."""
+    with db.conn() as conn:
+        _prepare(conn)
+        rows = conn.execute("""SELECT body FROM (
+            SELECT id, body, ROW_NUMBER() OVER (PARTITION BY json_extract(body,'$.bot_id') ORDER BY id DESC) AS rank
+            FROM dashboard_records WHERE kind='chat'
+        ) WHERE rank <= 12 ORDER BY id""").fetchall()
+    return [json.loads(row[0]) for row in rows]
+
+
 def chat(llm, payload: dict) -> dict:
     prompt = text(payload, 'prompt', 3000)
     bot_id = str(payload.get('bot_id') or 'EMP-L02')

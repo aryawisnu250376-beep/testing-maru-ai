@@ -113,7 +113,8 @@ def _skills_catalog() -> list[dict]:
 def state() -> dict:
     db.init()
     episodes = [_episode_summary(e) for e in db.list_episodes(limit=100)]
-    q4 = queue4.list_items()
+    from ootto import studio_status
+    q4 = [studio_status(item) for item in queue4.list_items()]
     pending = [_episode_summary(e) for e in db.list_episodes(status="pending_approval", limit=-1)]
     cards = _approval_cards(q4, pending)
     from .hq.agents import ROSTER
@@ -135,7 +136,7 @@ def state() -> dict:
             "shortcuts":[{"key":k,"label":v[0].replace("_"," ")+" · "+v[1][:65]} for k,v in __import__("src.revisor",fromlist=["SHORTCUTS"]).SHORTCUTS.items()],
             "server_time":db.now(),
             "queue4":q4, "mausbot_cards":cards, "hq_agents":agents,
-            "chat":dashboard_ops.records('chat'), "watchlist":dashboard_ops.watchlist(limit=200),
+            "chat":dashboard_ops.chat_feed(), "watchlist":dashboard_ops.watchlist(limit=200),
             "skills_catalog":_skills_catalog(),
             "employees":__import__("src.agents",fromlist=["snapshot"]).snapshot().get("agents",[]),
             "hq":hq}
@@ -156,10 +157,12 @@ def episode_detail(ep: str) -> dict:
     e = db.get_episode(ep)
     if not e:
         raise ValueError("Episode tidak ditemukan")
+    from .approve import script_fingerprint
     from .revisor import history
     from .scriptwriter import validate_script
     ok, errors, warnings = validate_script(e.get("script") or {},CFG)
     return {**_episode_summary(e),"script":e.get("script"),"topic":e.get("topic"),
+            "reviewed_hash":script_fingerprint(e.get("script") or {}),
             "validation":{"ok":ok,"errors":errors,"warnings":warnings},
             "revisions":history(ep),"tasks":db.tasks_for_episode(ep)}
 
@@ -184,7 +187,7 @@ def action(payload: dict) -> dict:
         if payload.get("confirmed") is not True:
             raise ValueError("Konfirmasi tinjauan naskah dan sumber diperlukan")
         from . import agents, approve
-        res = approve.apply_decision(ep,"approve")
+        res = approve.apply_decision(ep,"approve",reviewed_hash=payload.get("reviewed_hash"))
         agents.clear_waiting(ep,"done")
         return res
     if act == "reject":
@@ -306,9 +309,12 @@ def action(payload: dict) -> dict:
         return {'queued': queue.enqueue('hermes', payload={'path': str(candidate), 'topic': topic}, max_attempts=1)}
     if act == "ootto_attach_approved_video":
         return dashboard_ops.attach_approved_video(payload)
+    if act == "ootto_recover":
+        from ootto import return_for_owner_review
+        return return_for_owner_review(dashboard_ops.text(payload, 'content_id', 100), dashboard_ops.text(payload, 'note', 500))
     if act == "ootto_schedule":
         from ootto import jadwalkan
-        return jadwalkan(str(payload.get("content_id") or ""), str(payload.get("waktu") or ""))
+        return jadwalkan(str(payload.get("content_id") or ""), str(payload.get("waktu") or ""), require_qc=True)
     if act == "ootto_cancel":
         from ootto import batalkan
         return batalkan(str(payload.get("content_id") or ""))
@@ -357,12 +363,14 @@ def action(payload: dict) -> dict:
         kind = payload.get('card_kind')
         key = str(payload.get('card_id') or '')
         if kind == 'content':
+            if which == 'SETUJU' and payload.get('confirmed') is not True:
+                raise ValueError('Konfirmasi tinjauan naskah dan sumber diperlukan')
             return queue4.owner_decision(key, which, str(payload.get('reason') or '')[:500], expected_status='MENUNGGU')
         if kind == 'episode' and which != 'REVISI':
             if _require_ep(key).get('status') != 'pending_approval':
                 raise ValueError('Episode tidak lagi menunggu persetujuan.')
             return action({'action': 'approve' if which == 'SETUJU' else 'reject', 'episode_id': key,
-                           'confirmed': payload.get('confirmed') is True})
+                           'confirmed': payload.get('confirmed') is True, 'reviewed_hash': payload.get('reviewed_hash')})
         raise ValueError('Gunakan panel revisi yang sesuai untuk jenis draf ini.')
     raise ValueError("Aksi tidak dikenal atau tidak tersedia dari handphone")
 

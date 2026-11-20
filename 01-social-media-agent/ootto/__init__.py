@@ -36,7 +36,7 @@ def _validated_video(item: dict) -> Path:
     return video
 
 
-def jadwalkan(id_konten: str, waktu: str) -> dict:
+def jadwalkan(id_konten: str, waktu: str, *, require_qc: bool = False) -> dict:
     """Jadwalkan pengiriman lokal. Hanya konten DISETUJUI yang diterima."""
     item = queue4.get(id_konten)
     if not item:
@@ -47,6 +47,8 @@ def jadwalkan(id_konten: str, waktu: str) -> dict:
     dt = _parse_time(waktu)
     if dt <= datetime.now(TZ):
         raise ValueError("Waktu jadwal harus di masa depan")
+    if require_qc and item.get("qc_passed") is not True:
+        raise ValueError("Studio memerlukan video dengan QC tercatat sebelum jadwal dibuat")
     _validated_video(item)
     if not item.get("label_ai", True):
         raise ValueError("Konten AI wajib diberi label AI")
@@ -104,6 +106,13 @@ def kirim(item: dict) -> dict:
     mode = item.get("mode_tiktok") or MODE
     try:
         _validated_video(item)
+    except (ValueError, PermissionError, OSError):
+        return queue4.transition(item['id'], 'GAGAL', 'ootto', 'Video atau persetujuan gagal diperiksa sebelum upload',
+                                 expected_status='TERJADWAL', ootto_result={
+                                     'status':'gagal', 'dispatch':'NOT_ATTEMPTED',
+                                     'error':'Pemeriksaan video, QC, atau ACC gagal sebelum upload.',
+                                 })
+    try:
         if mode == "direct":
             if not ALLOW_DIRECT:
                 raise PermissionError("Mode direct belum diaktifkan")
@@ -118,7 +127,33 @@ def kirim(item: dict) -> dict:
         error = "Pengiriman gagal; tinjau konfigurasi, video, dan status TikTok sebelum mencoba lagi"
         queue4.log("ootto", item["id"], "gagal", type(exc).__name__)
         return queue4.transition(item["id"], "GAGAL", "ootto", error,
-                                 expected_status="TERJADWAL", ootto_result={"status": "gagal", "error": error})
+                                 expected_status="TERJADWAL", ootto_result={"status": "gagal", "dispatch": "UNKNOWN", "error": error})
+
+
+def can_recover(item: dict) -> bool:
+    result = item.get('ootto_result') or {}
+    return bool(item.get('status') == 'GAGAL' and not item.get('tiktok_publish_id')
+                and not result.get('publish_id') and result.get('dispatch') == 'NOT_ATTEMPTED')
+
+
+def return_for_owner_review(content_id: str, note: str) -> dict:
+    item = queue4.get(content_id)
+    if not item or not can_recover(item):
+        raise ValueError('Belum aman memulihkan item ini dari Studio; verifikasi status di TikTok.')
+    return queue4.transition(content_id, 'MENUNGGU', 'pemilik', 'Pemulihan sebelum upload: ' + note,
+                             expected_status='GAGAL', jadwal=None, video='', episode_id='', qc_passed=None,
+                             verified_episode_video=False, ootto_result={'status':'menunggu_review_pemulihan'})
+
+
+def studio_status(item: dict) -> dict:
+    ready = False
+    if item.get('status') == 'DISETUJUI' and item.get('qc_passed') is True:
+        try:
+            _validated_video(item)
+            ready = True
+        except (ValueError, OSError, PermissionError):
+            pass
+    return {**item, 'schedule_ready': ready, 'can_recover': can_recover(item)}
 
 
 def reconcile_direct(item: dict) -> dict | None:

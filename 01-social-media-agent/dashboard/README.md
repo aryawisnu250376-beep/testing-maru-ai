@@ -25,3 +25,10 @@ Buka `http://127.0.0.1:8080`. Atur `STUDIO_PASSWORD` minimal 16 karakter melalui
 - Direct TikTok upload is `DIKIRIM_TIKTOK` until Ootto polls a confirmed `PUBLISH_COMPLETE`; `python -m ootto run-due` (see `python -m ootto --help`) must be scheduled for reconciliation. No TikTok call is needed to start Studio or HQ.
 - `ootto_attach_approved_video` is an authenticated API handoff for a Queue4 item already approved by the owner. Send `content_id`, `episode_id`, and `confirmed: true` only after verifying the video matches the draft. The episode must have independent current script approval, a rendered file under its output directory, and matching QC. This does not create the episode, schedule a post, or transmit a video.
 - Browser-submitted Hermes source files must be inside the configured `HERMES_INPUT_DIR` (default `masuk/`). Pass a path relative to that directory. The standalone Hermes CLI retains its local-operator input contract.
+
+### Alur pemilik di Studio
+
+- **Workflow** → **Tinjau naskah & sumber** untuk membaca isi sebelum ACC. Jika naskah episode berubah setelah panel dibuka, buka ulang panel dan periksa versi terbaru.
+- Pada kartu draf yang sudah ACC, **Tautkan video lolos QC** memakai ID episode yang sudah ACC, dirender, dan lolos QC. Studio tidak membuat atau merender episode baru dari teks bebas. Jadwal baru tersedia setelah ada artefak sah dan QC tercatat; jadwal tidak langsung melakukan upload.
+- **Periksa kegagalan** hanya menawarkan pengembalian ke antrean tinjauan jika upload diketahui belum dicoba. Jadwal dan tautan sebelumnya dilepas. Jika hasil upload belum diketahui, periksa secara manual di TikTok; Studio tidak menawarkan kirim ulang.
+- **Office** → **Projects** → pilih tugas untuk melihat hasil/kesalahan dan mencatat keputusan. Status `COMPLETED` tetap berbeda dari keputusan pemilik. **Studio** memuat watchlist 100 referensi per halaman; panel chat hanya menampilkan percakapan agen yang dipilih.

@@ -166,10 +166,11 @@ def test_studio_page_tidak_punya_tombol_pemicu():
 
     for terlarang in ("/api/action\",{action:\"scan", ">Scan<", ">Render<", ">Tulis Script<"):
         assert terlarang not in PAGE
-    # Markup now delegates state-backed approval and denials instead of fixed IDs.
-    assert 'data-card-act="ALLOW"' in PAGE
+    # An approval starts from the review panel, not a one-click Kanban bypass.
+    assert 'data-card-act="ALLOW"' not in PAGE
+    assert 'data-review-card=' in PAGE
+    assert 'name="confirmed" required' in PAGE
     assert 'data-card-act="DENY"' in PAGE
-    assert 'data-card-kind=' in PAGE
 
 
 def test_prune_tasks_membuang_riwayat_lama(fresh_db):
