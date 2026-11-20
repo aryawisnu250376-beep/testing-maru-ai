@@ -49,6 +49,57 @@ def _episode_summary(e: dict) -> dict:
             "metrics":db.latest_metrics(e["id"])}
 
 
+
+def _get_hq_data() -> dict:
+    telemetry = {}
+    try:
+        import psutil
+        vm = psutil.virtual_memory()
+        du = psutil.disk_usage('/')
+        telemetry = {
+            'cpu_pct': psutil.cpu_percent(interval=None),
+            'ram_used_mb': round(vm.used / (1024*1024), 1),
+            'ram_total_mb': round(vm.total / (1024*1024), 1),
+            'ram_pct': vm.percent,
+            'disk_pct': du.percent,
+            'disk_free_gb': round(du.free / (1024*1024*1024), 1),
+            'status': 'OPERATIONAL'
+        }
+    except Exception as e:
+        telemetry = {'status': 'AVAILABLE', 'error': str(e)}
+
+    hq_jobs = []
+    status_counts = {}
+    try:
+        from src.hq.queue import HQJobQueue
+        q = HQJobQueue()
+        jobs = q.list_jobs(limit=10)
+        hq_jobs = [j.to_dict() for j in jobs]
+        status_counts = q.get_status_counts()
+    except Exception:
+        pass
+
+    hq_memory_count = 0
+    try:
+        from src.hq.memory import HQMemoryManager
+        mem = HQMemoryManager()
+        hq_memory_count = len(mem.query(limit=50))
+    except Exception:
+        pass
+
+    return {
+        'telemetry': telemetry,
+        'hq_jobs': hq_jobs,
+        'hq_status_counts': status_counts,
+        'hq_memory_count': hq_memory_count,
+        'finance': {
+            'currency': 'IDR',
+            'balance': 25000000,
+            'burn_rate_est': 'Rp 120.000 / hari',
+            'token_cost_est': 'Rp 8.450 / 100k token'
+        }
+    }
+
 def state() -> dict:
     db.init()
     episodes = [_episode_summary(e) for e in db.list_episodes(limit=100)]
@@ -67,7 +118,8 @@ def state() -> dict:
             "shortcuts":[{"key":k,"label":v[0].replace("_"," ")+" · "+v[1][:65]} for k,v in __import__("src.revisor",fromlist=["SHORTCUTS"]).SHORTCUTS.items()],
             "server_time":db.now(),
             "queue4":queue4.list_items(),
-            "employees":__import__("src.agents",fromlist=["snapshot"]).snapshot().get("agents",[])}
+            "employees":__import__("src.agents",fromlist=["snapshot"]).snapshot().get("agents",[]),
+            "hq":_get_hq_data()}
 
 
 def studio_state() -> dict:
@@ -241,6 +293,34 @@ def action(payload: dict) -> dict:
     if act == "router_test":
         from . import router9
         return router9.test_question()
+    if act == "hq_enqueue":
+        from src.hq.queue import HQJobQueue
+        q = HQJobQueue()
+        job = q.enqueue(
+            division=str(payload.get("division") or "EXECUTIVE_SUITE"),
+            requested_by=str(payload.get("requested_by") or "PEMILIK"),
+            goal=str(payload.get("goal") or "HQ Task"),
+            input_payload=payload.get("input_payload", {}),
+            acceptance_criteria=payload.get("acceptance_criteria", ["Tugas diselesaikan dengan standar MARU HQ"]),
+            assigned_agent=str(payload.get("assigned_agent") or "EMP-L01")
+        )
+        return {"ok": True, "task_id": job.task_id, "status": job.status}
+    if act == "task_create":
+        # User task creation from dashboard task list
+        goal = str(payload.get("goal") or "").strip()
+        if not goal:
+            raise ValueError("Tujuan tugas tidak boleh kosong")
+        from src.hq.queue import HQJobQueue
+        q = HQJobQueue()
+        job = q.enqueue(
+            division=str(payload.get("division") or "EXECUTIVE_SUITE"),
+            requested_by="PEMILIK",
+            goal=goal,
+            input_payload={"note": goal, "created_via": "dashboard_tasks"},
+            acceptance_criteria=["Tinjau & selesaikan sesuai KPI"],
+            assigned_agent=str(payload.get("assigned_agent") or "EMP-L01")
+        )
+        return {"ok": True, "task_id": job.task_id, "status": job.status, "message": "Tugas baru berhasil dicatat di HQ Queue"}
     raise ValueError("Aksi tidak dikenal atau tidak tersedia dari handphone")
 
 
@@ -341,6 +421,10 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path=="/api/state":
                 return self._json(state())
+            if path=="/api/hq":
+                return self._json(_get_hq_data())
+            if path=="/api/telemetry":
+                return self._json(_get_hq_data().get("telemetry", {}))
             if path=="/api/studio":
                 return self._json(studio_state())
             if path=="/api/queue4":

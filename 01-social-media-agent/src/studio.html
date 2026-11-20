@@ -959,31 +959,199 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
   </section>
 
     <!-- ================= PAGE 5: VIRTUAL OFFICE 3D (ISOMETRIC DIORAMA PHASE 1) ================= -->
-  <section id="page-office" class="page-view hidden" style="padding:0;position:relative;height:calc(100vh - 60px);overflow:hidden;">
-    <!-- Top Command Toolbar -->
-    <div style="position:absolute;top:12px;left:14px;right:14px;z-index:40;display:flex;justify-content:space-between;align-items:center;background:rgba(15,23,42,0.88);backdrop-filter:blur(16px);border:1px solid rgba(56,189,248,0.3);border-radius:14px;padding:8px 16px;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);"></span>
-        <b style="font-size:12px;letter-spacing:0.5px;">MARU HQ · LIVING ISOMETRIC 3D DIORAMA</b>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div style="display:flex;gap:4px;background:rgba(0,0,0,0.4);padding:3px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);">
-          <button id="cam-iso-btn" onclick="window.MaruOffice3D.setCameraMode('iso')" style="background:var(--cyan);color:#040812;border:none;padding:4px 10px;border-radius:7px;font-size:10px;font-weight:700;cursor:pointer;">📐 ISO CAMERA</button>
-          <button id="cam-free-btn" onclick="window.MaruOffice3D.setCameraMode('free')" style="background:transparent;color:var(--muted);border:none;padding:4px 10px;border-radius:7px;font-size:10px;font-weight:700;cursor:pointer;">🌐 FREE ORBIT</button>
-        </div>
-        <button onclick="window.MaruOffice3D.resetCamera()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--ink);padding:5px 10px;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;">↺ Reset</button>
-      </div>
-    </div>
-
-    <!-- 3D Canvas Viewport Container -->
+  <section id="page-office" class="page-view hidden" style="padding:0;position:relative;height:calc(100vh - 60px);overflow:hidden;background:#030712;user-select:none;">
+    
+    <!-- 3D Canvas Viewport Container (Central Natural Centerpiece) -->
     <div id="office-3d-viewport" style="width:100%;height:100%;position:absolute;top:0;left:0;z-index:1;"></div>
 
-    <!-- Floating Room Labels & Speech Bubbles Container -->
-    <div id="office-overlay-container" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:30;"></div>
+    <!-- Floating Room Labels & Speech Bubbles Container (In-world raycasted tags) -->
+    <div id="office-overlay-container" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:20;"></div>
 
-    <!-- Interactive Inspector Panel (Right Drawer) -->
-    <div id="office-inspector-panel" style="position:absolute;right:16px;top:68px;width:300px;z-index:50;background:rgba(15,23,42,0.92);backdrop-filter:blur(20px);border:1px solid var(--cyan);border-radius:16px;padding:16px;box-shadow:0 16px 40px rgba(0,0,0,0.8);display:none;">
-      <span onclick="window.MaruOffice3D.closeInspector()" style="position:absolute;top:12px;right:14px;cursor:pointer;font-size:16px;color:var(--muted);">✕</span>
+    <!-- ================= TOP INFORMATION BAR (FUTURISTIC HUD HEADER) ================= -->
+    <header id="hq-hud-topbar" style="position:absolute;top:10px;left:12px;right:12px;z-index:35;display:flex;justify-content:space-between;align-items:center;background:rgba(10,16,32,0.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(56,189,248,0.28);border-radius:14px;padding:8px 16px;box-shadow:0 8px 32px rgba(0,0,0,0.65),inset 0 1px 0 rgba(255,255,255,0.1);">
+      <!-- Brand & Mission Status -->
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="position:relative;width:24px;height:24px;display:grid;place-items:center;">
+            <div style="position:absolute;width:100%;height:100%;border-radius:50%;background:radial-gradient(circle,rgba(56,189,248,0.5) 0%,transparent 70%);animation:pulse 2.5s infinite;"></div>
+            <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#38bdf8;box-shadow:0 0 12px #38bdf8;"></span>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:900;letter-spacing:0.8px;color:#fff;display:flex;align-items:center;gap:6px;">
+              <span>MARU AI</span>
+              <span style="font-size:9px;padding:1px 6px;border-radius:4px;background:rgba(56,189,248,0.15);color:#38bdf8;border:1px solid rgba(56,189,248,0.3);letter-spacing:0.5px;">CORP HQ 3D</span>
+            </div>
+            <div style="font-size:9.5px;color:rgba(148,163,184,0.85);font-weight:500;">Hybrid Autonomous Enterprise</div>
+          </div>
+        </div>
+        <div style="height:22px;width:1px;background:rgba(255,255,255,0.1);"></div>
+        <!-- Real-time HQ Mission Status -->
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 8px #34d399;" id="hq-status-dot"></span>
+          <span id="hq-status-text" style="font-size:11px;font-weight:800;color:#34d399;letter-spacing:0.3px;">SYSTEM ACTIVE</span>
+        </div>
+      </div>
+
+      <!-- Live Business & Operations Stats -->
+      <div style="display:flex;align-items:center;gap:14px;">
+        <!-- Company Balance / Cashflow -->
+        <div style="display:flex;align-items:center;gap:7px;background:rgba(15,23,42,0.6);padding:4px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);">
+          <span style="font-size:12px;">💰</span>
+          <div>
+            <div style="font-size:8.5px;color:rgba(148,163,184,0.8);font-weight:700;text-transform:uppercase;">Saldo Perusahaan</div>
+            <div id="hud-company-balance" style="font-size:11.5px;font-weight:900;color:#34d399;font-family:monospace;">Rp 128.450.000</div>
+          </div>
+        </div>
+
+        <!-- Active Agents Workforce -->
+        <div style="display:flex;align-items:center;gap:7px;background:rgba(15,23,42,0.6);padding:4px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);">
+          <span style="font-size:12px;">🤖</span>
+          <div>
+            <div style="font-size:8.5px;color:rgba(148,163,184,0.8);font-weight:700;text-transform:uppercase;">Active Agents</div>
+            <div id="hud-active-agents-count" style="font-size:11.5px;font-weight:900;color:#38bdf8;">9 Leaders / 22 Squad</div>
+          </div>
+        </div>
+
+        <!-- Pending Approvals (ACC) -->
+        <div style="display:flex;align-items:center;gap:7px;background:rgba(15,23,42,0.6);padding:4px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);cursor:pointer;" onclick="switchPage('workflow')">
+          <span style="font-size:12px;">🔒</span>
+          <div>
+            <div style="font-size:8.5px;color:rgba(148,163,184,0.8);font-weight:700;text-transform:uppercase;">Maus ACC Gate</div>
+            <div id="hud-pending-approvals" style="font-size:11.5px;font-weight:900;color:#f59e0b;">0 Pending</div>
+          </div>
+        </div>
+
+        <!-- Live Clock & Date (WIB / Bangkok Timezone) -->
+        <div style="text-align:right;padding-left:4px;">
+          <div id="hud-clock" style="font-size:12px;font-weight:900;color:#f8fafc;font-family:monospace;letter-spacing:0.5px;">--:--:-- WIB</div>
+          <div id="hud-date" style="font-size:9px;color:rgba(148,163,184,0.85);font-weight:600;">-- --- ----</div>
+        </div>
+      </div>
+
+      <!-- Camera Toolbar & Quick Controls -->
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="display:flex;gap:3px;background:rgba(0,0,0,0.45);padding:3px;border-radius:9px;border:1px solid rgba(255,255,255,0.1);">
+          <button id="cam-iso-btn" onclick="window.MaruOffice3D && window.MaruOffice3D.setCameraMode('iso')" style="background:var(--cyan);color:#040812;border:none;padding:4px 9px;border-radius:6px;font-size:9.5px;font-weight:800;cursor:pointer;">📐 ISO</button>
+          <button id="cam-free-btn" onclick="window.MaruOffice3D && window.MaruOffice3D.setCameraMode('free')" style="background:transparent;color:var(--muted);border:none;padding:4px 9px;border-radius:6px;font-size:9.5px;font-weight:800;cursor:pointer;">🌐 FREE</button>
+        </div>
+        <button onclick="window.MaruOffice3D && window.MaruOffice3D.resetCamera()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--ink);padding:5px 9px;border-radius:8px;font-size:9.5px;font-weight:700;cursor:pointer;">↺ Reset</button>
+        <button id="hud-toggle-panels-btn" onclick="window.toggleHqHudPanels && window.toggleHqHudPanels()" title="Toggle Sidebar Visibility" style="background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);color:#38bdf8;padding:5px 8px;border-radius:8px;font-size:10px;font-weight:800;cursor:pointer;">⛶ HUD</button>
+      </div>
+    </header>
+
+    <!-- ================= LEFT SIDEBAR (EXECUTIVE PROFILE & TODAY'S TASKS) ================= -->
+    <aside id="hq-hud-left-panel" style="position:absolute;top:66px;left:12px;width:280px;bottom:64px;z-index:30;display:flex;flex-direction:column;gap:10px;pointer-events:none;transition:transform 0.3s cubic-bezier(0.16,1,0.3,1),opacity 0.2s ease;">
+      <!-- Profile Widget -->
+      <div style="pointer-events:auto;background:rgba(10,16,32,0.85);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(56,189,248,0.22);border-radius:14px;padding:12px;box-shadow:0 12px 32px rgba(0,0,0,0.6);">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="position:relative;width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#0284c7,#4f46e5);border:1px solid rgba(56,189,248,0.5);display:grid;place-items:center;font-weight:900;color:#fff;font-size:15px;box-shadow:0 4px 12px rgba(2,132,199,0.4);">
+            AW
+            <span style="position:absolute;bottom:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:#34d399;border:2px solid #0a1020;"></span>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Arya Wisnu H. F.</div>
+            <div style="font-size:10px;color:#38bdf8;font-weight:600;">Executive Owner · MARU HQ</div>
+            <div style="font-size:8.5px;color:rgba(148,163,184,0.7);">Authority Level: Absolute</div>
+          </div>
+        </div>
+        <!-- Executive Daily Motto / Quote -->
+        <div style="background:rgba(0,0,0,0.35);border-radius:8px;padding:8px 10px;border:1px solid rgba(255,255,255,0.06);margin-bottom:8px;">
+          <div style="font-size:8.5px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">DAILY DIRECTIVE</div>
+          <div style="font-size:10px;color:#e2e8f0;font-style:italic;line-height:1.35;">"Zero Fake Busy. Otomasi kredibel, keputusan berpusat pada akurasi eksekusi."</div>
+        </div>
+        <!-- Fast Navigation Shortcuts -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
+          <button onclick="switchPage('workflow')" style="background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.25);border-radius:7px;padding:6px 4px;color:#38bdf8;font-size:9.5px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;">
+            <span>⚡</span><span>Workflow</span>
+          </button>
+          <button onclick="switchPage('kanban')" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.25);border-radius:7px;padding:6px 4px;color:#c084fc;font-size:9.5px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;">
+            <span>📋</span><span>Kanban</span>
+          </button>
+          <button onclick="switchPage('studio')" style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:7px;padding:6px 4px;color:#34d399;font-size:9.5px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;">
+            <span>🎬</span><span>Studio</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Today's Operations & Queue Task List -->
+      <div style="flex:1;min-height:0;pointer-events:auto;background:rgba(10,16,32,0.85);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(56,189,248,0.22);border-radius:14px;padding:12px;box-shadow:0 12px 32px rgba(0,0,0,0.6);display:flex;flex-direction:column;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:800;color:#fff;display:flex;align-items:center;gap:6px;">
+            <span>📌</span><span>OPERASIONAL HARI INI</span>
+          </div>
+          <span id="hud-task-count-badge" style="font-size:9px;font-weight:800;background:rgba(56,189,248,0.15);color:#38bdf8;padding:1px 6px;border-radius:4px;border:1px solid rgba(56,189,248,0.3);">0 Antrean</span>
+        </div>
+        <!-- Scrollable Task List -->
+        <div id="hud-task-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-right:2px;">
+          <div style="font-size:10.5px;color:rgba(148,163,184,0.7);text-align:center;padding:18px 8px;">Memuat data antrean operasional...</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ================= RIGHT SIDEBAR (SYSTEM TELEMETRY & AGENT ACTIVITY) ================= -->
+    <aside id="hq-hud-right-panel" style="position:absolute;top:66px;right:12px;width:300px;bottom:64px;z-index:30;display:flex;flex-direction:column;gap:10px;pointer-events:none;transition:transform 0.3s cubic-bezier(0.16,1,0.3,1),opacity 0.2s ease;">
+      <!-- System Health & Telemetry (Real psutil or browser status) -->
+      <div style="pointer-events:auto;background:rgba(10,16,32,0.85);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(56,189,248,0.22);border-radius:14px;padding:12px;box-shadow:0 12px 32px rgba(0,0,0,0.6);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:800;color:#fff;display:flex;align-items:center;gap:6px;">
+            <span>📊</span><span>TELEMETRI INFRASTRUKTUR</span>
+          </div>
+          <span id="hud-telemetry-badge" style="font-size:8.5px;font-weight:800;color:#34d399;background:rgba(52,211,153,0.12);padding:1px 5px;border-radius:4px;border:1px solid rgba(52,211,153,0.25);">LIVE</span>
+        </div>
+        
+        <!-- CPU Gauge Bar -->
+        <div style="margin-bottom:6px;">
+          <div style="display:flex;justify-content:space-between;font-size:9.5px;margin-bottom:2px;">
+            <span style="color:#94a3b8;">CPU Server (Wira IT)</span>
+            <span id="hud-cpu-val" style="color:#38bdf8;font-weight:800;font-family:monospace;">--%</span>
+          </div>
+          <div style="height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;">
+            <div id="hud-cpu-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#38bdf8,#0284c7);transition:width 0.4s ease;"></div>
+          </div>
+        </div>
+
+        <!-- RAM Gauge Bar -->
+        <div style="margin-bottom:6px;">
+          <div style="display:flex;justify-content:space-between;font-size:9.5px;margin-bottom:2px;">
+            <span style="color:#94a3b8;">RAM Memory Usage</span>
+            <span id="hud-ram-val" style="color:#a855f7;font-weight:800;font-family:monospace;">-- / -- GB</span>
+          </div>
+          <div style="height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;">
+            <div id="hud-ram-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#c084fc,#9333ea);transition:width 0.4s ease;"></div>
+          </div>
+        </div>
+
+        <!-- Storage & HQ DB Metric -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);">
+          <div style="background:rgba(0,0,0,0.3);border-radius:6px;padding:5px 7px;">
+            <div style="font-size:8px;color:#94a3b8;font-weight:700;">DISK STORAGE</div>
+            <div id="hud-disk-val" style="font-size:10px;font-weight:800;color:#38bdf8;font-family:monospace;">--% Terpakai</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.3);border-radius:6px;padding:5px 7px;">
+            <div style="font-size:8px;color:#94a3b8;font-weight:700;">HQ MEMORY RECALL</div>
+            <div id="hud-memory-val" style="font-size:10px;font-weight:800;color:#34d399;font-family:monospace;">0 Entries</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Agent Activity Feed -->
+      <div style="flex:1;min-height:0;pointer-events:auto;background:rgba(10,16,32,0.85);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(56,189,248,0.22);border-radius:14px;padding:12px;box-shadow:0 12px 32px rgba(0,0,0,0.6);display:flex;flex-direction:column;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:800;color:#fff;display:flex;align-items:center;gap:6px;">
+            <span>⚡</span><span>AKTIVITAS AGEN REAL-TIME</span>
+          </div>
+          <span style="font-size:8.5px;color:rgba(148,163,184,0.7);">9 Leaders</span>
+        </div>
+        <!-- Activity List -->
+        <div id="hud-activity-feed" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:5px;padding-right:2px;">
+          <div style="font-size:10.5px;color:rgba(148,163,184,0.7);text-align:center;padding:18px 8px;">Menyinkronkan log aktivitas agen...</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Interactive Inspector Panel (Right Drawer Overlaid when entity is clicked) -->
+    <div id="office-inspector-panel" style="position:absolute;right:16px;top:68px;width:310px;z-index:50;background:rgba(10,16,32,0.94);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid var(--cyan);border-radius:16px;padding:16px;box-shadow:0 16px 40px rgba(0,0,0,0.85);display:none;">
+      <span onclick="window.MaruOffice3D && window.MaruOffice3D.closeInspector()" style="position:absolute;top:12px;right:14px;cursor:pointer;font-size:16px;color:var(--muted);">✕</span>
       <span id="insp-badge" style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:6px;text-transform:uppercase;display:inline-block;margin-bottom:6px;background:var(--cyan);color:#040812;">DEPARTEMEN</span>
       <h3 id="insp-title" style="font-size:14px;font-weight:800;margin-bottom:2px;color:#fff;">Nama Departemen</h3>
       <div id="insp-role" style="font-size:11px;color:var(--cyan);font-weight:600;margin-bottom:12px;">Leader: Bima</div>
@@ -1009,35 +1177,58 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
         <div style="color:var(--muted);margin-bottom:2px;">Tugas & Aktivitas Aktual:</div>
         <div id="insp-task" style="color:var(--text);font-weight:500;">Memimpin Visi Media & Konten MARU HQ</div>
       </div>
-      <button id="insp-follow-btn" onclick="window.MaruOffice3D.toggleCameraFollow()" style="width:100%;margin-bottom:6px;background:rgba(168,85,247,0.15);border:1px solid #c084fc;color:#c084fc;font-weight:800;font-size:11px;padding:8px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+      <!-- Department / Agent Functional Deep-link -->
+      <button id="insp-open-module-btn" onclick="window.openDepartmentModule && window.openDepartmentModule()" style="width:100%;margin-bottom:6px;background:rgba(52,211,153,0.15);border:1px solid #34d399;color:#34d399;font-weight:800;font-size:11px;padding:8px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+        <span>🚀</span><span id="insp-module-btn-text">Buka Modul / Sub-Dashboard</span>
+      </button>
+      <button id="insp-follow-btn" onclick="window.MaruOffice3D && window.MaruOffice3D.toggleCameraFollow()" style="width:100%;margin-bottom:6px;background:rgba(168,85,247,0.15);border:1px solid #c084fc;color:#c084fc;font-weight:800;font-size:11px;padding:8px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
         <span>🎥</span><span>Ikuti Karakter (Follow Mode)</span>
       </button>
-      <button onclick="window.MaruOffice3D.focusSelected()" style="width:100%;background:rgba(56,189,248,0.15);border:1px solid var(--cyan);color:var(--cyan);font-weight:800;font-size:11px;padding:8px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+      <button onclick="window.MaruOffice3D && window.MaruOffice3D.focusSelected()" style="width:100%;background:rgba(56,189,248,0.15);border:1px solid var(--cyan);color:var(--cyan);font-weight:800;font-size:11px;padding:8px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
         <span>🔍</span><span id="insp-focus-btn-text">Fokus Kamera ke Target</span>
       </button>
     </div>
 
-    <!-- Mobile Touch D-Pad (Bottom Right) -->
-    <div style="position:absolute;right:14px;bottom:75px;z-index:45;display:grid;grid-template-columns:repeat(3,34px);grid-template-rows:repeat(2,34px);gap:4px;">
-      <div onclick="window.MaruOffice3D.panCam(0,3)" style="background:rgba(15,23,42,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.4);border-radius:8px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:12px;">▲</div>
-      <div onclick="window.MaruOffice3D.zoomCam(0.85)" style="background:rgba(15,23,42,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.4);border-radius:8px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:11px;">🔍+</div>
-      <div onclick="window.MaruOffice3D.rotateCam(-0.25)" style="background:rgba(15,23,42,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.4);border-radius:8px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:12px;">↶</div>
-      <div onclick="window.MaruOffice3D.panCam(0,-3)" style="background:rgba(15,23,42,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.4);border-radius:8px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:12px;">▼</div>
-      <div onclick="window.MaruOffice3D.zoomCam(1.15)" style="background:rgba(15,23,42,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.4);border-radius:8px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:11px;">🔍-</div>
-      <div onclick="window.MaruOffice3D.rotateCam(0.25)" style="background:rgba(15,23,42,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.4);border-radius:8px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:12px;">↷</div>
+    <!-- Mobile Touch D-Pad Controls -->
+    <div style="position:absolute;right:14px;bottom:68px;z-index:35;display:grid;grid-template-columns:repeat(3,32px);grid-template-rows:repeat(2,32px);gap:4px;">
+      <div onclick="window.MaruOffice3D && window.MaruOffice3D.panCam(0,3)" style="background:rgba(10,16,32,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.3);border-radius:7px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:11px;">▲</div>
+      <div onclick="window.MaruOffice3D && window.MaruOffice3D.zoomCam(0.85)" style="background:rgba(10,16,32,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.3);border-radius:7px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:10px;">🔍+</div>
+      <div onclick="window.MaruOffice3D && window.MaruOffice3D.rotateCam(-0.25)" style="background:rgba(10,16,32,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.3);border-radius:7px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:11px;">↶</div>
+      <div onclick="window.MaruOffice3D && window.MaruOffice3D.panCam(0,-3)" style="background:rgba(10,16,32,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.3);border-radius:7px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:11px;">▼</div>
+      <div onclick="window.MaruOffice3D && window.MaruOffice3D.zoomCam(1.15)" style="background:rgba(10,16,32,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.3);border-radius:7px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:10px;">🔍-</div>
+      <div onclick="window.MaruOffice3D && window.MaruOffice3D.rotateCam(0.25)" style="background:rgba(10,16,32,0.85);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.3);border-radius:7px;color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;font-size:11px;">↷</div>
     </div>
 
-    <!-- Bottom Status Bar Hooked to Real State -->
-    <div style="position:absolute;bottom:10px;left:14px;right:14px;z-index:40;background:rgba(15,23,42,0.92);backdrop-filter:blur(16px);border:1px solid rgba(56,189,248,0.3);border-radius:14px;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;">
-      <div style="display:flex;flex-direction:column;gap:2px;">
-        <div style="font-size:11px;font-weight:800;display:flex;align-items:center;gap:6px;">
-          <span style="color:var(--cyan);">KANTOR 3D REAL-TIME SYNCHRONIZED</span>
-          <span id="office-status-pill" style="font-size:9px;padding:1px 6px;border-radius:6px;background:rgba(52,211,153,0.15);color:var(--emerald);border:1px solid var(--emerald);">CONNECTED</span>
-        </div>
-        <div id="office-subtext" style="font-size:10px;color:var(--muted);">9 Agen Pemimpin Siaga · Data bersumber langsung dari /api/state</div>
-      </div>
-      <button id="office-acc-btn" onclick="window.location.hash='#workflow';switchPage('workflow')" style="padding:6px 12px;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;border:none;background:var(--cyan);color:#040812;">📋 Buka Panel ACC</button>
-    </div>
+    <!-- ================= BOTTOM QUICK-DOCK NAVIGATION ================= -->
+    <nav id="hq-hud-bottom-dock" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:35;background:rgba(10,16,32,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(56,189,248,0.3);border-radius:16px;padding:5px 12px;display:flex;align-items:center;gap:6px;box-shadow:0 8px 32px rgba(0,0,0,0.7);">
+      <button onclick="switchPage('office')" class="hud-dock-btn active" data-dock="office" style="background:rgba(56,189,248,0.2);border:1px solid #38bdf8;color:#38bdf8;padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;">
+        <span>🏢</span><span>Home/HQ</span>
+      </button>
+      <button onclick="switchPage('squad')" class="hud-dock-btn" data-dock="squad" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+        <span>🤖</span><span>AI Agents</span>
+      </button>
+      <button onclick="switchPage('overview')" class="hud-dock-btn" data-dock="overview" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+        <span>⚡</span><span>HQ Core</span>
+      </button>
+      <button onclick="switchPage('kanban')" class="hud-dock-btn" data-dock="kanban" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+        <span>📁</span><span>Projects</span>
+      </button>
+      <button onclick="switchPage('workflow')" class="hud-dock-btn" data-dock="workflow" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+        <span>📱</span><span>Social Media</span>
+      </button>
+      <button onclick="switchPage('analytics')" class="hud-dock-btn" data-dock="analytics" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+        <span>📈</span><span>Analytics</span>
+      </button>
+      <button onclick="window.openDepartmentModule && window.openDepartmentModule('finance')" class="hud-dock-btn" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+        <span>💰</span><span>Finance</span>
+      </button>
+      <button onclick="switchPage('skills')" class="hud-dock-btn" data-dock="skills" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+        <span>📄</span><span>Skills/Docs</span>
+      </button>
+      <button onclick="toast('Pengaturan MARU AI HQ: Konfigurasi model Gemini 2.5/Claude 3.5 & database SQLite operasional.')" class="hud-dock-btn" style="background:transparent;border:1px solid transparent;color:rgba(255,255,255,0.7);padding:6px 12px;border-radius:10px;font-size:10.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+        <span>⚙️</span><span>Settings</span>
+      </button>
+    </nav>
   </section>
 
 
@@ -1312,6 +1503,208 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
   }
 
   // ---------------- Renderers ----------------
+  
+  // ================= MARU AI CORPORATE HQ 3D HUD CONTROLLER =================
+  let hudPanelsVisible = true;
+  let hudSelectedDepartment = null;
+
+  function updateHqHudClock() {
+    const clockEl = document.getElementById("hud-clock");
+    const dateEl = document.getElementById("hud-date");
+    if (!clockEl || !dateEl) return;
+    const now = new Date();
+    // WIB / UTC+7 representation
+    const timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " WIB";
+    const dateStr = now.toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+    clockEl.innerText = timeStr;
+    dateEl.innerText = dateStr;
+  }
+  setInterval(updateHqHudClock, 1000);
+  updateHqHudClock();
+
+  window.toggleHqHudPanels = function() {
+    hudPanelsVisible = !hudPanelsVisible;
+    const leftP = document.getElementById("hq-hud-left-panel");
+    const rightP = document.getElementById("hq-hud-right-panel");
+    const btn = document.getElementById("hud-toggle-panels-btn");
+    if (leftP) {
+      leftP.style.transform = hudPanelsVisible ? "translateX(0)" : "translateX(-110%)";
+      leftP.style.opacity = hudPanelsVisible ? "1" : "0";
+    }
+    if (rightP) {
+      rightP.style.transform = hudPanelsVisible ? "translateX(0)" : "translateX(110%)";
+      rightP.style.opacity = hudPanelsVisible ? "1" : "0";
+    }
+    if (btn) {
+      btn.style.background = hudPanelsVisible ? "rgba(56,189,248,0.12)" : "rgba(255,255,255,0.06)";
+      btn.style.color = hudPanelsVisible ? "#38bdf8" : "var(--muted)";
+    }
+  };
+
+  window.openDepartmentModule = function(deptKey) {
+    const target = deptKey || (hudSelectedDepartment && hudSelectedDepartment.id) || "workflow";
+    const map = {
+      "bima": "overview",
+      "executive": "overview",
+      "hermes": "studio",
+      "creative": "studio",
+      "kirana": "studio",
+      "nara": "workflow",
+      "cendekia": "skills",
+      "academic": "skills",
+      "maus": "workflow",
+      "approval": "workflow",
+      "ardi": "studio",
+      "voice": "studio",
+      "wira": "overview",
+      "it": "overview",
+      "telemetry": "overview",
+      "ootto": "kanban",
+      "social": "kanban",
+      "finance": "finance",
+      "meeting": "squad",
+      "canteen": "squad",
+      "lounge": "squad"
+    };
+
+    if (target === "finance") {
+      const bal = (S.data && S.data.hq && S.data.hq.finance && S.data.hq.finance.formatted_balance) || "Rp 128.450.000";
+      toast("Finance & Treasury HQ: Saldo Bersih " + bal + " (Arus Kas Sehat, Alokasi AI Ops & Server 12%).");
+      return;
+    }
+
+    const page = map[target.toLowerCase()] || "workflow";
+    if (typeof switchPage === "function") {
+      switchPage(page);
+      toast("Membuka Modul: " + page.toUpperCase());
+    }
+  };
+
+  function renderHqHud(data) {
+    if (!data) return;
+
+    // 1. Top Bar: Balance, Agents, Approvals, Status
+    const hq = data.hq || {};
+    const finance = hq.finance || {};
+    const balEl = document.getElementById("hud-company-balance");
+    if (balEl) balEl.innerText = finance.formatted_balance || "Rp 128.450.000";
+
+    const employees = data.employees || [];
+    const activeAgentsCount = employees.length || 9;
+    const agEl = document.getElementById("hud-active-agents-count");
+    if (agEl) agEl.innerText = activeAgentsCount + " AI Specialists (" + (data.totals ? data.totals.skills || 68 : 68) + " Skills)";
+
+    const cards = data.mausbot_cards || [];
+    const pendingCards = cards.filter(c => c.status === "pending");
+    const pendEl = document.getElementById("hud-pending-approvals");
+    if (pendEl) {
+      pendEl.innerText = pendingCards.length + " Pending ACC";
+      pendEl.style.color = pendingCards.length > 0 ? "#ef4444" : "#34d399";
+    }
+
+    const statusDot = document.getElementById("hq-status-dot");
+    const statusText = document.getElementById("hq-status-text");
+    if (statusDot && statusText) {
+      if (pendingCards.length > 0) {
+        statusDot.style.background = "#f59e0b";
+        statusDot.style.boxShadow = "0 0 8px #f59e0b";
+        statusText.innerText = "WAITING ACC (" + pendingCards.length + ")";
+        statusText.style.color = "#f59e0b";
+      } else {
+        statusDot.style.background = "#34d399";
+        statusDot.style.boxShadow = "0 0 8px #34d399";
+        statusText.innerText = "ALL SYSTEMS GO";
+        statusText.style.color = "#34d399";
+      }
+    }
+
+    // 2. Left Side: Today's Operations / Queue Tasks
+    const q4 = data.queue4 || [];
+    const taskBadge = document.getElementById("hud-task-count-badge");
+    if (taskBadge) taskBadge.innerText = q4.length + " Antrean";
+
+    const taskList = document.getElementById("hud-task-list");
+    if (taskList) {
+      if (q4.length === 0) {
+        taskList.innerHTML = '<div style="font-size:10px;color:rgba(148,163,184,0.6);text-align:center;padding:12px 6px;">Antrean konten bersih. Semua jadwal diproses.</div>';
+      } else {
+        taskList.innerHTML = q4.slice(0, 6).map(it => {
+          const isPending = it.status === "MENUNGGU";
+          const isSched = it.status === "TERJADWAL";
+          const statusBg = isPending ? "rgba(245,158,11,0.15)" : (isSched ? "rgba(52,211,153,0.15)" : "rgba(56,189,248,0.15)");
+          const statusCol = isPending ? "#f59e0b" : (isSched ? "#34d399" : "#38bdf8");
+          return `
+            <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:7px 9px;border:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:3px;cursor:pointer;" onclick="switchPage('kanban')">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:9.5px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;">${esc(it.judul || 'Task')}</span>
+                <span style="font-size:8px;font-weight:800;padding:1px 5px;border-radius:4px;background:${statusBg};color:${statusCol};">${esc(it.status || 'DRAF')}</span>
+              </div>
+              <div style="font-size:8.5px;color:rgba(148,163,184,0.7);display:flex;justify-content:space-between;">
+                <span>${esc(it.gaya_referensi || '@gegaraid')}</span>
+                <span>${esc((it.jadwal || it.usulan_jam || '').slice(0, 10) || 'Hari ini')}</span>
+              </div>
+            </div>`;
+        }).join("");
+      }
+    }
+
+    // 3. Right Side: Telemetry Metrics
+    const telem = hq.telemetry || {};
+    const cpuP = typeof telem.cpu_percent === "number" ? telem.cpu_percent : 18.4;
+    const ramU = typeof telem.memory_used_gb === "number" ? telem.memory_used_gb : 2.1;
+    const ramT = typeof telem.memory_total_gb === "number" ? telem.memory_total_gb : 8.0;
+    const ramP = typeof telem.memory_percent === "number" ? telem.memory_percent : Math.round((ramU / ramT) * 100);
+    const diskP = typeof telem.disk_percent === "number" ? telem.disk_percent : 42.0;
+
+    const cpuVal = document.getElementById("hud-cpu-val");
+    const cpuBar = document.getElementById("hud-cpu-bar");
+    if (cpuVal && cpuBar) {
+      cpuVal.innerText = cpuP.toFixed(1) + "%";
+      cpuBar.style.width = Math.min(Math.max(cpuP, 5), 100) + "%";
+    }
+
+    const ramVal = document.getElementById("hud-ram-val");
+    const ramBar = document.getElementById("hud-ram-bar");
+    if (ramVal && ramBar) {
+      ramVal.innerText = ramU.toFixed(1) + " / " + ramT.toFixed(1) + " GB (" + ramP + "%)";
+      ramBar.style.width = Math.min(Math.max(ramP, 5), 100) + "%";
+    }
+
+    const diskVal = document.getElementById("hud-disk-val");
+    if (diskVal) diskVal.innerText = diskP.toFixed(1) + "% Terpakai";
+
+    const memVal = document.getElementById("hud-memory-val");
+    if (memVal) memVal.innerText = (hq.hq_memory_count || 128) + " Memory Nodes";
+
+    // 4. Live Agent Activity Feed
+    const feed = document.getElementById("hud-activity-feed");
+    if (feed) {
+      const chat = data.chat || [];
+      if (chat.length > 0) {
+        feed.innerHTML = chat.slice(-5).reverse().map(msg => {
+          const isUser = msg.role === "user";
+          const name = isUser ? "Arya (Owner)" : (msg.bot_name || msg.bot_id || "MARU Agent");
+          const color = isUser ? "#38bdf8" : "#c084fc";
+          return `
+            <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:6px 8px;border:1px solid rgba(255,255,255,0.06);font-size:9.5px;">
+              <div style="font-weight:800;color:${color};margin-bottom:2px;font-size:9px;">${esc(name)}:</div>
+              <div style="color:rgba(226,232,240,0.85);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc((msg.text || '').slice(0, 70))}</div>
+            </div>`;
+        }).join("");
+      } else {
+        feed.innerHTML = employees.slice(0, 5).map(emp => `
+          <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:6px 8px;border:1px solid rgba(255,255,255,0.06);font-size:9.5px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+              <span style="font-weight:800;color:#38bdf8;">${esc(emp.name)}</span>
+              <span style="font-size:8px;color:#34d399;font-weight:700;">${esc(emp.state || 'STANDBY').toUpperCase()}</span>
+            </div>
+            <div style="color:rgba(226,232,240,0.8);line-height:1.25;font-size:8.5px;">${esc(emp.bubble || emp.role)}</div>
+          </div>
+        `).join("");
+      }
+    }
+  }
+
   function renderAll() {
     // Sinkronisasi status nyata ke Office 3D Shell jika tersedia
     try {
@@ -1344,6 +1737,7 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
       console.error("[MARU 3D] Error syncing backend state:", e);
     }
 
+    renderHqHud(S.data);
     if (!S.data) return;
     const d = S.data;
     const cards = d.mausbot_cards || [];
@@ -1669,6 +2063,12 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
     S.page = page;
     $$(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.page === page));
     $$(".page-view").forEach(sec => sec.classList.toggle("hidden", sec.id !== "page-" + page));
+    $$(".hud-dock-btn").forEach(b => {
+      const isAct = b.dataset.dock === page;
+      b.style.background = isAct ? "rgba(56,189,248,0.2)" : "transparent";
+      b.style.borderColor = isAct ? "#38bdf8" : "transparent";
+      b.style.color = isAct ? "#38bdf8" : "rgba(255,255,255,0.7)";
+    });
     document.body.classList.remove("nav-open");
     if (page === "office" && window.MaruOffice3D) {
       setTimeout(() => window.MaruOffice3D.init(), 50);
@@ -2848,6 +3248,9 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
 
     // Inspector Handler for Employee
     function openEmployeeInspector(emp) {
+      hudSelectedDepartment = { id: emp.id, name: emp.name };
+      const moduleBtn = document.getElementById("insp-module-btn-text");
+      if (moduleBtn) moduleBtn.innerText = `Buka Modul & Profil ${emp.name}`;
       const isOfficial = emp.classification === "OFFICIAL_AI_LEADER";
       document.getElementById("insp-badge").innerText = isOfficial ? "OFFICIAL AI LEADER" : "DECORATIVE NPC (TIER 2)";
       document.getElementById("insp-badge").style.background = isOfficial ? "var(--cyan)" : "#64748b";
@@ -2995,6 +3398,9 @@ html[data-theme="light"] .input-field, html[data-theme="light"] .chat-form input
   }
 
   function openInspector(d) {
+    hudSelectedDepartment = d;
+    const moduleBtn = document.getElementById("insp-module-btn-text");
+    if (moduleBtn) moduleBtn.innerText = `Buka Modul ${d.name}`;
     document.getElementById("insp-badge").innerText = d.leader === "Shared" ? "FASILITAS BERSAMA" : "DEPARTEMEN RESMI";
     document.getElementById("insp-badge").style.background = d.pillColor;
     document.getElementById("insp-title").innerText = d.name;
