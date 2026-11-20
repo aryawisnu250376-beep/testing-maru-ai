@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import secrets
 import threading
 import time
 import urllib.parse
@@ -402,7 +403,14 @@ class Handler(BaseHTTPRequestHandler):
         if path=="/api/preview-bootstrap":
             # Inform frontend whether preview mode is active or token auto-provisioning
             is_preview = os.getenv("MARU_PREVIEW_MODE", "0") == "1"
-            return self._json({"preview_mode": is_preview})
+            res = {"preview_mode": is_preview}
+            if is_preview:
+                # Auto-issue a valid session token for preview mode
+                token = secrets.token_urlsafe(32)
+                with RUNTIME.auth._lock:
+                    RUNTIME.auth._sessions[RUNTIME.auth._hash(token)] = time.time() + 86400
+                res["token"] = token
+            return self._json(res)
         if path=="/manifest.webmanifest":
             data={"name":"Nara — AI Edukasi Studio","short_name":"Nara Studio","lang":"id","start_url":"/","scope":"/","display":"standalone","background_color":"#f6f7f2","theme_color":"#205c4b","icons":[{"src":"/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},{"src":"/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}
             return self._send(200,json.dumps(data).encode(),"application/manifest+json")
