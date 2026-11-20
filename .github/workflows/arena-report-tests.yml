@@ -1,0 +1,23 @@
+name: Arena Report Unit Tests
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/*arena-report*.yml'
+      - 'scripts/publish_report_to_notion.py'
+      - 'tests_report_pipeline/**'
+  push:
+    paths:
+      - '.github/workflows/*arena-report*.yml'
+      - 'scripts/publish_report_to_notion.py'
+      - 'tests_report_pipeline/**'
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - run: python3.12 -m unittest discover -s tests_report_pipeline -v

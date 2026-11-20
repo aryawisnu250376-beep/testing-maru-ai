@@ -1,0 +1,20 @@
+name: Arena Report Ingest
+
+on:
+  push:
+    branches-ignore: [main]
+    paths:
+      - 'docs/reports/*.md'
+      - 'docs/reports/**/*.md'
+      - '!docs/reports/README.md'
+
+permissions: {}
+
+jobs:
+  signal:
+    if: ${{ !github.event.deleted }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Signal report push without secrets or checkout
+        run: echo 'Report push received; trusted publisher will validate the commit independently.'
